@@ -7,8 +7,9 @@ public class EnemySpawner : MonoBehaviour
     [Tooltip("소환 간격 (초)")]
     public float spawnInterval = 5f;
 
-    [Tooltip("소환 반경 (카메라 밖)")]
-    public float spawnRadius = 9f;
+    [Tooltip("화면 가장자리로부터 안쪽 여백 (뷰포트 비율 0~0.5)")]
+    [Range(0f, 0.4f)]
+    public float spawnMargin = 0.05f;
 
     [Tooltip("시작 HP")]
     public float baseHp = 30f;
@@ -34,7 +35,7 @@ public class EnemySpawner : MonoBehaviour
     {
         if (enemyPrefab == null) return;
 
-        Vector2 pos = Random.insideUnitCircle.normalized * spawnRadius;
+        Vector2 pos = RandomScreenPosition();
         GameObject go = Instantiate(enemyPrefab, pos, Quaternion.identity);
 
         float elapsed = GameManager.Instance.ElapsedTime;
@@ -44,5 +45,13 @@ public class EnemySpawner : MonoBehaviour
         // 경과 시간을 0~1로 정규화해 비주얼 강도로 사용
         float strengthRatio = Mathf.Clamp01(elapsed / maxStrengthTime);
         go.GetComponent<EnemyController>().Init(hp, strengthRatio);
+    }
+
+    Vector2 RandomScreenPosition()
+    {
+        float m = spawnMargin;
+        float x = Random.Range(m, 1f - m);
+        float y = Random.Range(m, 1f - m);
+        return Camera.main.ViewportToWorldPoint(new Vector3(x, y, Mathf.Abs(Camera.main.transform.position.z)));
     }
 }

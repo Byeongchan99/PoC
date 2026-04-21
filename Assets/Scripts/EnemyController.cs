@@ -15,11 +15,15 @@ public class EnemyController : MonoBehaviour
 
     [Header("비주얼 색상")]
     public Color weakColor   = Color.white;
-    public Color strongColor = new Color(0.8f, 0.1f, 0.1f); // 짙은 빨강
+    public Color strongColor = new Color(0.8f, 0.1f, 0.1f);
+
+    // 알파 최솟값 100/255
+    const float MinAlpha = 100f / 255f;
 
     float _nextDamageTime;
+    SpriteRenderer _sr;
+    Color _baseColor;
 
-    // strengthRatio: 0 = 시작(약함), 1 = 최대(강함)
     public void Init(float hp, float strengthRatio = 0f)
     {
         maxHp = currentHp = hp;
@@ -27,9 +31,13 @@ public class EnemyController : MonoBehaviour
         float t = Mathf.Clamp01(strengthRatio);
         transform.localScale = Vector3.one * Mathf.Lerp(minScale, maxScale, t);
 
-        SpriteRenderer sr = GetComponent<SpriteRenderer>();
-        if (sr != null)
-            sr.color = Color.Lerp(weakColor, strongColor, t);
+        _sr = GetComponent<SpriteRenderer>();
+        if (_sr != null)
+        {
+            _baseColor = Color.Lerp(weakColor, strongColor, t);
+            _baseColor.a = 1f;
+            _sr.color = _baseColor;
+        }
     }
 
     void OnTriggerStay2D(Collider2D other)
@@ -47,8 +55,14 @@ public class EnemyController : MonoBehaviour
     void TakeDamage(float dmg)
     {
         currentHp -= dmg;
-        if (currentHp <= 0)
-            Die();
+        if (currentHp <= 0) { Die(); return; }
+
+        // HP 비율에 따라 알파 감소 (최솟값 100/255)
+        if (_sr != null)
+        {
+            float alpha = Mathf.Lerp(MinAlpha, 1f, currentHp / maxHp);
+            _sr.color = new Color(_baseColor.r, _baseColor.g, _baseColor.b, alpha);
+        }
     }
 
     void Die()

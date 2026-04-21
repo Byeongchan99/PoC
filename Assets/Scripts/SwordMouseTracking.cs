@@ -36,9 +36,12 @@ public class SwordMouseTracking : MonoBehaviour
             _currentAngle = Mathf.LerpAngle(_currentAngle, targetAngle, rotationSmoothSpeed * Time.deltaTime);
         }
 
-        // 현재 향하는 방향으로 앞으로 이동
+        // 마우스에 가까워질수록 속도를 줄여 도착 후 빙글빙글 도는 현상 방지
+        float dist = toMouse.magnitude;
+        float speed = moveSpeed * Mathf.Clamp01(dist);
+
         Vector2 forward = new Vector2(Mathf.Cos(_currentAngle * Mathf.Deg2Rad), Mathf.Sin(_currentAngle * Mathf.Deg2Rad));
-        transform.position += (Vector3)(forward * moveSpeed * Time.deltaTime);
+        transform.position += (Vector3)(forward * speed * Time.deltaTime);
 
         transform.rotation = Quaternion.Euler(0f, 0f, _currentAngle + angleOffset);
     }

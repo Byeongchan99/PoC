@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 /// <summary>
 /// 마우스 위치를 따라 부드럽게 움직이고 회전하는 검 컨트롤러.
@@ -52,8 +53,8 @@ public class SwordMouseTracking : MonoBehaviour
 
     void UpdateTargetAngle()
     {
-        Vector3 mouseScreen = Input.mousePosition;
-        mouseScreen.z = Mathf.Abs(_mainCamera.transform.position.z);
+        Vector2 mouseScreenPos = Mouse.current.position.ReadValue();
+        Vector3 mouseScreen = new Vector3(mouseScreenPos.x, mouseScreenPos.y, Mathf.Abs(_mainCamera.transform.position.z));
         Vector2 mouseWorld = _mainCamera.ScreenToWorldPoint(mouseScreen);
 
         Vector2 pivotPos = pivot != null ? (Vector2)pivot.position : Vector2.zero;

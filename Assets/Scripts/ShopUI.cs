@@ -1,0 +1,67 @@
+using UnityEngine;
+using UnityEngine.UI;
+using UnityEngine.InputSystem;
+using TMPro;
+
+public class ShopUI : MonoBehaviour
+{
+    [SerializeField] SwordStats swordStats;
+    [SerializeField] GameObject shopPanel;
+    [SerializeField] TextMeshProUGUI goldText;
+    [SerializeField] Button[] upgradeButtons;   // [0]=공격력 [1]=이동속도 [2]=회전속도
+    [SerializeField] TextMeshProUGUI[] costTexts;
+
+    static readonly float[] Increments  = { 5f,  1f,  2f  };
+    static readonly int[]   BaseCosts   = { 10,  15,  12  };
+    static readonly float[] Multipliers = { 2f, 1.8f, 1.8f };
+
+    readonly int[] _levels = { 0, 0, 0 };
+
+    void Awake()
+    {
+        shopPanel.SetActive(false);
+        for (int i = 0; i < upgradeButtons.Length; i++)
+        {
+            int idx = i;
+            upgradeButtons[i].onClick.AddListener(() => TryUpgrade(idx));
+        }
+    }
+
+    void Start()
+    {
+        GameManager.Instance.OnGoldChanged += RefreshUI;
+        RefreshUI(GameManager.Instance.Gold);
+    }
+
+    void OnDestroy() => GameManager.Instance.OnGoldChanged -= RefreshUI;
+
+    void Update()
+    {
+        if (Keyboard.current.tabKey.wasPressedThisFrame)
+            shopPanel.SetActive(!shopPanel.activeSelf);
+    }
+
+    void TryUpgrade(int idx)
+    {
+        int cost = GetCost(idx);
+        if (!GameManager.Instance.SpendGold(cost)) return;
+
+        _levels[idx]++;
+        switch (idx)
+        {
+            case 0: swordStats.attackDamage  += Increments[0]; break;
+            case 1: swordStats.moveSpeed     += Increments[1]; break;
+            case 2: swordStats.rotationSpeed += Increments[2]; break;
+        }
+    }
+
+    int GetCost(int idx) =>
+        Mathf.RoundToInt(BaseCosts[idx] * Mathf.Pow(Multipliers[idx], _levels[idx]));
+
+    void RefreshUI(int gold)
+    {
+        goldText.text = $"Gold: {gold}";
+        for (int i = 0; i < costTexts.Length; i++)
+            costTexts[i].text = $"{GetCost(i)}G";
+    }
+}

@@ -19,9 +19,15 @@ public class EnemySpawner : MonoBehaviour
     [Tooltip("비주얼이 최대(strongColor/maxScale)에 도달하는 경과 시간 (초)")]
     public float maxStrengthTime = 300f;
 
+    [Tooltip("게임 시작 시 소환할 적 수")]
+    public int initialSpawnCount = 5;
+
     void Start()
     {
-        InvokeRepeating(nameof(SpawnEnemy), 0f, spawnInterval);
+        for (int i = 0; i < initialSpawnCount; i++)
+            SpawnEnemy();
+
+        InvokeRepeating(nameof(SpawnEnemy), spawnInterval, spawnInterval);
     }
 
     void SpawnEnemy()

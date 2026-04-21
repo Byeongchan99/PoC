@@ -13,6 +13,9 @@ public class SwordMouseTracking : MonoBehaviour
     [Tooltip("검 스프라이트 방향 보정 (위쪽=-90, 오른쪽=0)")]
     public float angleOffset = -90f;
 
+    [Tooltip("이 거리 이내에 들어오면 멈춤")]
+    public float stopDistance = 0.1f;
+
     private Camera _mainCamera;
     private float _currentAngle;
 
@@ -28,16 +31,18 @@ public class SwordMouseTracking : MonoBehaviour
         Vector3 mouseScreen = new Vector3(mouseScreenPos.x, mouseScreenPos.y, Mathf.Abs(_mainCamera.transform.position.z));
         Vector2 mouseWorld = _mainCamera.ScreenToWorldPoint(mouseScreen);
 
-        // 마우스 방향으로 목표 각도 계산
         Vector2 toMouse = mouseWorld - (Vector2)transform.position;
-        if (toMouse.sqrMagnitude > 0.001f)
-        {
-            float targetAngle = Mathf.Atan2(toMouse.y, toMouse.x) * Mathf.Rad2Deg;
-            _currentAngle = Mathf.LerpAngle(_currentAngle, targetAngle, rotationSmoothSpeed * Time.deltaTime);
-        }
-
-        // 마우스에 가까워질수록 속도를 줄여 도착 후 빙글빙글 도는 현상 방지
         float dist = toMouse.magnitude;
+
+        // 마우스에 충분히 가까우면 회전·이동 중단
+        if (dist <= stopDistance)
+            return;
+
+        // 마우스 방향으로 목표 각도 계산
+        float targetAngle = Mathf.Atan2(toMouse.y, toMouse.x) * Mathf.Rad2Deg;
+        _currentAngle = Mathf.LerpAngle(_currentAngle, targetAngle, rotationSmoothSpeed * Time.deltaTime);
+
+        // 마우스에 가까워질수록 속도 감소
         float speed = moveSpeed * Mathf.Clamp01(dist);
 
         Vector2 forward = new Vector2(Mathf.Cos(_currentAngle * Mathf.Deg2Rad), Mathf.Sin(_currentAngle * Mathf.Deg2Rad));

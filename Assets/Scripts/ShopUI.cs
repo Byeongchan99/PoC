@@ -68,9 +68,9 @@ public class ShopUI : MonoBehaviour
 
         if (statTexts != null && statTexts.Length >= 3)
         {
-            statTexts[0].text = $"공격력: {swordStats.attackDamage:F1}";
-            statTexts[1].text = $"이동속도: {swordStats.moveSpeed:F1}";
-            statTexts[2].text = $"회전속도: {swordStats.rotationSpeed:F1}";
+            statTexts[0].text = $"ATK: {swordStats.attackDamage:F1}";
+            statTexts[1].text = $"SPD: {swordStats.moveSpeed:F1}";
+            statTexts[2].text = $"ROT: {swordStats.rotationSpeed:F1}";
         }
     }
 }

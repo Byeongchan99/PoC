@@ -5,6 +5,8 @@ public class GameManager : MonoBehaviour
 {
     public static GameManager Instance { get; private set; }
 
+    public int startingGold = 0;
+
     public int Gold { get; private set; }
     public float ElapsedTime { get; private set; }
 
@@ -14,6 +16,7 @@ public class GameManager : MonoBehaviour
     {
         if (Instance != null) { Destroy(gameObject); return; }
         Instance = this;
+        Gold = startingGold;
     }
 
     void Update() => ElapsedTime += Time.deltaTime;

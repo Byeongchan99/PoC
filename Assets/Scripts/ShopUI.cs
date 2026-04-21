@@ -8,8 +8,9 @@ public class ShopUI : MonoBehaviour
     [SerializeField] SwordStats swordStats;
     [SerializeField] GameObject shopPanel;
     [SerializeField] TextMeshProUGUI goldText;
-    [SerializeField] Button[] upgradeButtons;   // [0]=공격력 [1]=이동속도 [2]=회전속도
+    [SerializeField] Button[] upgradeButtons;    // [0]=공격력 [1]=이동속도 [2]=회전속도
     [SerializeField] TextMeshProUGUI[] costTexts;
+    [SerializeField] TextMeshProUGUI[] statTexts; // [0]=공격력 [1]=이동속도 [2]=회전속도
 
     static readonly float[] Increments  = { 5f,  1f,  2f  };
     static readonly int[]   BaseCosts   = { 10,  15,  12  };
@@ -53,6 +54,7 @@ public class ShopUI : MonoBehaviour
             case 1: swordStats.moveSpeed     += Increments[1]; break;
             case 2: swordStats.rotationSpeed += Increments[2]; break;
         }
+        RefreshUI(GameManager.Instance.Gold);
     }
 
     int GetCost(int idx) =>
@@ -63,5 +65,12 @@ public class ShopUI : MonoBehaviour
         goldText.text = $"Gold: {gold}";
         for (int i = 0; i < costTexts.Length; i++)
             costTexts[i].text = $"{GetCost(i)}G";
+
+        if (statTexts != null && statTexts.Length >= 3)
+        {
+            statTexts[0].text = $"공격력: {swordStats.attackDamage:F1}";
+            statTexts[1].text = $"이동속도: {swordStats.moveSpeed:F1}";
+            statTexts[2].text = $"회전속도: {swordStats.rotationSpeed:F1}";
+        }
     }
 }

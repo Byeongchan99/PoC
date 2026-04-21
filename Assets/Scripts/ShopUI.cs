@@ -6,7 +6,6 @@ using TMPro;
 public class ShopUI : MonoBehaviour
 {
     [SerializeField] SwordStats swordStats;
-    [SerializeField] GameObject shopPanel;
     [SerializeField] TextMeshProUGUI goldText;
     [SerializeField] Button[] upgradeButtons;    // [0]=공격력 [1]=이동속도 [2]=회전속도
     [SerializeField] TextMeshProUGUI[] costTexts;
@@ -20,7 +19,6 @@ public class ShopUI : MonoBehaviour
 
     void Awake()
     {
-        shopPanel.SetActive(false);
         for (int i = 0; i < upgradeButtons.Length; i++)
         {
             int idx = i;
@@ -35,12 +33,6 @@ public class ShopUI : MonoBehaviour
     }
 
     void OnDestroy() => GameManager.Instance.OnGoldChanged -= RefreshUI;
-
-    void Update()
-    {
-        if (Keyboard.current.tabKey.wasPressedThisFrame)
-            shopPanel.SetActive(!shopPanel.activeSelf);
-    }
 
     void TryUpgrade(int idx)
     {
@@ -68,9 +60,9 @@ public class ShopUI : MonoBehaviour
 
         if (statTexts != null && statTexts.Length >= 3)
         {
-            statTexts[0].text = $"ATK: {swordStats.attackDamage:F1}";
-            statTexts[1].text = $"SPD: {swordStats.moveSpeed:F1}";
-            statTexts[2].text = $"ROT: {swordStats.rotationSpeed:F1}";
+            statTexts[0].text = $"{swordStats.attackDamage:F1}";
+            statTexts[1].text = $"{swordStats.moveSpeed:F1}";
+            statTexts[2].text = $"{swordStats.rotationSpeed:F1}";
         }
     }
 }

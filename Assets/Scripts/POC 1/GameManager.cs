@@ -1,37 +1,40 @@
 using System;
 using UnityEngine;
 
-public class GameManager : MonoBehaviour
+namespace POC1
 {
-    public static GameManager Instance { get; private set; }
-
-    public int startingGold = 0;
-
-    public int Gold { get; private set; }
-    public float ElapsedTime { get; private set; }
-
-    public event Action<int> OnGoldChanged;
-
-    void Awake()
+    public class GameManager : MonoBehaviour
     {
-        if (Instance != null) { Destroy(gameObject); return; }
-        Instance = this;
-        Gold = startingGold;
-    }
+        public static GameManager Instance { get; private set; }
 
-    void Update() => ElapsedTime += Time.deltaTime;
+        public int startingGold = 0;
 
-    public void AddGold(int amount)
-    {
-        Gold += amount;
-        OnGoldChanged?.Invoke(Gold);
-    }
+        public int Gold { get; private set; }
+        public float ElapsedTime { get; private set; }
 
-    public bool SpendGold(int amount)
-    {
-        if (Gold < amount) return false;
-        Gold -= amount;
-        OnGoldChanged?.Invoke(Gold);
-        return true;
+        public event Action<int> OnGoldChanged;
+
+        void Awake()
+        {
+            if (Instance != null) { Destroy(gameObject); return; }
+            Instance = this;
+            Gold = startingGold;
+        }
+
+        void Update() => ElapsedTime += Time.deltaTime;
+
+        public void AddGold(int amount)
+        {
+            Gold += amount;
+            OnGoldChanged?.Invoke(Gold);
+        }
+
+        public bool SpendGold(int amount)
+        {
+            if (Gold < amount) return false;
+            Gold -= amount;
+            OnGoldChanged?.Invoke(Gold);
+            return true;
+        }
     }
 }

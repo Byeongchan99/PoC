@@ -1,8 +1,11 @@
 using UnityEngine;
 
-public class SwordStats : MonoBehaviour
+namespace POC1
 {
-    public float attackDamage  = 10f;
-    public float moveSpeed     = 5f;
-    public float rotationSpeed = 8f;
+    public class SwordStats : MonoBehaviour
+    {
+        public float attackDamage  = 10f;
+        public float moveSpeed     = 5f;
+        public float rotationSpeed = 8f;
+    }
 }

@@ -30,6 +30,7 @@ public class TrainManager : MonoBehaviour
 
     public int CurrentCargo => _currentCargo;
     public int MaxCargo => _maxCargo;
+    public int CarCount => _carCount;
 
     private void Start()
     {

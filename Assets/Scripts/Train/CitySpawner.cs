@@ -10,6 +10,7 @@ public class CitySpawner : MonoBehaviour
     [SerializeField] private TrainManager _trainManager;
     [SerializeField] private TrainLocomotive _locomotive;
     [SerializeField] private GameObject _cityPrefab;
+    [SerializeField] private QuestListUI _questListUI;
 
     [Header("스폰 설정")]
     [Tooltip("도시가 스폰되는 시간 간격 (초)")]
@@ -115,6 +116,7 @@ public class CitySpawner : MonoBehaviour
 
         // 도시가 제거될 때 현재 도시 수를 1 감소시키는 콜백 전달
         city.Initialize(_trainManager, requiredCargo, timeLimit, () => _currentCityCount--);
+        _questListUI.AddEntry(city);
 
         _currentCityCount++;
     }

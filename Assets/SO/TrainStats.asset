@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TrainStats
   _baseSpeed: 5
   _speedPerCar: 0.3
-  _rotationSpeed: 120
+  _rotationSpeed: 200
   _baseCargo: 50
   _cargoPerCar: 25
-  _carSpacing: 1.2
+  _carSpacing: 0.8

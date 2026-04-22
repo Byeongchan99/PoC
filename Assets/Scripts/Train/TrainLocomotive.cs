@@ -7,6 +7,7 @@ using UnityEngine.InputSystem;
 /// 지나온 경로를 TrainManager에 기록하여 기차 칸들이 따라올 수 있게 함.
 /// </summary>
 [RequireComponent(typeof(Rigidbody2D))]
+[RequireComponent(typeof(BoxCollider2D))]
 public class TrainLocomotive : MonoBehaviour
 {
     [Header("참조")]

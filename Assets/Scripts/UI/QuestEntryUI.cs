@@ -51,12 +51,15 @@ public class QuestEntryUI : MonoBehaviour
         {
             case QuestStatus.InProgress:
                 _statusText.text = "진행 중";
+                _statusText.color = Color.white;
                 break;
             case QuestStatus.Success:
                 _statusText.text = "성공!";
+                _statusText.color = Color.green;
                 break;
             case QuestStatus.Failed:
                 _statusText.text = "실패";
+                _statusText.color = Color.red;
                 break;
         }
     }

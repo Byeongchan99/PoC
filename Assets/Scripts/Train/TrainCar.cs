@@ -6,6 +6,7 @@ using UnityEngine;
 /// 기관차와의 충돌 감지를 위해 Collider2D가 반드시 필요.
 /// </summary>
 [RequireComponent(typeof(Rigidbody2D))]
+[RequireComponent(typeof(BoxCollider2D))]
 public class TrainCar : MonoBehaviour
 {
     [Header("현재 상태 (Inspector 확인용 - 읽기 전용)")]

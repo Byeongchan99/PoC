@@ -8,14 +8,17 @@ namespace POC3
     {
         public static PlayerController Instance { get; private set; }
 
-        [SerializeField] float orbitRadius = 3f;
-
         int targetSector = 4;
         float currentAngle = (4 + 0.5f) * 60f; // 270° = 화면 하단
+        float radius;
 
         public float CurrentAngleDeg => currentAngle;
 
-        void Awake() => Instance = this;
+        void Awake()
+        {
+            Instance = this;
+            radius = ((Vector2)transform.position).magnitude;
+        }
 
         void Update()
         {
@@ -31,8 +34,8 @@ namespace POC3
 
             float rad = currentAngle * Mathf.Deg2Rad;
             transform.position = new Vector3(
-                Mathf.Cos(rad) * orbitRadius,
-                Mathf.Sin(rad) * orbitRadius,
+                Mathf.Cos(rad) * radius,
+                Mathf.Sin(rad) * radius,
                 transform.position.z);
 
             // currentAngle + 90° → 로컬 +Y(팁)가 항상 중심을 향함

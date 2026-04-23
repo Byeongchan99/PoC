@@ -10,14 +10,12 @@ namespace POC3
         // 프리팹에 미리 배치된 6개 변 오브젝트 (인스펙터에서 할당)
         [SerializeField] GameObject[] sides = new GameObject[6];
 
-        float rotateSpeed;
         bool collisionChecked;
 
         void Awake()
         {
             transform.localScale = Vector3.zero;
             DisableGaps(RollGapCount());
-            rotateSpeed = Random.Range(-20f, 20f);
         }
 
         static int RollGapCount()
@@ -54,7 +52,6 @@ namespace POC3
             float expandSpeed = Mathf.Lerp(1.0f, 4.0f, GameManager.Instance.Difficulty);
             float s = transform.localScale.x + expandSpeed * Time.deltaTime;
             transform.localScale = Vector3.one * s;
-            transform.Rotate(0f, 0f, rotateSpeed * Time.deltaTime);
 
             // scale = 1 → 링이 플레이어 궤도에 도달
             if (!collisionChecked && s >= 1f)

@@ -5,17 +5,22 @@ namespace POC3
     public class HexRing : MonoBehaviour
     {
         static readonly float[] GapWeights = { 0.20f, 0.30f, 0.30f, 0.10f, 0.05f, 0.05f };
-        const float DestroyScale = 4f;
 
-        // 프리팹에 미리 배치된 6개 변 오브젝트 (인스펙터에서 할당)
         [SerializeField] GameObject[] sides = new GameObject[6];
         [SerializeField] float collisionScale = 1f;
 
+        // t가 이 값을 넘으면 파괴 (t=2 → scale = 4 * collisionScale)
+        const float DestroyT = 2f;
+
+        float timer;
+        float totalTime; // 링이 플레이어에 도달하기까지 걸리는 시간
         bool collisionChecked;
 
         void Awake()
         {
             transform.localScale = Vector3.zero;
+            // 난이도에 따라 도달 시간 감소 (플레이어가 미리 볼 수 있는 시간이 줄어듦)
+            totalTime = Mathf.Lerp(3f, 1f, GameManager.Instance.Difficulty);
             DisableGaps(RollGapCount());
         }
 
@@ -50,18 +55,19 @@ namespace POC3
         {
             if (GameManager.Instance.CurrentState != GameManager.State.Playing) return;
 
-            float expandSpeed = Mathf.Lerp(1.0f, 4.0f, GameManager.Instance.Difficulty);
-            float s = transform.localScale.x + expandSpeed * Time.deltaTime;
-            transform.localScale = Vector3.one * s;
+            timer += Time.deltaTime;
+            float t = timer / totalTime;
 
-            // scale = 1 → 링이 플레이어 궤도에 도달
-            if (!collisionChecked && s >= collisionScale)
+            // 이차 ease-in: 처음엔 느리게(갭 확인), 플레이어에 가까워질수록 빠르게
+            transform.localScale = Vector3.one * (t * t * collisionScale);
+
+            if (!collisionChecked && t >= 1f)
             {
                 collisionChecked = true;
                 CheckCollision();
             }
 
-            if (s > DestroyScale)
+            if (t > DestroyT)
                 Destroy(gameObject);
         }
 

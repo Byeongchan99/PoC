@@ -15,6 +15,7 @@ namespace POC3
 
         void Awake()
         {
+            transform.localScale = Vector3.zero;
             DisableGaps(RollGapCount());
             rotateSpeed = Random.Range(-20f, 20f);
         }

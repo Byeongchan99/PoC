@@ -9,6 +9,7 @@ namespace POC3
 
         // 프리팹에 미리 배치된 6개 변 오브젝트 (인스펙터에서 할당)
         [SerializeField] GameObject[] sides = new GameObject[6];
+        [SerializeField] float collisionScale = 1f;
 
         bool collisionChecked;
 
@@ -54,7 +55,7 @@ namespace POC3
             transform.localScale = Vector3.one * s;
 
             // scale = 1 → 링이 플레이어 궤도에 도달
-            if (!collisionChecked && s >= 1f)
+            if (!collisionChecked && s >= collisionScale)
             {
                 collisionChecked = true;
                 CheckCollision();

@@ -20,11 +20,15 @@ namespace POC3
         [SerializeField] int preloadCount = 30;
 
         [Header("Line Properties")]
-        [SerializeField] float lineSpeed    = 4f;
-        [SerializeField] float lineLength   = 0.6f;
-        [SerializeField] float maxDistance  = 12f;
-        [SerializeField] float lineWidth    = 0.03f;
-        [SerializeField] Color lineColor    = new Color(1f, 1f, 1f, 0.25f);
+        [SerializeField] float lineSpeed       = 4f;
+        // 생성마다 랜덤으로 결정되는 대시 길이 범위
+        [SerializeField] float minLineLength   = 0.3f;
+        [SerializeField] float maxLineLength   = 1.2f;
+        [SerializeField] float maxDistance     = 12f;
+        // 원점 근처 두께 → 바깥쪽 두께로 보간되어 원근감 표현
+        [SerializeField] float minLineWidth    = 0.02f;
+        [SerializeField] float maxLineWidth    = 0.12f;
+        [SerializeField] Color lineColor       = new Color(1f, 1f, 1f, 0.25f);
 
         [Header("Material")]
         // Sprites/Default 등 LineRenderer에 사용할 머티리얼
@@ -53,11 +57,13 @@ namespace POC3
 
         /// <summary>
         /// 임의의 방향으로 BackgroundLine을 하나 생성합니다.
+        /// 길이는 minLineLength ~ maxLineLength 범위에서 랜덤으로 결정됩니다.
         /// </summary>
         /// <param name="startDist">선의 꼬리(start point)가 시작할 원점 기준 거리</param>
         void SpawnLine(float startDist)
         {
-            float angleDeg = Random.Range(0f, 360f);
+            float angleDeg  = Random.Range(0f, 360f);
+            float lineLength = Random.Range(minLineLength, maxLineLength);
 
             var go = Instantiate(backgroundLinePrefab, Vector3.zero, Quaternion.identity, transform);
 
@@ -68,7 +74,7 @@ namespace POC3
             go.GetComponent<BackgroundLine>().Initialize(
                 angleDeg, startDist, lineLength,
                 lineSpeed, maxDistance,
-                lineWidth, lineColor
+                minLineWidth, maxLineWidth, lineColor
             );
         }
     }

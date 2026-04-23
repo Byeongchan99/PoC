@@ -10,7 +10,7 @@ namespace POC3
         float spawnTimer;
 
         // 난이도에 따라 2초 → 1초로 스폰 간격 감소
-        float SpawnInterval => Mathf.Lerp(2f, 1f, GameManager.Instance.Difficulty);
+        float SpawnInterval => Mathf.Lerp(1.5f, 1f, GameManager.Instance.Difficulty);
 
         void Update()
         {

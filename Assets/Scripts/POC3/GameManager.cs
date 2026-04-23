@@ -41,7 +41,7 @@ namespace POC3
         {
             var style = new GUIStyle(GUI.skin.label)
             {
-                fontSize = 32,
+                fontSize = 40,
                 fontStyle = FontStyle.Bold,
                 alignment = TextAnchor.MiddleCenter,
             };
@@ -50,8 +50,7 @@ namespace POC3
             {
                 case State.WaitingToStart:
                     style.normal.textColor = Color.white;
-                    GUI.Label(FullRect(-30), "HEXAGON DODGE", style);
-                    style.fontSize = 20;
+                    style.fontSize = 40;
                     GUI.Label(FullRect(20), "Press any key to start", style);
                     break;
 

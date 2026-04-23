@@ -20,7 +20,7 @@ namespace POC3
         {
             transform.localScale = Vector3.zero;
             // 난이도에 따라 도달 시간 감소 (플레이어가 미리 볼 수 있는 시간이 줄어듦)
-            totalTime = Mathf.Lerp(3f, 1f, GameManager.Instance.Difficulty);
+            totalTime = Mathf.Lerp(2f, 1f, GameManager.Instance.Difficulty);
             DisableGaps(RollGapCount());
         }
 

@@ -1,6 +1,8 @@
 using TMPro;
 using UnityEngine;
 
+namespace POC2;
+
 /// <summary>
 /// 퀘스트 목록 패널에 표시되는 개별 퀘스트 항목 UI.
 /// 연결된 City가 제거되면 스스로 삭제됨.

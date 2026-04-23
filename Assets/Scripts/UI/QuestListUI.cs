@@ -1,5 +1,7 @@
 using UnityEngine;
 
+namespace POC2;
+
 /// <summary>
 /// 화면 우측에 고정되는 퀘스트 목록 패널.
 /// CitySpawner가 도시를 생성할 때 AddEntry를 호출하여 항목을 추가.

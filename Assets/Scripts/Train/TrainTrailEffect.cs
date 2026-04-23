@@ -1,5 +1,7 @@
 using UnityEngine;
 
+namespace POC2;
+
 /// <summary>
 /// 기관차에 두 줄 레일 트레일 이펙트를 적용하는 컴포넌트.
 /// 기관차 좌우에 자식 오브젝트를 생성하고 각각 TrailRenderer를 붙여

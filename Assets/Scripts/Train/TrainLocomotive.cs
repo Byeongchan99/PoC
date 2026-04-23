@@ -1,6 +1,8 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
+namespace POC2;
+
 /// <summary>
 /// 기관차의 이동과 조향을 담당.
 /// 항상 앞(transform.up)으로 전진하며, 마우스가 있는 방향으로 회전.

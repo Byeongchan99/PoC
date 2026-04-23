@@ -1,6 +1,8 @@
 using TMPro;
 using UnityEngine;
 
+namespace POC2;
+
 /// <summary>
 /// 화면 상단에 고정되는 HUD.
 /// 현재 화물 / 최대 화물과 기차 칸 수를 매 프레임 갱신하여 표시.

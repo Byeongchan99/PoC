@@ -1,5 +1,7 @@
 using UnityEngine;
 
+namespace POC2;
+
 /// <summary>
 /// 개별 기차 칸.
 /// TrainManager의 경로 히스토리에서 자신의 인덱스에 해당하는 지점을 읽어 이동.

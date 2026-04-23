@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+namespace POC2;
+
 /// <summary>
 /// 기차 전체를 관리하는 중앙 컨트롤러.
 /// 기관차가 지나온 경로를 기록하고, 기차 칸 추가/제거 및 화물 관리를 담당.

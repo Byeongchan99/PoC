@@ -1,6 +1,8 @@
 using System;
 using UnityEngine;
 
+namespace POC2;
+
 /// <summary>
 /// 맵에 배치되는 화물 하나를 나타내는 컴포넌트.
 /// 기관차와 충돌 시 TrainManager에 화물을 추가하고 스스로 제거됨.

@@ -1,5 +1,7 @@
 using UnityEngine;
 
+namespace POC2;
+
 /// <summary>
 /// 기차의 기본 스탯을 담는 ScriptableObject.
 /// 프로젝트 창에서 우클릭 > Create > Train > TrainStats 로 생성 가능.

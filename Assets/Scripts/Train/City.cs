@@ -2,6 +2,8 @@ using System;
 using System.Collections;
 using UnityEngine;
 
+namespace POC2;
+
 /// <summary>
 /// 맵에 배치되는 도시 오브젝트.
 /// 퀘스트를 보유하며, 기관차가 도시 영역에 진입하면 화물을 자동으로 납품 처리함.

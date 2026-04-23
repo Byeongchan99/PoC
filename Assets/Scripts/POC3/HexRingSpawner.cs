@@ -20,8 +20,11 @@ namespace POC3
             if (spawnTimer < SpawnInterval) return;
 
             spawnTimer = 0f;
-            // WorldContainer의 자식으로 생성 → WorldContainer 회전 시 링도 함께 회전
-            Instantiate(hexRingPrefab, Vector3.zero, Quaternion.identity, worldContainer);
+            // WorldContainer의 자식으로 생성, local position/rotation = 0으로 명시
+            // Quaternion.identity를 world rotation으로 넘기면 WorldContainer 회전값이
+            // local rotation에서 상쇄되어 이상한 각도가 저장됨
+            var ring = Instantiate(hexRingPrefab, worldContainer);
+            ring.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
         }
     }
 }

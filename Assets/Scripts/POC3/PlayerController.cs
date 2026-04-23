@@ -8,16 +8,19 @@ namespace POC3
     {
         public static PlayerController Instance { get; private set; }
 
-        int targetSector = 4;
-        float currentAngle = (4 + 0.5f) * 60f; // 270° = 화면 하단
-        float radius;
+        // 링들을 자식으로 갖는 월드 컨테이너 (이 오브젝트를 회전시켜 플레이어 이동 효과 연출)
+        [SerializeField] Transform worldContainer;
 
-        public float CurrentAngleDeg => currentAngle;
+        float worldCurrentAngle;
+        float worldTargetAngle;
+
+        // 씬에 배치된 플레이어 위치 기준 고정 각도
+        public float PlayerAngle { get; private set; }
 
         void Awake()
         {
             Instance = this;
-            radius = ((Vector2)transform.position).magnitude;
+            PlayerAngle = Mathf.Atan2(transform.position.y, transform.position.x) * Mathf.Rad2Deg;
         }
 
         void Update()
@@ -25,21 +28,12 @@ namespace POC3
             if (GameManager.Instance.CurrentState != GameManager.State.Playing) return;
 
             if (Keyboard.current.leftArrowKey.wasPressedThisFrame)
-                targetSector = (targetSector - 1 + 6) % 6;
+                worldTargetAngle += 60f;
             if (Keyboard.current.rightArrowKey.wasPressedThisFrame)
-                targetSector = (targetSector + 1) % 6;
+                worldTargetAngle -= 60f;
 
-            float targetAngle = (targetSector + 0.5f) * 60f;
-            currentAngle = Mathf.LerpAngle(currentAngle, targetAngle, 12f * Time.deltaTime);
-
-            float rad = currentAngle * Mathf.Deg2Rad;
-            transform.position = new Vector3(
-                Mathf.Cos(rad) * radius,
-                Mathf.Sin(rad) * radius,
-                transform.position.z);
-
-            // currentAngle + 90° → 로컬 +Y(팁)가 항상 중심을 향함
-            transform.rotation = Quaternion.Euler(0f, 0f, currentAngle + 90f);
+            worldCurrentAngle = Mathf.Lerp(worldCurrentAngle, worldTargetAngle, 12f * Time.deltaTime);
+            worldContainer.rotation = Quaternion.Euler(0f, 0f, worldCurrentAngle);
         }
     }
 }

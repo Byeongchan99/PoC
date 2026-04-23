@@ -5,6 +5,7 @@ namespace POC3
     public class HexRingSpawner : MonoBehaviour
     {
         [SerializeField] GameObject hexRingPrefab;
+        [SerializeField] Transform worldContainer;
 
         float spawnTimer;
 
@@ -19,7 +20,8 @@ namespace POC3
             if (spawnTimer < SpawnInterval) return;
 
             spawnTimer = 0f;
-            Instantiate(hexRingPrefab, Vector3.zero, Quaternion.identity);
+            // WorldContainer의 자식으로 생성 → WorldContainer 회전 시 링도 함께 회전
+            Instantiate(hexRingPrefab, Vector3.zero, Quaternion.identity, worldContainer);
         }
     }
 }

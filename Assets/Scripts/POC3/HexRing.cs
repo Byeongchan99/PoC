@@ -68,10 +68,11 @@ namespace POC3
 
         void CheckCollision()
         {
-            float playerAngle = PlayerController.Instance.CurrentAngleDeg;
+            // 플레이어는 고정 위치 → 씬 배치 기준 각도 사용
+            // 링은 WorldContainer의 자식이므로 transform.eulerAngles.z에 WorldContainer 회전이 포함됨
+            float playerAngle = PlayerController.Instance.PlayerAngle;
             float ringRot = transform.eulerAngles.z;
 
-            // 링 로컬 기준으로 플레이어 각도 변환
             float localAngle = ((playerAngle - ringRot) % 360f + 360f) % 360f;
             int sideIndex = Mathf.FloorToInt(localAngle / 60f) % 6;
 

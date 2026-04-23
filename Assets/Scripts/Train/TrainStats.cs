@@ -1,6 +1,7 @@
 using UnityEngine;
 
-namespace POC2;
+namespace POC2
+{
 
 /// <summary>
 /// 기차의 기본 스탯을 담는 ScriptableObject.
@@ -39,4 +40,5 @@ public class TrainStats : ScriptableObject
 
     public float RotationSpeed => _rotationSpeed;
     public float CarSpacing => _carSpacing;
+}
 }

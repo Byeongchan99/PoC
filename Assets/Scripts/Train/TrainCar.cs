@@ -1,6 +1,7 @@
 using UnityEngine;
 
-namespace POC2;
+namespace POC2
+{
 
 /// <summary>
 /// 개별 기차 칸.
@@ -57,4 +58,5 @@ public class TrainCar : MonoBehaviour
         // Quaternion에서 2D 회전값(Z축 각도)만 추출하여 적용
         _rb.MoveRotation(point.Rotation.eulerAngles.z);
     }
+}
 }

@@ -1,7 +1,8 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-namespace POC2;
+namespace POC2
+{
 
 /// <summary>
 /// 기관차의 이동과 조향을 담당.
@@ -113,4 +114,5 @@ public class TrainLocomotive : MonoBehaviour
 
         _trainManager.RemoveCarsFrom(car.CarIndex);
     }
+}
 }

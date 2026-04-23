@@ -1,7 +1,8 @@
 using TMPro;
 using UnityEngine;
 
-namespace POC2;
+namespace POC2
+{
 
 /// <summary>
 /// 화면 상단에 고정되는 HUD.
@@ -37,4 +38,5 @@ public class GameHUD : MonoBehaviour
     {
         _carCountText.text = $"기차 칸: {_trainManager.CarCount}";
     }
+}
 }

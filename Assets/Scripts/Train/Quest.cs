@@ -1,7 +1,8 @@
 using System;
 using UnityEngine;
 
-namespace POC2;
+namespace POC2
+{
 
 /// <summary>
 /// 퀘스트의 현재 상태를 나타내는 열거형.
@@ -89,4 +90,5 @@ public class Quest
         if (_status == QuestStatus.InProgress)
             _status = QuestStatus.Failed;
     }
+}
 }

@@ -1,6 +1,7 @@
 using UnityEngine;
 
-namespace POC2;
+namespace POC2
+{
 
 /// <summary>
 /// 일정 시간마다 맵에 화물을 랜덤 스폰하는 관리자.
@@ -118,4 +119,5 @@ public class CargoSpawner : MonoBehaviour
 
         _currentCargoCount++;
     }
+}
 }

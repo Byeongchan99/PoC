@@ -1,6 +1,7 @@
 using UnityEngine;
 
-namespace POC2;
+namespace POC2
+{
 
 /// <summary>
 /// 화면 우측에 고정되는 퀘스트 목록 패널.
@@ -31,4 +32,5 @@ public class QuestListUI : MonoBehaviour
         QuestEntryUI entry = entryObj.GetComponent<QuestEntryUI>();
         entry.Initialize(city, _questCounter);
     }
+}
 }

@@ -1,6 +1,7 @@
 using UnityEngine;
 
-namespace POC2;
+namespace POC2
+{
 
 /// <summary>
 /// 기관차에 두 줄 레일 트레일 이펙트를 적용하는 컴포넌트.
@@ -53,4 +54,5 @@ public class TrainTrailEffect : MonoBehaviour
         if (_railMaterial != null)
             trail.material = _railMaterial;
     }
+}
 }

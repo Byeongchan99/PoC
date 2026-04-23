@@ -1,6 +1,7 @@
 using UnityEngine;
 
-namespace POC2;
+namespace POC2
+{
 
 /// <summary>
 /// 일정 시간마다 맵에 도시를 랜덤 스폰하는 관리자.
@@ -122,4 +123,5 @@ public class CitySpawner : MonoBehaviour
 
         _currentCityCount++;
     }
+}
 }

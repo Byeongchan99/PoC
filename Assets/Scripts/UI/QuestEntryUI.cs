@@ -1,7 +1,8 @@
 using TMPro;
 using UnityEngine;
 
-namespace POC2;
+namespace POC2
+{
 
 /// <summary>
 /// 퀘스트 목록 패널에 표시되는 개별 퀘스트 항목 UI.
@@ -65,4 +66,5 @@ public class QuestEntryUI : MonoBehaviour
                 break;
         }
     }
+}
 }

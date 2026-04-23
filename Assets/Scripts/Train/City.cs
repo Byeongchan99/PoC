@@ -2,7 +2,8 @@ using System;
 using System.Collections;
 using UnityEngine;
 
-namespace POC2;
+namespace POC2
+{
 
 /// <summary>
 /// 맵에 배치되는 도시 오브젝트.
@@ -111,4 +112,5 @@ public class City : MonoBehaviour
         _onDestroyed?.Invoke();
         Destroy(gameObject);
     }
+}
 }

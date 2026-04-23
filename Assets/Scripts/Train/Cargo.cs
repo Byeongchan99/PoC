@@ -1,7 +1,8 @@
 using System;
 using UnityEngine;
 
-namespace POC2;
+namespace POC2
+{
 
 /// <summary>
 /// 맵에 배치되는 화물 하나를 나타내는 컴포넌트.
@@ -50,4 +51,5 @@ public class Cargo : MonoBehaviour
         _onCollected?.Invoke();
         Destroy(gameObject);
     }
+}
 }

@@ -1,7 +1,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace POC2;
+namespace POC2
+{
 
 /// <summary>
 /// 기차 전체를 관리하는 중앙 컨트롤러.
@@ -185,4 +186,5 @@ public class TrainManager : MonoBehaviour
         public Quaternion Rotation;
         public float Distance;
     }
+}
 }

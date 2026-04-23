@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 namespace POC3
 {
@@ -47,9 +48,9 @@ namespace POC3
         {
             if (GameManager.Instance.CurrentState != GameManager.State.Playing) return;
 
-            if (Input.GetKeyDown(KeyCode.LeftArrow))
+            if (Keyboard.current.leftArrowKey.wasPressedThisFrame)
                 targetSector = (targetSector - 1 + 6) % 6;
-            if (Input.GetKeyDown(KeyCode.RightArrow))
+            if (Keyboard.current.rightArrowKey.wasPressedThisFrame)
                 targetSector = (targetSector + 1) % 6;
 
             float targetAngle = (targetSector + 0.5f) * 60f;

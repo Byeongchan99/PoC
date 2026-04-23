@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 
 namespace POC3
@@ -23,10 +24,10 @@ namespace POC3
             if (CurrentState == State.Playing)
                 survivalTime += Time.deltaTime;
 
-            if (CurrentState == State.WaitingToStart && Input.anyKeyDown)
+            if (CurrentState == State.WaitingToStart && Keyboard.current.anyKey.wasPressedThisFrame)
                 CurrentState = State.Playing;
 
-            if (CurrentState == State.GameOver && Input.anyKeyDown)
+            if (CurrentState == State.GameOver && Keyboard.current.anyKey.wasPressedThisFrame)
                 SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
         }
 

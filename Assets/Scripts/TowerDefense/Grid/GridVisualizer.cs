@@ -106,8 +106,8 @@ namespace POC4
 
             LineRenderer lr = lineObj.AddComponent<LineRenderer>();
             lr.positionCount = 2;
-            lr.startWidth = 0.02f;
-            lr.endWidth = 0.02f;
+            lr.startWidth = 0.05f;
+            lr.endWidth = 0.05f;
             lr.material = new Material(Shader.Find("Sprites/Default"));
             lr.startColor = _runtimeLineColor;
             lr.endColor = _runtimeLineColor;

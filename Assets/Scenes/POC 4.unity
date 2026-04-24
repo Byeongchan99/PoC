@@ -155,8 +155,8 @@ Camera:
   m_GameObject: {fileID: 382216137}
   m_Enabled: 1
   serializedVersion: 2
-  m_ClearFlags: 1
-  m_BackGroundColor: {r: 0.19215687, g: 0.3019608, b: 0.4745098, a: 0}
+  m_ClearFlags: 2
+  m_BackGroundColor: {r: 0.45803666, g: 0.6886792, b: 0.49288613, a: 0}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
   m_FOVAxisMode: 0
@@ -299,12 +299,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9eab953dbea8b3044ab57a68c0311eb4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TowerDefense.GridVisualizer
-  _gridLineColor: {r: 0.5, g: 0.5, b: 0.5, a: 0.5}
+  _gridLineColor: {r: 0.3962264, g: 0.3962264, b: 0.3962264, a: 1}
   _spawnPointColor: {r: 0, g: 1, b: 0, a: 1}
   _goalPointColor: {r: 1, g: 0, b: 0, a: 1}
   _wallCellColor: {r: 1, g: 0.3, b: 0.3, a: 0.4}
   _showRuntimeGrid: 1
-  _runtimeLineColor: {r: 0.4, g: 0.4, b: 0.4, a: 0.3}
+  _runtimeLineColor: {r: 0.2830189, g: 0.2830189, b: 0.2830189, a: 1}
 --- !u!114 &451137085
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -388,6 +388,91 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1696228333
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1696228337}
+  - component: {fileID: 1696228336}
+  - component: {fileID: 1696228335}
+  - component: {fileID: 1696228334}
+  m_Layer: 0
+  m_Name: Wall Placer
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1696228334
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1696228333}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aa2a4fbfd95d8b045a23d973052fda5b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::POC4.WallPlacementUI
+  _wallPlacer: {fileID: 1696228336}
+  _wallDataI: {fileID: 11400000, guid: 92fe3a931060fb944a14ae3877de935e, type: 2}
+  _wallDataO: {fileID: 11400000, guid: cd83177c7b21c414db09f891dec8afe7, type: 2}
+  _wallDataT: {fileID: 11400000, guid: cc8f30b78fd4a0744b08f64f716a15e7, type: 2}
+  _wallDataS: {fileID: 11400000, guid: cfe72e0e4881f21438634ff3396f56e0, type: 2}
+  _wallDataZ: {fileID: 11400000, guid: a3299914b98e7c84a95a95da75ce6a4a, type: 2}
+  _wallDataL: {fileID: 11400000, guid: 51f6128734306dc4baa2921f9b2fdd5b, type: 2}
+  _wallDataJ: {fileID: 11400000, guid: 5372f5bd189e1454b80721049faa4cf0, type: 2}
+--- !u!114 &1696228335
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1696228333}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b4e9d0208fa4f4c4ca4b848c4b506693, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::POC4.WallPreview
+  _validColor: {r: 0, g: 1, b: 0, a: 0.5}
+  _invalidColor: {r: 1, g: 0, b: 0, a: 0.5}
+--- !u!114 &1696228336
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1696228333}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a5597328f01188f49adfe2bd6e32bf53, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::POC4.WallPlacer
+  _gridSystem: {fileID: 451137085}
+  _pathFinder: {fileID: 451137083}
+  _wallPreview: {fileID: 1696228335}
+  _wallPlacementUI: {fileID: 1696228334}
+  _wallObjectPrefab: {fileID: 2547557266204776380, guid: 6f8f5a0a35c9a7f4e8aacc0fe30ce55f, type: 3}
+--- !u!4 &1696228337
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1696228333}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -395,3 +480,4 @@ SceneRoots:
   - {fileID: 382216140}
   - {fileID: 451137086}
   - {fileID: 1283506146}
+  - {fileID: 1696228337}

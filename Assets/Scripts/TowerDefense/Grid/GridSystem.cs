@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace TowerDefense
+namespace POC4
 {
     /// <summary>
     /// 그리드 전체를 관리하는 핵심 클래스.

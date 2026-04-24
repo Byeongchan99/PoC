@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace TowerDefense
+namespace POC4
 {
     /// <summary>
     /// 적을 일정 간격으로 스폰하는 클래스.

@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace TowerDefense
+namespace POC4
 {
     /// <summary>
     /// 적 하나를 제어하는 클래스.

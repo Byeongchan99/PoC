@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace TowerDefense
+namespace POC4
 {
     /// <summary>
     /// A* 알고리즘으로 그리드 위의 최단 경로를 계산하는 클래스.

@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace TowerDefense
+namespace POC4
 {
     /// <summary>
     /// 그리드를 시각적으로 표시하는 클래스.

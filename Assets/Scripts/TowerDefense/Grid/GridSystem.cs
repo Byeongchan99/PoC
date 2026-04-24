@@ -143,6 +143,8 @@ namespace POC4
         public bool IsWall(int x, int y)
         {
             if (!IsInBounds(x, y)) return true;
+            // 에디터에서 Awake 전에 OnDrawGizmos가 호출될 수 있으므로 null 체크
+            if (_isWall == null) return false;
             return _isWall[x, y];
         }
 

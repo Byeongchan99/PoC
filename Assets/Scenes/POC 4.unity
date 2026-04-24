@@ -517,9 +517,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d645afcd53eddb543b9fe8c978216dea, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::POC4.Hand
-  _defaultWallCard: {fileID: 11400000, guid: 28c9ad825be96b64ab544ffa54eab2ed, type: 2}
-  _defaultTowerCard: {fileID: 11400000, guid: ebffff71465497a42bbaa7728c34a236, type: 2}
+  _wallCardPool:
+  - {fileID: 11400000, guid: ebffff71465497a42bbaa7728c34a236, type: 2}
+  - {fileID: 11400000, guid: 719858ec3e108f14b8bb212bf92db4b3, type: 2}
+  - {fileID: 11400000, guid: 076af3ca294366940bf6957fea4b008e, type: 2}
+  - {fileID: 11400000, guid: 8dedb12c13828914780fba4659529029, type: 2}
+  - {fileID: 11400000, guid: 978f2f2fa491bf64f9308c4ebda50b78, type: 2}
+  - {fileID: 11400000, guid: 00a4babbe3973724c9e8963c9884fda6, type: 2}
+  - {fileID: 11400000, guid: 0a361cf669841484c857a4dca56f0801, type: 2}
   _initialWallCardCount: 3
+  _towerCardPool:
+  - {fileID: 11400000, guid: 28c9ad825be96b64ab544ffa54eab2ed, type: 2}
+  - {fileID: 11400000, guid: b60a9e0a00cbb8646a2f0a8ced38481a, type: 2}
+  - {fileID: 11400000, guid: 604ab8c230f87fd449ebebec05df1ddc, type: 2}
   _initialTowerCardCount: 3
   _additionalStartingCards: []
 --- !u!4 &1597992869

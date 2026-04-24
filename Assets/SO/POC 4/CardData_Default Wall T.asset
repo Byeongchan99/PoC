@@ -1,0 +1,18 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 80964384454ad674c83ded9c73ec78fd, type: 3}
+  m_Name: CardData_Default Wall T
+  m_EditorClassIdentifier: Assembly-CSharp::POC4.CardData
+  _kind: 0
+  _displayName: Wall T
+  _wallData: {fileID: 11400000, guid: cc8f30b78fd4a0744b08f64f716a15e7, type: 2}
+  _towerData: {fileID: 0}

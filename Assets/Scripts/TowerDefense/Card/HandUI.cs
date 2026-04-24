@@ -12,6 +12,10 @@ namespace POC4
     /// 카드 소비 시점:
     ///   - 벽 카드: WallPlacer.OnWallPlaced 이벤트 수신 시 (설치 확정 후)
     ///   - 타워 카드: TowerPlacer.OnTowerPlaced 이벤트 수신 시 (즉시 설치 후)
+    ///
+    /// 대기 카드 추적 방식:
+    ///   CardData 참조 대신 손패 내 인덱스로 추적한다.
+    ///   같은 CardData 에셋이 여러 장 있을 때 클릭한 카드만 정확히 강조/소비된다.
     /// </summary>
     public class HandUI : MonoBehaviour
     {
@@ -41,8 +45,12 @@ namespace POC4
         // 내부 상태
         // -------------------------------------------------------
 
-        /// <summary>현재 설치 대기 중인 카드 (설치 완료 또는 취소 시 null)</summary>
-        private CardData _pendingCard;
+        /// <summary>
+        /// 현재 설치 대기 중인 카드의 손패 인덱스.
+        /// -1이면 대기 중인 카드 없음.
+        /// CardData 참조 대신 인덱스를 사용해 같은 에셋 중복 보유 시에도 정확히 한 장만 추적한다.
+        /// </summary>
+        private int _pendingCardIndex = -1;
 
         /// <summary>손패 UI 전체 영역 (IsMouseOverUI 판단용)</summary>
         private Rect _handPanelRect;
@@ -85,13 +93,13 @@ namespace POC4
         }
 
         /// <summary>
-        /// 대기 중인 카드를 손패에서 제거한다.
+        /// 대기 중인 카드를 인덱스로 손패에서 제거한다.
         /// </summary>
         private void ConsumeCard()
         {
-            if (_pendingCard == null) return;
-            _hand.RemoveCard(_pendingCard);
-            _pendingCard = null;
+            if (_pendingCardIndex < 0) return;
+            _hand.RemoveCardAt(_pendingCardIndex);
+            _pendingCardIndex = -1;
         }
 
         // -------------------------------------------------------
@@ -134,9 +142,10 @@ namespace POC4
             }
 
             // 대기 중인 카드 상태 표시
-            if (_pendingCard != null)
+            if (_pendingCardIndex >= 0 && _pendingCardIndex < cards.Count)
             {
-                string label = _pendingCard.Kind == CardData.CardKind.Wall
+                CardData pendingCard = cards[_pendingCardIndex];
+                string label = pendingCard.Kind == CardData.CardKind.Wall
                     ? "벽 배치 중 - 그리드에 위치 선택 후 확정"
                     : "타워 배치 중 - 벽 셀 위를 클릭";
                 GUI.Label(new Rect(Screen.width * 0.5f - 150f, Screen.height - _cardHeight - 50f,
@@ -146,11 +155,11 @@ namespace POC4
 
         /// <summary>
         /// 카드 한 장을 버튼으로 그린다.
-        /// 대기 중인 카드이면 강조 표시한다.
+        /// 대기 중인 카드 인덱스와 일치하면 강조 표시한다.
         /// </summary>
         private void DrawCard(CardData card, int index)
         {
-            bool isPending = card == _pendingCard;
+            bool isPending = index == _pendingCardIndex;
 
             // 대기 중인 카드는 배경색 변경으로 강조
             Color prevColor = GUI.backgroundColor;
@@ -164,7 +173,7 @@ namespace POC4
 
             if (clicked && !isPending)
             {
-                UseCard(card);
+                UseCard(card, index);
             }
         }
 
@@ -198,7 +207,7 @@ namespace POC4
         /// 카드를 클릭했을 때 호출한다.
         /// 이미 다른 카드를 사용 중이면 기존 설치 모드를 취소하고 새 카드를 선택한다.
         /// </summary>
-        private void UseCard(CardData card)
+        private void UseCard(CardData card, int index)
         {
             if (!card.IsValid())
             {
@@ -209,7 +218,7 @@ namespace POC4
             // 기존 설치 취소
             CancelCurrentPlacing();
 
-            _pendingCard = card;
+            _pendingCardIndex = index;
 
             if (card.Kind == CardData.CardKind.Wall)
             {
@@ -229,7 +238,7 @@ namespace POC4
             if (_wallPlacer == null)
             {
                 Debug.LogError("[HandUI] WallPlacer가 연결되지 않았습니다.");
-                _pendingCard = null;
+                _pendingCardIndex = -1;
                 return;
             }
             _wallPlacer.StartPlacing(wallData);
@@ -243,7 +252,7 @@ namespace POC4
             if (_towerPlacer == null)
             {
                 Debug.LogError("[HandUI] TowerPlacer가 연결되지 않았습니다.");
-                _pendingCard = null;
+                _pendingCardIndex = -1;
                 return;
             }
             _towerPlacer.StartPlacingFromCard(towerData);
@@ -255,11 +264,11 @@ namespace POC4
         /// </summary>
         private void CancelCurrentPlacing()
         {
-            if (_pendingCard == null) return;
+            if (_pendingCardIndex < 0) return;
 
             _wallPlacer?.Cancel();
             _towerPlacer?.CancelPlacing();
-            _pendingCard = null;
+            _pendingCardIndex = -1;
         }
 
         // -------------------------------------------------------

@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: da5b3df14cb8dea47bea7871938e2fe5, type: 3}
-  m_Name: TrainStats
+  m_Name: POC2_TrainStats
   m_EditorClassIdentifier: Assembly-CSharp::TrainStats
   _baseSpeed: 5
   _speedPerCar: 0.3

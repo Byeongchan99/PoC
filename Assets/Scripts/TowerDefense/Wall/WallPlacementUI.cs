@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 namespace POC4
 {
@@ -49,10 +50,9 @@ namespace POC4
         {
             get
             {
-                Vector2 guiMouse = new Vector2(
-                    Input.mousePosition.x,
-                    Screen.height - Input.mousePosition.y
-                );
+                Vector2 mouseScreen = Mouse.current.position.ReadValue();
+                // Input System 좌표는 좌측 하단 기준, GUI는 좌측 상단 기준이므로 y 반전
+                Vector2 guiMouse = new Vector2(mouseScreen.x, Screen.height - mouseScreen.y);
                 return _uiRect.Contains(guiMouse);
             }
         }

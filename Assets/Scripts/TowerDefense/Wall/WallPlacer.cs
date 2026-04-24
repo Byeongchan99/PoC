@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 namespace POC4
 {
@@ -111,7 +112,8 @@ namespace POC4
         /// </summary>
         private void TrackMouseAndShowPreview()
         {
-            Vector3 worldPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+            Vector2 mouseScreen = Mouse.current.position.ReadValue();
+            Vector3 worldPos = Camera.main.ScreenToWorldPoint(new Vector3(mouseScreen.x, mouseScreen.y, 0f));
             worldPos.z = 0f;
 
             Vector2Int anchorCell = _gridSystem.WorldToGridPosition(worldPos);
@@ -147,7 +149,7 @@ namespace POC4
         /// </summary>
         private void HandleRightClick()
         {
-            if (!Input.GetMouseButtonDown(1)) return;
+            if (!Mouse.current.rightButton.wasPressedThisFrame) return;
 
             _rotationSteps = (_rotationSteps + 1) % 4;
             // Dropped 상태에서 회전하면 Placing으로 돌아가 재배치 가능
@@ -163,7 +165,7 @@ namespace POC4
         /// </summary>
         private void HandleLeftClick()
         {
-            if (!Input.GetMouseButtonDown(0)) return;
+            if (!Mouse.current.leftButton.wasPressedThisFrame) return;
 
             // UI 버튼 위에서는 월드 클릭 처리 건너뜀
             if (_wallPlacementUI != null && _wallPlacementUI.IsMouseOverUI) return;

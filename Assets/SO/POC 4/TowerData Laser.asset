@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c729f5c9eaeab44f88c5745907af486, type: 3}
+  m_Name: TowerData Laser
+  m_EditorClassIdentifier: Assembly-CSharp::POC4.TowerData
+  _towerType: 1
+  _attackPower: 10
+  _range: 3
+  _attackSpeed: 1
+  _effectType: 0
+  _extraDamage: 5
+  _slowRatio: 0.5
+  _slowDuration: 2
+  _stunDuration: 1

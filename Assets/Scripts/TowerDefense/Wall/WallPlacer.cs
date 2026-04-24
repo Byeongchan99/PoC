@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -62,6 +63,16 @@ namespace POC4
         private bool _isCurrentValid;
 
         // -------------------------------------------------------
+        // 이벤트
+        // -------------------------------------------------------
+
+        /// <summary>
+        /// 벽 설치가 확정될 때 발생한다.
+        /// HandUI가 구독해 카드를 소비한다.
+        /// </summary>
+        public event Action OnWallPlaced;
+
+        // -------------------------------------------------------
         // 프로퍼티 (WallPlacementUI에서 읽음)
         // -------------------------------------------------------
 
@@ -91,7 +102,8 @@ namespace POC4
 
         /// <summary>
         /// 특정 WallData로 배치를 시작한다.
-        /// WallPlacementUI의 팔레트 버튼 또는 카드 시스템(4단계)이 호출.
+        /// WallPlacementUI의 팔레트 버튼 또는 HandUI(카드 시스템)이 호출.
+        /// StartPlacing 직후 프레임의 좌클릭은 의도치 않은 드롭이 되지 않도록 무시한다.
         /// </summary>
         public void StartPlacing(WallData data)
         {
@@ -100,7 +112,11 @@ namespace POC4
             _currentOffsets = null;
             _isCurrentValid = false;
             _state = PlacerState.Placing;
+            _skipNextLeftClick = true; // 카드 클릭과 월드 클릭 중복 방지
         }
+
+        // StartPlacing 직후 첫 번째 좌클릭을 무시하는 플래그
+        private bool _skipNextLeftClick;
 
         // -------------------------------------------------------
         // Placing 상태: 마우스 추적 + 겹침 검사
@@ -166,6 +182,13 @@ namespace POC4
         private void HandleLeftClick()
         {
             if (!Mouse.current.leftButton.wasPressedThisFrame) return;
+
+            // StartPlacing 직후 첫 클릭 무시 (카드 클릭과 드롭 중복 방지)
+            if (_skipNextLeftClick)
+            {
+                _skipNextLeftClick = false;
+                return;
+            }
 
             // UI 버튼 위에서는 월드 클릭 처리 건너뜀
             if (_wallPlacementUI != null && _wallPlacementUI.IsMouseOverUI) return;
@@ -260,6 +283,9 @@ namespace POC4
             wallObj.Place(cells, _currentData, _gridSystem);
 
             ResetState();
+
+            // 설치 완료 이벤트 발생 (HandUI가 카드 소비에 사용)
+            OnWallPlaced?.Invoke();
         }
 
         /// <summary>

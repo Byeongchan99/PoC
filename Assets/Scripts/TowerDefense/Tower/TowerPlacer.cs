@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -56,6 +57,16 @@ namespace POC4
 
         // OnGUI UI 영역 (WallPlacer의 영역과 겹치지 않도록 오른쪽에 배치)
         private readonly Rect _uiRect = new Rect(Screen.width - 200, 10, 190, 200);
+
+        // -------------------------------------------------------
+        // 이벤트
+        // -------------------------------------------------------
+
+        /// <summary>
+        /// 타워 설치가 완료될 때 발생한다.
+        /// HandUI가 구독해 카드를 소비한다.
+        /// </summary>
+        public event Action OnTowerPlaced;
 
         // -------------------------------------------------------
         // 유니티 생명주기
@@ -207,17 +218,59 @@ namespace POC4
             // 해당 셀에 타워 설치 완료 표시 (셀 단위)
             wall.SetTowerAtCell(_hoveredCell);
 
+            // 설치 완료 이벤트 발생 (HandUI가 카드 소비에 사용)
+            OnTowerPlaced?.Invoke();
+
             // 선택 상태 유지: 연속으로 같은 종류 타워를 다른 셀에 설치 가능
         }
 
         // -------------------------------------------------------
-        // 상태 관리
+        // 카드 시스템 연동
         // -------------------------------------------------------
 
         /// <summary>
-        /// 타워 선택을 취소하고 Idle 상태로 초기화한다.
+        /// HandUI에서 타워 카드를 선택했을 때 호출한다.
+        /// TowerData의 TowerType에 맞는 프리팹을 자동으로 선택해 배치 모드를 시작한다.
         /// </summary>
-        private void CancelPlacing()
+        public void StartPlacingFromCard(TowerData data)
+        {
+            ArrowTower prefab = GetPrefabForType(data.Type);
+            if (prefab == null)
+            {
+                Debug.LogWarning($"[TowerPlacer] TowerType '{data.Type}'에 해당하는 프리팹이 연결되지 않았습니다.");
+                return;
+            }
+
+            _selectedData = data;
+            _selectedPrefab = prefab;
+            _isPlacing = true;
+        }
+
+        /// <summary>
+        /// TowerType에 맞는 타워 프리팹을 반환한다.
+        /// 6단계에서 LaserTower, CannonTower 프리팹 추가 시 이곳에 매핑을 추가한다.
+        /// </summary>
+        private ArrowTower GetPrefabForType(TowerData.TowerType type)
+        {
+            return type switch
+            {
+                TowerData.TowerType.Arrow => _arrowTowerPrefab,
+                // TowerData.TowerType.Laser  => _laserTowerPrefab,  // 6단계
+                // TowerData.TowerType.Cannon => _cannonTowerPrefab, // 6단계
+                _ => _arrowTowerPrefab
+            };
+        }
+
+        /// <summary>
+        /// 배치 모드를 취소하고 Idle 상태로 초기화한다.
+        /// HandUI에서 다른 카드를 선택하거나 취소 시 호출한다.
+        /// </summary>
+        public void CancelPlacing()
+        {
+            CancelPlacingInternal();
+        }
+
+        private void CancelPlacingInternal()
         {
             _isPlacing = false;
             _selectedData = null;
@@ -225,6 +278,7 @@ namespace POC4
             _hoveredWall = null;
             _previewRenderer.gameObject.SetActive(false);
         }
+
 
         // -------------------------------------------------------
         // UI 영역 판단

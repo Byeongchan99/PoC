@@ -7,6 +7,7 @@ namespace POC4
     /// 씬에 실제로 배치된 벽 오브젝트.
     /// 자신이 점유한 그리드 셀 목록을 관리하고,
     /// 배치 확정 시 GridSystem에 해당 셀들을 벽으로 등록한다.
+    /// 타워는 벽의 각 셀에 하나씩 독립적으로 설치할 수 있다.
     /// </summary>
     public class WallObject : MonoBehaviour
     {
@@ -25,15 +26,21 @@ namespace POC4
         private GridSystem _gridSystem;
         private WallData _wallData;
 
+        /// <summary>
+        /// 타워가 설치된 셀 좌표 집합.
+        /// HashSet으로 관리해 빠른 존재 여부 확인이 가능하다.
+        /// </summary>
+        private HashSet<Vector2Int> _cellsWithTower = new HashSet<Vector2Int>();
+
         // -------------------------------------------------------
         // 프로퍼티
         // -------------------------------------------------------
 
-        /// <summary>이 벽 위에 타워가 설치되었는지 여부 (3단계에서 사용)</summary>
-        public bool HasTower { get; private set; }
-
         public WallData WallData => _wallData;
         public IReadOnlyList<Vector2Int> OccupiedCells => _occupiedCells;
+
+        /// <summary>벽의 모든 셀에 타워가 가득 찼는지 여부 (편의용)</summary>
+        public bool IsFullyOccupied => _cellsWithTower.Count >= _occupiedCells.Count;
 
         // -------------------------------------------------------
         // 배치 확정
@@ -59,12 +66,28 @@ namespace POC4
             RenderCells();
         }
 
+        // -------------------------------------------------------
+        // 타워 설치 관리 (셀 단위)
+        // -------------------------------------------------------
+
         /// <summary>
-        /// 타워 설치 여부를 기록한다. 타워 설치 시스템(3단계)에서 호출.
+        /// 지정한 셀에 타워가 설치되어 있는지 확인한다.
         /// </summary>
-        public void SetTowerPlaced(bool placed)
+        public bool HasTowerAtCell(Vector2Int cell)
         {
-            HasTower = placed;
+            return _cellsWithTower.Contains(cell);
+        }
+
+        /// <summary>
+        /// 지정한 셀에 타워 설치를 기록한다.
+        /// TowerPlacer가 설치 완료 후 호출한다.
+        /// </summary>
+        public void SetTowerAtCell(Vector2Int cell)
+        {
+            if (_occupiedCells.Contains(cell))
+            {
+                _cellsWithTower.Add(cell);
+            }
         }
 
         // -------------------------------------------------------

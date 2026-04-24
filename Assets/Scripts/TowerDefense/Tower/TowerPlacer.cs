@@ -45,10 +45,13 @@ namespace POC4
         private TowerData _selectedData;
         private ArrowTower _selectedPrefab;
 
-        /// <summary>현재 마우스가 올라간 유효한 WallObject (타워 없는 벽)</summary>
+        /// <summary>현재 마우스가 올라간 셀 좌표</summary>
+        private Vector2Int _hoveredCell;
+
+        /// <summary>현재 마우스가 올라간 셀을 포함하는 WallObject (해당 셀에 타워 없을 때만 유효)</summary>
         private WallObject _hoveredWall;
 
-        // 미리보기용 SpriteRenderer (WallObject 중심에 표시)
+        // 미리보기용 SpriteRenderer (호버된 셀 위치에 표시)
         private SpriteRenderer _previewRenderer;
 
         // OnGUI UI 영역 (WallPlacer의 영역과 겹치지 않도록 오른쪽에 배치)
@@ -96,8 +99,8 @@ namespace POC4
         // -------------------------------------------------------
 
         /// <summary>
-        /// 마우스 위치를 그리드 좌표로 변환하고, 해당 셀에 있는 WallObject를 탐색한다.
-        /// 타워가 없는 벽만 유효로 판정한다.
+        /// 마우스 위치를 그리드 좌표로 변환하고, 해당 셀을 포함하는 WallObject를 탐색한다.
+        /// 해당 셀에 이미 타워가 있으면 null로 처리한다.
         /// </summary>
         private void UpdateHoveredWall()
         {
@@ -106,23 +109,24 @@ namespace POC4
                 new Vector3(mouseScreen.x, mouseScreen.y, 0f));
             worldPos.z = 0f;
 
-            Vector2Int gridCell = _gridSystem.WorldToGridPosition(worldPos);
-            _hoveredWall = FindWallAtCell(gridCell);
+            _hoveredCell = _gridSystem.WorldToGridPosition(worldPos);
+            _hoveredWall = FindWallAtCell(_hoveredCell);
         }
 
         /// <summary>
         /// 씬의 모든 WallObject 중 지정한 셀을 점유하고 있고,
-        /// 아직 타워가 없는 것을 반환한다.
+        /// 해당 셀에 아직 타워가 없는 것을 반환한다.
+        /// 셀 단위로 판정하므로 같은 벽의 다른 셀에는 여전히 설치 가능.
         /// </summary>
         private WallObject FindWallAtCell(Vector2Int cell)
         {
             WallObject[] walls = FindObjectsByType<WallObject>(FindObjectsSortMode.None);
             foreach (WallObject wall in walls)
             {
-                if (wall.HasTower) continue;
                 foreach (Vector2Int occupied in wall.OccupiedCells)
                 {
-                    if (occupied == cell) return wall;
+                    if (occupied == cell && !wall.HasTowerAtCell(cell))
+                        return wall;
                 }
             }
             return null;
@@ -133,7 +137,8 @@ namespace POC4
         // -------------------------------------------------------
 
         /// <summary>
-        /// 유효한 벽 위에 있으면 초록색 미리보기를, 없으면 미리보기를 숨긴다.
+        /// 유효한 벽 셀 위에 있으면 초록색 미리보기를, 없으면 미리보기를 숨긴다.
+        /// 미리보기는 벽 중심이 아닌 마우스가 올라간 셀 위치에 표시한다.
         /// </summary>
         private void UpdatePreview()
         {
@@ -143,27 +148,12 @@ namespace POC4
                 return;
             }
 
-            Vector3 center = CalculateWallCenter(_hoveredWall);
             float size = _gridSystem.CellSize * 0.7f;
 
             _previewRenderer.gameObject.SetActive(true);
-            _previewRenderer.transform.position = center;
+            _previewRenderer.transform.position = _gridSystem.GridToWorldPosition(_hoveredCell);
             _previewRenderer.transform.localScale = Vector3.one * size;
             _previewRenderer.color = _validPreviewColor;
-        }
-
-        /// <summary>
-        /// WallObject가 점유한 셀들의 월드 좌표 평균을 반환한다.
-        /// 타워는 이 위치에 배치된다.
-        /// </summary>
-        private Vector3 CalculateWallCenter(WallObject wall)
-        {
-            Vector3 sum = Vector3.zero;
-            foreach (Vector2Int cell in wall.OccupiedCells)
-            {
-                sum += _gridSystem.GridToWorldPosition(cell);
-            }
-            return sum / wall.OccupiedCells.Count;
         }
 
         // -------------------------------------------------------
@@ -199,12 +189,13 @@ namespace POC4
         // -------------------------------------------------------
 
         /// <summary>
-        /// 지정한 WallObject 위에 타워를 즉시 설치한다.
-        /// 설치 후 선택 상태를 초기화한다.
+        /// 호버된 셀 위치에 타워를 즉시 설치한다.
+        /// 타워는 셀 중심에 배치되며, 해당 셀만 점유로 표시된다.
+        /// 설치 후 선택 상태를 유지해 연속 설치가 가능하다.
         /// </summary>
         private void PlaceTower(WallObject wall)
         {
-            Vector3 spawnPos = CalculateWallCenter(wall);
+            Vector3 spawnPos = _gridSystem.GridToWorldPosition(_hoveredCell);
             Tower tower = Instantiate(_selectedPrefab, spawnPos, Quaternion.identity);
 
             // 타워 스탯 초기화
@@ -213,10 +204,10 @@ namespace POC4
             // 벽 효과 적용 (벽에 효과가 있으면 타워 스탯에 보너스 추가)
             tower.ApplyWallBonus(wall.WallData);
 
-            // 벽에 타워 설치 완료 표시
-            wall.SetTowerPlaced(true);
+            // 해당 셀에 타워 설치 완료 표시 (셀 단위)
+            wall.SetTowerAtCell(_hoveredCell);
 
-            CancelPlacing();
+            // 선택 상태 유지: 연속으로 같은 종류 타워를 다른 셀에 설치 가능
         }
 
         // -------------------------------------------------------

@@ -111,6 +111,28 @@ namespace POC4
             };
         }
 
+        // -------------------------------------------------------
+        // 런타임 초기화 (카드 제작 시스템 전용)
+        // -------------------------------------------------------
+
+        /// <summary>
+        /// 카드 제작 시스템이 ScriptableObject.CreateInstance 로 생성한 인스턴스에 데이터를 설정한다.
+        /// 에디터에서 만든 에셋(WallData 파일)에는 절대 호출하지 말 것.
+        /// </summary>
+        public void Initialize(WallType type, WallEffectType effectType,
+            float attackBonus, float rangeBonus, float attackSpeedBonus)
+        {
+            _wallType = type;
+            _effectType = effectType;
+            _attackBonus = attackBonus;
+            _rangeBonus = rangeBonus;
+            _attackSpeedBonus = attackSpeedBonus;
+        }
+
+        // -------------------------------------------------------
+        // 형태 오프셋 반환
+        // -------------------------------------------------------
+
         /// <summary>
         /// rotationSteps(0~3)번만큼 시계 방향 90도 회전한 오프셋 배열을 반환한다.
         /// 회전 공식: (x, y) → (y, -x) (1회 CW)

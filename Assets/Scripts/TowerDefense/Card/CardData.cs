@@ -47,6 +47,32 @@ namespace POC4
         public TowerData TowerData => _towerData;
 
         // -------------------------------------------------------
+        // 런타임 초기화 (카드 제작 시스템 전용)
+        // -------------------------------------------------------
+
+        /// <summary>
+        /// 카드 제작 시스템이 ScriptableObject.CreateInstance 로 생성한 인스턴스에 WallData를 설정한다.
+        /// 에디터에서 만든 에셋(CardData 파일)에는 절대 호출하지 말 것.
+        /// </summary>
+        public void Initialize(WallData wallData)
+        {
+            _kind = CardKind.Wall;
+            _wallData = wallData;
+            _towerData = null;
+        }
+
+        /// <summary>
+        /// 카드 제작 시스템이 ScriptableObject.CreateInstance 로 생성한 인스턴스에 TowerData를 설정한다.
+        /// 에디터에서 만든 에셋(CardData 파일)에는 절대 호출하지 말 것.
+        /// </summary>
+        public void Initialize(TowerData towerData)
+        {
+            _kind = CardKind.Tower;
+            _towerData = towerData;
+            _wallData = null;
+        }
+
+        // -------------------------------------------------------
         // 유효성
         // -------------------------------------------------------
 

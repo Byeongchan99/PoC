@@ -57,6 +57,28 @@ namespace POC4
         [SerializeField] private float _stunDuration = 1f;
 
         // -------------------------------------------------------
+        // 런타임 초기화 (카드 제작 시스템 전용)
+        // -------------------------------------------------------
+
+        /// <summary>
+        /// 카드 제작 시스템이 ScriptableObject.CreateInstance 로 생성한 인스턴스에 데이터를 설정한다.
+        /// template의 스탯을 그대로 복사하고 효과 종류만 덮어쓴다.
+        /// 에디터에서 만든 에셋(TowerData 파일)에는 절대 호출하지 말 것.
+        /// </summary>
+        public void Initialize(TowerData template, TowerEffectType effectType)
+        {
+            _towerType = template._towerType;
+            _attackPower = template._attackPower;
+            _range = template._range;
+            _attackSpeed = template._attackSpeed;
+            _effectType = effectType;
+            _extraDamage = template._extraDamage;
+            _slowRatio = template._slowRatio;
+            _slowDuration = template._slowDuration;
+            _stunDuration = template._stunDuration;
+        }
+
+        // -------------------------------------------------------
         // 프로퍼티
         // -------------------------------------------------------
 

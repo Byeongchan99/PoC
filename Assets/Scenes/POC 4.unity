@@ -425,7 +425,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::POC4.TowerPlacer
   _gridSystem: {fileID: 451137085}
   _arrowTowerPrefab: {fileID: 7993379909296180127, guid: d18cae6a610724a40b9bd1ad5c5b1997, type: 3}
+  _laserTowerPrefab: {fileID: 6380168330945515213, guid: d5130f767f23ab14d9f7b26d31cb5178, type: 3}
+  _cannonTowerPrefab: {fileID: -7599569386434842982, guid: 5fe059c2a405e3048af6a497abc8554d, type: 3}
   _arrowTowerData: {fileID: 11400000, guid: 127e3d2ae235ab74886f93206f3bbfd3, type: 2}
+  _laserTowerData: {fileID: 11400000, guid: e6fefc3362b42304995420c969426f4f, type: 2}
+  _cannonTowerData: {fileID: 11400000, guid: e9c676e72a0ffa340812ae5758fe0a9f, type: 2}
   _validPreviewColor: {r: 0, g: 1, b: 0, a: 0.5}
   _invalidPreviewColor: {r: 1, g: 0, b: 0, a: 0.3}
 --- !u!4 &602166236

@@ -10,9 +10,9 @@ GameObject:
   m_Component:
   - component: {fileID: 3580868089973818691}
   - component: {fileID: 8990415761639639054}
-  - component: {fileID: 7993379909296180127}
+  - component: {fileID: -7599569386434842982}
   m_Layer: 0
-  m_Name: Arrow Tower
+  m_Name: Cannon Tower
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -83,7 +83,7 @@ SpriteRenderer:
   m_SortingOrder: 10
   m_MaskInteraction: 0
   m_Sprite: {fileID: 7482667652216324306, guid: 311925a002f4447b3a28927169b83ea6, type: 3}
-  m_Color: {r: 1, g: 0.78381175, b: 0, a: 1}
+  m_Color: {r: 0, g: 1, b: 0.8694532, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -92,7 +92,7 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
---- !u!114 &7993379909296180127
+--- !u!114 &-7599569386434842982
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -101,9 +101,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 1822166746088276254}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3fe6cd6e5ecbf034286b57522dc90915, type: 3}
+  m_Script: {fileID: 11500000, guid: 29e7ab2e1d828e84b9b9878258f5b14e, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::POC4.ArrowTower
+  m_EditorClassIdentifier: Assembly-CSharp::POC4.CannonTower
   _attackPower: 10
   _range: 3
   _attackSpeed: 1
@@ -112,5 +112,6 @@ MonoBehaviour:
   _slowRatio: 0.5
   _slowDuration: 2
   _stunDuration: 1
-  _projectilePrefab: {fileID: 7717973978011783199, guid: d655f12eab42f3a41bc2221592ec10b0, type: 3}
-  _projectileSpeed: 6
+  _projectilePrefab: {fileID: -7108484950648059370, guid: ac9b99730066fcb43baa2e470cbc8ba8, type: 3}
+  _projectileSpeed: 5
+  _explosionRadius: 1.5

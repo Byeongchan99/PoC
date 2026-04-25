@@ -83,8 +83,9 @@ namespace POC4
         /// <summary>
         /// 일정 간격으로 타겟을 찾아 공격하는 Coroutine.
         /// 공격 간격 = 1 / 공격속도(초).
+        /// LaserTower처럼 공격 방식이 다른 타워는 이 메서드를 override 한다.
         /// </summary>
-        private IEnumerator AttackLoop()
+        protected virtual IEnumerator AttackLoop()
         {
             while (true)
             {
@@ -112,8 +113,9 @@ namespace POC4
         /// 사거리 내 모든 적 중 PathProgress가 가장 높은 적을 반환한다.
         /// PathProgress가 높을수록 목표 지점에 가까운 (= 가장 위험한) 적이다.
         /// 사거리 내 적이 없으면 null 반환.
+        /// LaserTower 등 하위 클래스에서 직접 호출할 수 있도록 protected로 노출한다.
         /// </summary>
-        private Enemy FindFurthestEnemyInRange()
+        protected Enemy FindFurthestEnemyInRange()
         {
             // FindObjectsByType은 Destroy 예약된 오브젝트를 포함하지 않음
             Enemy[] allEnemies = FindObjectsByType<Enemy>(FindObjectsSortMode.None);

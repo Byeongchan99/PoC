@@ -31,8 +31,16 @@ namespace POC4
         [Tooltip("ArrowTower 컴포넌트가 붙은 프리팹")]
         [SerializeField] private ArrowTower _arrowTowerPrefab;
 
+        [Tooltip("LaserTower 컴포넌트가 붙은 프리팹")]
+        [SerializeField] private LaserTower _laserTowerPrefab;
+
+        [Tooltip("CannonTower 컴포넌트가 붙은 프리팹")]
+        [SerializeField] private CannonTower _cannonTowerPrefab;
+
         [Header("Tower Data Assets")]
         [SerializeField] private TowerData _arrowTowerData;
+        [SerializeField] private TowerData _laserTowerData;
+        [SerializeField] private TowerData _cannonTowerData;
 
         [Header("Preview Visual")]
         [SerializeField] private Color _validPreviewColor = new Color(0f, 1f, 0f, 0.5f);
@@ -44,7 +52,9 @@ namespace POC4
 
         private bool _isPlacing;
         private TowerData _selectedData;
-        private ArrowTower _selectedPrefab;
+
+        /// <summary>현재 선택된 타워 프리팹. 추상 기반 타입으로 모든 타워 종류를 수용한다.</summary>
+        private Tower _selectedPrefab;
 
         /// <summary>현재 마우스가 올라간 셀 좌표</summary>
         private Vector2Int _hoveredCell;
@@ -234,7 +244,7 @@ namespace POC4
         /// </summary>
         public void StartPlacingFromCard(TowerData data)
         {
-            ArrowTower prefab = GetPrefabForType(data.Type);
+            Tower prefab = GetPrefabForType(data.Type);
             if (prefab == null)
             {
                 Debug.LogWarning($"[TowerPlacer] TowerType '{data.Type}'에 해당하는 프리팹이 연결되지 않았습니다.");
@@ -248,15 +258,14 @@ namespace POC4
 
         /// <summary>
         /// TowerType에 맞는 타워 프리팹을 반환한다.
-        /// 6단계에서 LaserTower, CannonTower 프리팹 추가 시 이곳에 매핑을 추가한다.
         /// </summary>
-        private ArrowTower GetPrefabForType(TowerData.TowerType type)
+        private Tower GetPrefabForType(TowerData.TowerType type)
         {
             return type switch
             {
-                TowerData.TowerType.Arrow => _arrowTowerPrefab,
-                // TowerData.TowerType.Laser  => _laserTowerPrefab,  // 6단계
-                // TowerData.TowerType.Cannon => _cannonTowerPrefab, // 6단계
+                TowerData.TowerType.Arrow  => _arrowTowerPrefab,
+                TowerData.TowerType.Laser  => _laserTowerPrefab,
+                TowerData.TowerType.Cannon => _cannonTowerPrefab,
                 _ => _arrowTowerPrefab
             };
         }
@@ -278,7 +287,6 @@ namespace POC4
             _hoveredWall = null;
             _previewRenderer.gameObject.SetActive(false);
         }
-
 
         // -------------------------------------------------------
         // UI 영역 판단
@@ -322,6 +330,8 @@ namespace POC4
             else
             {
                 DrawTowerButton("화살 타워", _arrowTowerData, _arrowTowerPrefab);
+                DrawTowerButton("레이저 타워", _laserTowerData, _laserTowerPrefab);
+                DrawTowerButton("포탄 타워", _cannonTowerData, _cannonTowerPrefab);
                 GUILayout.Space(8);
                 GUILayout.Label("벽 위에 올리면 초록 미리보기");
                 GUILayout.Label("좌클릭으로 즉시 설치");
@@ -333,7 +343,7 @@ namespace POC4
         /// <summary>
         /// 타워 선택 버튼을 그린다. data 또는 prefab이 null이면 비활성화.
         /// </summary>
-        private void DrawTowerButton(string label, TowerData data, ArrowTower prefab)
+        private void DrawTowerButton(string label, TowerData data, Tower prefab)
         {
             GUI.enabled = data != null && prefab != null;
             if (GUILayout.Button(label) && data != null && prefab != null)

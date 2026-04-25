@@ -116,12 +116,17 @@ namespace POC4
         // -------------------------------------------------------
 
         /// <summary>
-        /// 화면 좌측 상단에 현재 보유 코스트와 카드 제작 버튼을 그린다.
+        /// 화면 우측 상단 TowerPlacer 패널 바로 아래에 코스트와 카드 제작 버튼을 그린다.
+        /// TowerPlacer UI 가 (Screen.width-200, 10, 190, 200) 을 차지하므로
+        /// 그 아래 (Screen.width-200, 220) 에 배치해 겹침을 피한다.
         /// </summary>
         private void DrawCostDisplay()
         {
             int cost = _costManager != null ? _costManager.CurrentCost : 0;
-            GUI.Label(new Rect(10f, 10f, 160f, 25f), $"보유 코스트: {cost}");
+            float x = Screen.width - 200f;
+            GUILayout.BeginArea(new Rect(x, 220f, 190f, 75f));
+            GUILayout.Label($"보유 코스트: {cost}");
+            GUILayout.EndArea();
         }
 
         /// <summary>
@@ -129,10 +134,13 @@ namespace POC4
         /// </summary>
         private void DrawOpenModalButton()
         {
-            if (GUI.Button(new Rect(10f, 38f, 120f, 28f), "카드 제작"))
+            float x = Screen.width - 200f;
+            GUILayout.BeginArea(new Rect(x, 245f, 190f, 40f));
+            if (GUILayout.Button("카드 제작", GUILayout.Height(32f)))
             {
                 OpenModal();
             }
+            GUILayout.EndArea();
         }
 
         // -------------------------------------------------------

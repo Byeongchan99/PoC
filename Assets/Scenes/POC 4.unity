@@ -119,6 +119,63 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &124056958
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 124056960}
+  - component: {fileID: 124056959}
+  m_Layer: 0
+  m_Name: Card Crafting UI
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &124056959
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 124056958}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1e2da0be54f1a59479d214aa8b71db1c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::POC4.CardCraftingUI
+  _hand: {fileID: 1597992868}
+  _costManager: {fileID: 1853145943}
+  _towerTemplates:
+  - {fileID: 11400000, guid: 127e3d2ae235ab74886f93206f3bbfd3, type: 2}
+  - {fileID: 11400000, guid: e9c676e72a0ffa340812ae5758fe0a9f, type: 2}
+  - {fileID: 11400000, guid: e6fefc3362b42304995420c969426f4f, type: 2}
+  _baseCraftCost: 5
+  _effectExtraCost: 1
+  _wallAttackBonus: 5
+  _wallRangeBonus: 1
+  _wallAttackSpeedBonus: 0.5
+  _modalWidth: 420
+  _modalHeight: 320
+--- !u!4 &124056960
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 124056958}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &382216137
 GameObject:
   m_ObjectHideFlags: 0
@@ -632,6 +689,52 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1853145942
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1853145944}
+  - component: {fileID: 1853145943}
+  m_Layer: 0
+  m_Name: Cost Manager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1853145943
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1853145942}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dc73159b2239d96428e1eb594a961b2e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::POC4.CostManager
+  _initialCost: 10
+  _costPerRound: 10
+--- !u!4 &1853145944
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1853145942}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -643,3 +746,5 @@ SceneRoots:
   - {fileID: 602166236}
   - {fileID: 1597992869}
   - {fileID: 938783986}
+  - {fileID: 1853145944}
+  - {fileID: 124056960}

@@ -63,7 +63,7 @@ namespace POC4
         [SerializeField] private float _modalWidth = 420f;
 
         [Tooltip("모달 패널 높이 (픽셀)")]
-        [SerializeField] private float _modalHeight = 320f;
+        [SerializeField] private float _modalHeight = 380f;
 
         // -------------------------------------------------------
         // 내부 상태
@@ -373,21 +373,43 @@ namespace POC4
         }
 
         /// <summary>
-        /// WallEffectType 전체(4종)에서 3개를 랜덤 추출해 3단계 선택지로 준비한다.
+        /// 3단계 벽 효과 선택지를 준비한다.
+        /// None은 항상 첫 번째에 고정하고, 나머지 효과(AttackBoost 등)에서 3개를 랜덤 추출해 총 4개를 제공한다.
         /// </summary>
         private void PrepareWallEffectOptions()
         {
-            WallData.WallEffectType[] all = (WallData.WallEffectType[])System.Enum.GetValues(typeof(WallData.WallEffectType));
-            _wallEffectOptions = SampleArray(all, 3);
+            List<WallData.WallEffectType> nonNone = new List<WallData.WallEffectType>();
+            foreach (WallData.WallEffectType e in System.Enum.GetValues(typeof(WallData.WallEffectType)))
+            {
+                if (e != WallData.WallEffectType.None) nonNone.Add(e);
+            }
+
+            WallData.WallEffectType[] sampled = SampleArray(nonNone.ToArray(), 3);
+
+            // None을 맨 앞에 고정, 그 뒤에 랜덤 3개
+            _wallEffectOptions = new WallData.WallEffectType[sampled.Length + 1];
+            _wallEffectOptions[0] = WallData.WallEffectType.None;
+            System.Array.Copy(sampled, 0, _wallEffectOptions, 1, sampled.Length);
         }
 
         /// <summary>
-        /// TowerEffectType 전체(4종)에서 3개를 랜덤 추출해 3단계 선택지로 준비한다.
+        /// 3단계 타워 효과 선택지를 준비한다.
+        /// None은 항상 첫 번째에 고정하고, 나머지 효과(ExtraDamage 등)에서 3개를 랜덤 추출해 총 4개를 제공한다.
         /// </summary>
         private void PrepareTowerEffectOptions()
         {
-            TowerData.TowerEffectType[] all = (TowerData.TowerEffectType[])System.Enum.GetValues(typeof(TowerData.TowerEffectType));
-            _towerEffectOptions = SampleArray(all, 3);
+            List<TowerData.TowerEffectType> nonNone = new List<TowerData.TowerEffectType>();
+            foreach (TowerData.TowerEffectType e in System.Enum.GetValues(typeof(TowerData.TowerEffectType)))
+            {
+                if (e != TowerData.TowerEffectType.None) nonNone.Add(e);
+            }
+
+            TowerData.TowerEffectType[] sampled = SampleArray(nonNone.ToArray(), 3);
+
+            // None을 맨 앞에 고정, 그 뒤에 랜덤 3개
+            _towerEffectOptions = new TowerData.TowerEffectType[sampled.Length + 1];
+            _towerEffectOptions[0] = TowerData.TowerEffectType.None;
+            System.Array.Copy(sampled, 0, _towerEffectOptions, 1, sampled.Length);
         }
 
         /// <summary>

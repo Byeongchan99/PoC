@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -42,6 +43,27 @@ namespace POC4
 
         /// <summary>이동 코루틴 핸들. 외부에서 멈출 수 있도록 보관.</summary>
         private Coroutine _moveCoroutine;
+
+        // -------------------------------------------------------
+        // 프로퍼티
+        // -------------------------------------------------------
+
+        // -------------------------------------------------------
+        // 정적 이벤트 (EnemySpawner / GameManager가 구독)
+        // -------------------------------------------------------
+
+        /// <summary>
+        /// 적이 목표 지점에 도달했을 때 발생한다.
+        /// 매개변수: 적의 공격력 (플레이어에게 입히는 피해량).
+        /// 정적 이벤트이므로 씬 내 모든 Enemy 인스턴스가 공유한다.
+        /// </summary>
+        public static event Action<float> OnAnyEnemyReachedGoal;
+
+        /// <summary>
+        /// 적이 처치되거나 목표 지점에 도달해 제거될 때 발생한다.
+        /// EnemySpawner가 구독해 남은 적 수를 추적한다.
+        /// </summary>
+        public static event Action OnAnyEnemyDefeated;
 
         // -------------------------------------------------------
         // 프로퍼티
@@ -107,15 +129,17 @@ namespace POC4
         }
 
         /// <summary>
-        /// 적이 사망했을 때 호출. 이동을 멈추고 오브젝트를 제거한다.
+        /// 적이 사망했을 때 호출. 이동을 멈추고 이벤트를 발생시킨 뒤 오브젝트를 제거한다.
         /// </summary>
         private void Die()
         {
             if (_moveCoroutine != null)
-            {
                 StopCoroutine(_moveCoroutine);
-            }
 
+            // IsAlive = false로 만들어 이후 중복 TakeDamage 호출을 차단한다.
+            _currentHp = 0f;
+
+            OnAnyEnemyDefeated?.Invoke();
             Destroy(gameObject);
         }
 
@@ -170,16 +194,17 @@ namespace POC4
 
         /// <summary>
         /// 목표 지점에 도달했을 때 호출.
-        /// PlayerHealth 컴포넌트를 씬에서 찾아 피해를 입힌다.
+        /// OnAnyEnemyReachedGoal 이벤트로 GameManager에 피해를 전달하고 자신을 제거한다.
+        /// _currentHp를 0으로 설정해 이후 투사체의 중복 처리를 방지한다.
         /// </summary>
         private void OnReachedGoal()
         {
-            // PlayerHealth는 2단계 이후 구현 예정.
-            // 지금은 로그로만 표시.
             Debug.Log($"[Enemy] 목표 지점 도달. 플레이어에게 {_attackPower} 피해!");
 
-            // TODO: PlayerHealth.Instance.TakeDamage(_attackPower);
+            _currentHp = 0f;
 
+            OnAnyEnemyReachedGoal?.Invoke(_attackPower);
+            OnAnyEnemyDefeated?.Invoke();
             Destroy(gameObject);
         }
 

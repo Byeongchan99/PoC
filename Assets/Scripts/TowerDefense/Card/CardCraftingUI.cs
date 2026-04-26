@@ -113,10 +113,6 @@ namespace POC4
         private void Update()
         {
             UpdateCostText();
-
-            // 3단계에서 보유 코스트가 변할 수 있으므로 버튼 활성화 여부를 매 프레임 갱신한다.
-            if (_step == CraftingStep.SelectEffect)
-                RefreshEffectButtonInteractability();
         }
 
         // -------------------------------------------------------
@@ -319,34 +315,6 @@ namespace POC4
         }
 
         /// <summary>
-        /// <summary>
-        /// 3단계가 열려 있는 동안 매 프레임 버튼 활성화 여부만 갱신한다.
-        /// 클릭 리스너는 ConfigureEffectButtons에서 이미 등록했으므로 다시 등록하지 않는다.
-        /// </summary>
-        private void RefreshEffectButtonInteractability()
-        {
-            if (_effectButtons == null) return;
-
-            int optionCount = _selectedKind == CardData.CardKind.Wall
-                ? (_wallEffectOptions?.Length ?? 0)
-                : (_towerEffectOptions?.Length ?? 0);
-
-            int currentCost = _costManager != null ? _costManager.CurrentCost : 0;
-
-            for (int i = 0; i < _effectButtons.Length; i++)
-            {
-                Button btn = _effectButtons[i];
-                if (btn == null || i >= optionCount) continue;
-
-                bool hasEffect = _selectedKind == CardData.CardKind.Wall
-                    ? _wallEffectOptions[i] != WallData.WallEffectType.None
-                    : _towerEffectOptions[i] != TowerData.TowerEffectType.None;
-
-                int cost = _baseCraftCost + (hasEffect ? _effectExtraCost : 0);
-                btn.interactable = currentCost >= cost;
-            }
-        }
-
         /// 3단계 버튼 클릭 시 호출된다. 선택된 효과로 카드를 제작한다.
         /// </summary>
         private void OnEffectSelected(int index)

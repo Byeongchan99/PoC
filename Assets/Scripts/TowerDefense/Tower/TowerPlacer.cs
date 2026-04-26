@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 
 namespace POC4
@@ -10,13 +11,13 @@ namespace POC4
     /// 배치 규칙:
     ///   - 벽 위에만 설치 가능
     ///   - 벽 하나당 타워 1개
-    ///   - 드롭 시 즉시 설치 (확정 버튼 없음)
+    ///   - 좌클릭 시 즉시 설치 (확정 버튼 없음)
     ///
     /// 흐름:
-    ///   1. OnGUI 버튼으로 타워 종류 선택 → Placing 상태
+    ///   1. Canvas 버튼에서 SelectArrow/Laser/CannonTower() 호출 → Placing 상태
     ///   2. 마우스가 유효한 벽 위에 오면 초록색 미리보기 표시
     ///   3. 좌클릭 → 즉시 설치
-    ///   4. 우클릭 / 취소 버튼 → 선택 취소
+    ///   4. 우클릭 / CancelPlacing() → 선택 취소
     /// </summary>
     public class TowerPlacer : MonoBehaviour
     {
@@ -64,9 +65,6 @@ namespace POC4
 
         // 미리보기용 SpriteRenderer (호버된 셀 위치에 표시)
         private SpriteRenderer _previewRenderer;
-
-        // OnGUI UI 영역 (WallPlacer의 영역과 겹치지 않도록 오른쪽에 배치)
-        private readonly Rect _uiRect = new Rect(Screen.width - 200, 10, 190, 200);
 
         // -------------------------------------------------------
         // 이벤트
@@ -194,7 +192,7 @@ namespace POC4
 
         /// <summary>
         /// 좌클릭: 유효한 벽 위에 타워를 즉시 설치한다.
-        /// UI 영역 클릭은 무시한다.
+        /// Canvas UI 위 클릭은 무시한다.
         /// </summary>
         private void HandleLeftClick()
         {
@@ -235,7 +233,7 @@ namespace POC4
         }
 
         // -------------------------------------------------------
-        // 카드 시스템 연동
+        // 카드 시스템 연동 및 Canvas 버튼 콜백
         // -------------------------------------------------------
 
         /// <summary>
@@ -254,6 +252,33 @@ namespace POC4
             _selectedData = data;
             _selectedPrefab = prefab;
             _isPlacing = true;
+        }
+
+        /// <summary>
+        /// 화살 타워 선택 Canvas 버튼 OnClick에 연결한다.
+        /// </summary>
+        public void SelectArrowTower()
+        {
+            if (_arrowTowerData != null && _arrowTowerPrefab != null)
+                StartPlacingFromCard(_arrowTowerData);
+        }
+
+        /// <summary>
+        /// 레이저 타워 선택 Canvas 버튼 OnClick에 연결한다.
+        /// </summary>
+        public void SelectLaserTower()
+        {
+            if (_laserTowerData != null && _laserTowerPrefab != null)
+                StartPlacingFromCard(_laserTowerData);
+        }
+
+        /// <summary>
+        /// 포탄 타워 선택 Canvas 버튼 OnClick에 연결한다.
+        /// </summary>
+        public void SelectCannonTower()
+        {
+            if (_cannonTowerData != null && _cannonTowerPrefab != null)
+                StartPlacingFromCard(_cannonTowerData);
         }
 
         /// <summary>
@@ -276,11 +301,6 @@ namespace POC4
         /// </summary>
         public void CancelPlacing()
         {
-            CancelPlacingInternal();
-        }
-
-        private void CancelPlacingInternal()
-        {
             _isPlacing = false;
             _selectedData = null;
             _selectedPrefab = null;
@@ -293,66 +313,12 @@ namespace POC4
         // -------------------------------------------------------
 
         /// <summary>
-        /// 마우스가 OnGUI 영역 위에 있는지 확인한다.
-        /// Input System의 좌표는 좌측 하단 기준이므로 y 반전.
+        /// 마우스가 Canvas UI 위에 있는지 확인한다.
+        /// Canvas EventSystem이 UI 레이캐스트를 처리하므로 IsPointerOverGameObject()로 판단한다.
         /// </summary>
         private bool IsMouseOverUI()
         {
-            Vector2 mouseScreen = Mouse.current.position.ReadValue();
-            Vector2 guiMouse = new Vector2(mouseScreen.x, Screen.height - mouseScreen.y);
-            return _uiRect.Contains(guiMouse);
-        }
-
-        // -------------------------------------------------------
-        // OnGUI 테스트 팔레트
-        // -------------------------------------------------------
-
-        private void OnGUI()
-        {
-            // Screen.width는 런타임에만 유효하므로 Rect를 매 OnGUI마다 갱신
-            Rect rect = new Rect(Screen.width - 200, 10, 190, 200);
-
-            GUILayout.BeginArea(rect);
-            GUILayout.Label("[ 타워 선택 ]");
-            GUILayout.Space(4);
-
-            if (_isPlacing)
-            {
-                GUILayout.Label($"배치 중: {_selectedData.name}");
-                GUILayout.Label("벽 위 좌클릭: 즉시 설치");
-                GUILayout.Label("우클릭 / 취소: 선택 해제");
-                GUILayout.Space(4);
-                if (GUILayout.Button("취소"))
-                {
-                    CancelPlacing();
-                }
-            }
-            else
-            {
-                DrawTowerButton("화살 타워", _arrowTowerData, _arrowTowerPrefab);
-                DrawTowerButton("레이저 타워", _laserTowerData, _laserTowerPrefab);
-                DrawTowerButton("포탄 타워", _cannonTowerData, _cannonTowerPrefab);
-                GUILayout.Space(8);
-                GUILayout.Label("벽 위에 올리면 초록 미리보기");
-                GUILayout.Label("좌클릭으로 즉시 설치");
-            }
-
-            GUILayout.EndArea();
-        }
-
-        /// <summary>
-        /// 타워 선택 버튼을 그린다. data 또는 prefab이 null이면 비활성화.
-        /// </summary>
-        private void DrawTowerButton(string label, TowerData data, Tower prefab)
-        {
-            GUI.enabled = data != null && prefab != null;
-            if (GUILayout.Button(label) && data != null && prefab != null)
-            {
-                _selectedData = data;
-                _selectedPrefab = prefab;
-                _isPlacing = true;
-            }
-            GUI.enabled = true;
+            return EventSystem.current != null && EventSystem.current.IsPointerOverGameObject();
         }
 
         // -------------------------------------------------------

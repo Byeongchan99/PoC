@@ -1,4 +1,4 @@
-using System.Collections;
+using TMPro;
 using UnityEngine;
 
 namespace POC4
@@ -10,7 +10,7 @@ namespace POC4
     /// 플레이어 HP 추적, 라운드 스케일링, 승리/패배 조건을 처리한다.
     ///
     /// 흐름:
-    ///   게임 시작 → 1라운드 준비 페이즈 → "전투 시작" 클릭 → 전투 페이즈
+    ///   게임 시작 → 1라운드 준비 페이즈 → "전투 시작" 버튼 → 전투 페이즈
     ///   → 모든 적 처치 → 다음 라운드 준비 페이즈 → ...
     ///   → 플레이어 HP 0 → 게임 오버
     /// </summary>
@@ -47,6 +47,31 @@ namespace POC4
 
         [Tooltip("카드 제작 UI 컴포넌트 (준비 페이즈에만 활성화)")]
         [SerializeField] private CardCraftingUI _cardCraftingUI;
+
+        // -------------------------------------------------------
+        // Inspector 노출 필드 - Canvas UI
+        // -------------------------------------------------------
+
+        [Header("Status UI")]
+        [Tooltip("라운드 번호를 표시하는 TMP_Text")]
+        [SerializeField] private TMP_Text _roundText;
+
+        [Tooltip("플레이어 HP를 표시하는 TMP_Text")]
+        [SerializeField] private TMP_Text _hpText;
+
+        [Tooltip("현재 페이즈를 표시하는 TMP_Text")]
+        [SerializeField] private TMP_Text _phaseText;
+
+        [Header("Combat Start Button")]
+        [Tooltip("준비 페이즈에만 표시할 '전투 시작' 버튼 GameObject")]
+        [SerializeField] private GameObject _startCombatButtonObject;
+
+        [Header("Game Over UI")]
+        [Tooltip("게임 오버 시 표시할 패널 GameObject")]
+        [SerializeField] private GameObject _gameOverPanel;
+
+        [Tooltip("게임 오버 패널에 최종 라운드를 표시하는 TMP_Text")]
+        [SerializeField] private TMP_Text _gameOverRoundText;
 
         // -------------------------------------------------------
         // Inspector 노출 필드 - 게임 설정
@@ -88,12 +113,12 @@ namespace POC4
         private void Awake()
         {
             _currentPlayerHp = _maxPlayerHp;
+            _gameOverPanel?.SetActive(false);
         }
 
         private void Start()
         {
             ValidateReferences();
-            // 게임 시작 시 1라운드 준비 페이즈로 진입한다.
             EnterPreparationPhase();
         }
 
@@ -150,6 +175,9 @@ namespace POC4
 
             _costManager?.AddRoundCost();
             SetPlayerControlEnabled(true);
+            _startCombatButtonObject?.SetActive(true);
+
+            UpdateStatusUI();
 
             Debug.Log($"[GameManager] ===== {_currentRound}라운드 준비 페이즈 시작 =====");
         }
@@ -157,19 +185,25 @@ namespace POC4
         /// <summary>
         /// 전투 페이즈로 전환한다.
         /// 진행 중인 배치를 취소하고, 플레이어 조작을 비활성화한 뒤 적 스폰을 시작한다.
+        /// Canvas 버튼 OnClick에 연결하거나 직접 호출한다.
         /// </summary>
-        private void EnterCombatPhase()
+        public void StartCombat()
         {
-            // 진행 중인 배치를 먼저 취소해 미완성 상태가 남지 않도록 한다.
+            if (_currentPhase != GamePhase.Preparation || _isGameOver) return;
+
+            // 진행 중인 배치를 취소해 미완성 상태가 남지 않도록 한다.
             _wallPlacer?.Cancel();
             _towerPlacer?.CancelPlacing();
 
             _currentPhase = GamePhase.Combat;
             SetPlayerControlEnabled(false);
+            _startCombatButtonObject?.SetActive(false);
 
             int enemyCount = _initialEnemyCount + (_currentRound - 1) * _enemyCountIncreasePerRound;
             // 스케일 인덱스는 0부터 시작한다 (1라운드=0, 2라운드=1, ...).
             int scaleIndex = _currentRound - 1;
+
+            UpdateStatusUI();
 
             Debug.Log($"[GameManager] ===== {_currentRound}라운드 전투 페이즈 시작. 적 {enemyCount}마리 =====");
 
@@ -182,15 +216,15 @@ namespace POC4
 
         /// <summary>
         /// 준비 페이즈 전용 컴포넌트들의 enabled를 일괄 설정한다.
-        /// enabled = false 이면 Update, OnGUI 등 유니티 이벤트가 호출되지 않는다.
+        /// enabled = false이면 Update 등 유니티 이벤트가 호출되지 않는다.
         /// </summary>
         private void SetPlayerControlEnabled(bool isEnabled)
         {
-            if (_wallPlacer != null)       _wallPlacer.enabled       = isEnabled;
-            if (_wallPlacementUI != null)  _wallPlacementUI.enabled  = isEnabled;
-            if (_towerPlacer != null)      _towerPlacer.enabled      = isEnabled;
-            if (_handUI != null)           _handUI.enabled           = isEnabled;
-            if (_cardCraftingUI != null)   _cardCraftingUI.enabled   = isEnabled;
+            if (_wallPlacer != null)      _wallPlacer.enabled      = isEnabled;
+            if (_wallPlacementUI != null) _wallPlacementUI.enabled = isEnabled;
+            if (_towerPlacer != null)     _towerPlacer.enabled     = isEnabled;
+            if (_handUI != null)          _handUI.enabled          = isEnabled;
+            if (_cardCraftingUI != null)  _cardCraftingUI.enabled  = isEnabled;
         }
 
         // -------------------------------------------------------
@@ -219,12 +253,12 @@ namespace POC4
             _currentPlayerHp -= Mathf.CeilToInt(damage);
             _currentPlayerHp = Mathf.Max(0, _currentPlayerHp);
 
+            UpdateStatusUI();
+
             Debug.Log($"[GameManager] 플레이어 피해! HP: {_currentPlayerHp}/{_maxPlayerHp}");
 
             if (_currentPlayerHp <= 0)
-            {
                 TriggerGameOver();
-            }
         }
 
         // -------------------------------------------------------
@@ -233,88 +267,23 @@ namespace POC4
 
         /// <summary>
         /// 게임 오버 상태로 전환한다.
-        /// 스폰을 중단하고 플레이어 조작을 비활성화한다.
+        /// 스폰을 중단하고 플레이어 조작을 비활성화한 뒤 게임 오버 패널을 표시한다.
         /// </summary>
         private void TriggerGameOver()
         {
             _isGameOver = true;
             _enemySpawner?.StopSpawning();
             SetPlayerControlEnabled(false);
+            _startCombatButtonObject?.SetActive(false);
+
+            if (_gameOverPanel != null)
+            {
+                _gameOverPanel.SetActive(true);
+                if (_gameOverRoundText != null)
+                    _gameOverRoundText.text = $"최종 라운드: {_currentRound}";
+            }
 
             Debug.Log("[GameManager] ===== 게임 오버 =====");
-        }
-
-        // -------------------------------------------------------
-        // OnGUI
-        // -------------------------------------------------------
-
-        private void OnGUI()
-        {
-            DrawStatusPanel();
-            DrawCombatStartButton();
-            DrawGameOverOverlay();
-        }
-
-        /// <summary>
-        /// 화면 상단 중앙에 라운드·HP·페이즈 정보를 표시한다.
-        /// </summary>
-        private void DrawStatusPanel()
-        {
-            float panelWidth = 200f;
-            float panelHeight = 75f;
-            Rect rect = new Rect(Screen.width * 0.5f - panelWidth * 0.5f, 10f, panelWidth, panelHeight);
-
-            GUILayout.BeginArea(rect);
-            GUILayout.Label($"라운드: {_currentRound}");
-            GUILayout.Label($"HP: {_currentPlayerHp} / {_maxPlayerHp}");
-            string phaseLabel = _currentPhase == GamePhase.Preparation ? "준비 페이즈" : "전투 페이즈";
-            GUILayout.Label($"페이즈: {phaseLabel}");
-            GUILayout.EndArea();
-        }
-
-        /// <summary>
-        /// 준비 페이즈에만 오른쪽에 "전투 시작" 버튼을 표시한다.
-        /// CardCraftingUI(y=220 ~ 245+버튼) 아래에 배치한다.
-        /// </summary>
-        private void DrawCombatStartButton()
-        {
-            if (_isGameOver) return;
-            if (_currentPhase != GamePhase.Preparation) return;
-
-            Rect rect = new Rect(Screen.width - 200, 295, 190, 48);
-            GUILayout.BeginArea(rect);
-            if (GUILayout.Button("전투 시작", GUILayout.Height(44)))
-            {
-                EnterCombatPhase();
-            }
-            GUILayout.EndArea();
-        }
-
-        /// <summary>
-        /// 게임 오버 시 화면 중앙에 반투명 오버레이를 표시한다.
-        /// </summary>
-        private void DrawGameOverOverlay()
-        {
-            if (!_isGameOver) return;
-
-            // 반투명 검정 배경
-            GUI.color = new Color(0f, 0f, 0f, 0.6f);
-            GUI.DrawTexture(new Rect(0, 0, Screen.width, Screen.height), Texture2D.whiteTexture);
-            GUI.color = Color.white;
-
-            float w = 300f;
-            float h = 120f;
-            Rect rect = new Rect(Screen.width * 0.5f - w * 0.5f, Screen.height * 0.5f - h * 0.5f, w, h);
-
-            GUILayout.BeginArea(rect);
-            GUILayout.Label("게임 오버", GUI.skin.box);
-            GUILayout.Label($"최종 라운드: {_currentRound}");
-            GUILayout.Space(8f);
-            if (GUILayout.Button("다시 시작"))
-            {
-                RestartGame();
-            }
-            GUILayout.EndArea();
         }
 
         // -------------------------------------------------------
@@ -323,19 +292,17 @@ namespace POC4
 
         /// <summary>
         /// 모든 상태를 초기화하고 1라운드 준비 페이즈부터 다시 시작한다.
-        /// 씬에 남아 있는 적과 타워를 모두 제거한다.
+        /// 게임 오버 패널의 '다시 시작' 버튼 OnClick에 연결한다.
         /// </summary>
-        private void RestartGame()
+        public void RestartGame()
         {
-            // 씬에 남아 있는 적 제거
+            // 씬에 남아 있는 적, 타워, 벽 제거
             Enemy[] enemies = FindObjectsByType<Enemy>(FindObjectsSortMode.None);
             foreach (Enemy e in enemies) Destroy(e.gameObject);
 
-            // 씬에 남아 있는 타워 제거
             Tower[] towers = FindObjectsByType<Tower>(FindObjectsSortMode.None);
             foreach (Tower t in towers) Destroy(t.gameObject);
 
-            // 씬에 남아 있는 벽 제거
             WallObject[] walls = FindObjectsByType<WallObject>(FindObjectsSortMode.None);
             foreach (WallObject w in walls) Destroy(w.gameObject);
 
@@ -344,6 +311,7 @@ namespace POC4
             _currentPlayerHp = _maxPlayerHp;
             _isGameOver = false;
 
+            _gameOverPanel?.SetActive(false);
             _enemySpawner?.StopSpawning();
 
             EnterPreparationPhase();
@@ -352,36 +320,44 @@ namespace POC4
         }
 
         // -------------------------------------------------------
-        // Inspector ContextMenu (디버그)
+        // Canvas UI 갱신
         // -------------------------------------------------------
 
         /// <summary>
-        /// 현재 준비 페이즈에서 즉시 전투 페이즈로 전환한다.
+        /// 라운드, HP, 페이즈 텍스트를 현재 상태로 갱신한다.
+        /// 페이즈 전환 및 HP 변화 시 호출한다.
         /// </summary>
+        private void UpdateStatusUI()
+        {
+            if (_roundText != null)
+                _roundText.text = $"라운드: {_currentRound}";
+
+            if (_hpText != null)
+                _hpText.text = $"HP: {_currentPlayerHp} / {_maxPlayerHp}";
+
+            if (_phaseText != null)
+                _phaseText.text = _currentPhase == GamePhase.Preparation ? "준비 페이즈" : "전투 페이즈";
+        }
+
+        // -------------------------------------------------------
+        // Inspector ContextMenu (디버그)
+        // -------------------------------------------------------
+
         [ContextMenu("Debug: 전투 시작")]
         private void DebugStartCombat()
         {
-            if (_currentPhase == GamePhase.Preparation)
-                EnterCombatPhase();
+            StartCombat();
         }
 
-        /// <summary>
-        /// 현재 전투 페이즈를 강제 종료하고 다음 라운드 준비 페이즈로 전환한다.
-        /// </summary>
         [ContextMenu("Debug: 다음 라운드")]
         private void DebugNextRound()
         {
             _enemySpawner?.StopSpawning();
-
             Enemy[] enemies = FindObjectsByType<Enemy>(FindObjectsSortMode.None);
             foreach (Enemy e in enemies) Destroy(e.gameObject);
-
             EnterPreparationPhase();
         }
 
-        /// <summary>
-        /// 게임을 처음부터 다시 시작한다.
-        /// </summary>
         [ContextMenu("Debug: 게임 재시작")]
         private void DebugRestartGame()
         {

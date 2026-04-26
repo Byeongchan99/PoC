@@ -300,7 +300,7 @@ namespace POC4
                         string effectName = _selectedKind == CardData.CardKind.Wall
                             ? _wallEffectOptions[i].ToString()
                             : _towerEffectOptions[i].ToString();
-                        label.text = $"{effectName}  ({cost} 코스트)";
+                        label.text = $"{effectName}\n({cost} 코스트)";
                     }
 
                     int capturedIndex = i;

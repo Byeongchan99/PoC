@@ -12,8 +12,8 @@ namespace POC4
     ///   - Idle 상태: 벽 종류 선택 팔레트 패널 표시
     ///   - Placing / Dropped 상태: 배치 안내 패널 표시
     ///
+    /// _placingPanel은 미리보기 오른쪽에 따라다닌다.
     /// Canvas 버튼에서 SelectWall*() 메서드를 Inspector에 직접 연결한다.
-    /// 확정/취소 버튼은 Confirm() / Cancel() 메서드를 연결한다.
     /// </summary>
     public class WallPlacementUI : MonoBehaviour
     {
@@ -37,7 +37,7 @@ namespace POC4
         [Tooltip("Idle 상태에서 표시할 벽 종류 선택 팔레트 패널")]
         [SerializeField] private GameObject _palettePanel;
 
-        [Tooltip("Placing / Dropped 상태에서 표시할 배치 안내 패널")]
+        [Tooltip("Placing / Dropped 상태에서 표시할 배치 안내 패널 (미리보기 오른쪽에 따라다님)")]
         [SerializeField] private GameObject _placingPanel;
 
         [Header("Placing Panel UI")]
@@ -47,9 +47,31 @@ namespace POC4
         [Tooltip("설치 확정 버튼 (Dropped이고 유효할 때만 활성화)")]
         [SerializeField] private Button _confirmButton;
 
+        [Header("Placing Panel Follow Settings")]
+        [Tooltip("미리보기 위치 기준으로 패널을 이동시킬 Canvas (없으면 부모에서 자동 탐색)")]
+        [SerializeField] private Canvas _canvas;
+
+        [Tooltip("미리보기 스크린 좌표 기준 패널 오프셋 (픽셀 단위). 오른쪽으로 이동하려면 x 양수.")]
+        [SerializeField] private Vector2 _placingPanelOffset = new Vector2(60f, 0f);
+
+        // -------------------------------------------------------
+        // 내부 상태
+        // -------------------------------------------------------
+
+        private RectTransform _placingPanelRT;
+
         // -------------------------------------------------------
         // 유니티 생명주기
         // -------------------------------------------------------
+
+        private void Awake()
+        {
+            if (_canvas == null)
+                _canvas = GetComponentInParent<Canvas>();
+
+            if (_placingPanel != null)
+                _placingPanelRT = _placingPanel.GetComponent<RectTransform>();
+        }
 
         private void Update()
         {
@@ -60,7 +82,10 @@ namespace POC4
             _placingPanel?.SetActive(!isIdle);
 
             if (!isIdle)
+            {
                 UpdatePlacingUI();
+                UpdatePlacingPanelPosition();
+            }
         }
 
         // -------------------------------------------------------
@@ -95,6 +120,40 @@ namespace POC4
         }
 
         // -------------------------------------------------------
+        // 패널 위치 추적
+        // -------------------------------------------------------
+
+        /// <summary>
+        /// 미리보기의 월드 좌표를 스크린 좌표로 변환한 뒤 오프셋을 더해 패널을 이동시킨다.
+        /// Canvas가 Screen Space - Overlay 모드일 때 카메라 파라미터에 null을 전달한다.
+        /// </summary>
+        private void UpdatePlacingPanelPosition()
+        {
+            if (_placingPanelRT == null) return;
+            if (_canvas == null) return;
+            if (!_wallPlacer.HasPreviewPosition) return;
+
+            // 미리보기 월드 좌표 → 스크린 좌표
+            Vector3 worldPos = _wallPlacer.CurrentPreviewWorldPosition;
+            Vector2 screenPos = Camera.main.WorldToScreenPoint(worldPos);
+
+            // 오른쪽으로 오프셋 적용
+            screenPos += _placingPanelOffset;
+
+            // 스크린 좌표 → Canvas 로컬 좌표
+            Camera uiCamera = _canvas.renderMode == RenderMode.ScreenSpaceOverlay
+                ? null
+                : _canvas.worldCamera;
+
+            RectTransform canvasRT = _canvas.GetComponent<RectTransform>();
+            if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                    canvasRT, screenPos, uiCamera, out Vector2 localPoint))
+            {
+                _placingPanelRT.anchoredPosition = localPoint;
+            }
+        }
+
+        // -------------------------------------------------------
         // 벽 선택 (각 Canvas 버튼 OnClick에 연결)
         // -------------------------------------------------------
 
@@ -106,14 +165,10 @@ namespace POC4
         public void SelectWallL() => _wallPlacer?.StartPlacing(_wallDataL);
         public void SelectWallJ() => _wallPlacer?.StartPlacing(_wallDataJ);
 
-        /// <summary>
-        /// 설치 확정 버튼 OnClick에 연결한다.
-        /// </summary>
+        /// <summary>설치 확정 버튼 OnClick에 연결한다.</summary>
         public void Confirm() => _wallPlacer?.Confirm();
 
-        /// <summary>
-        /// 취소 버튼 OnClick에 연결한다.
-        /// </summary>
+        /// <summary>취소 버튼 OnClick에 연결한다.</summary>
         public void Cancel() => _wallPlacer?.Cancel();
 
         // -------------------------------------------------------

@@ -79,6 +79,12 @@ namespace POC4
         public PlacerState State => _state;
         public bool IsCurrentValid => _isCurrentValid;
 
+        /// <summary>Placing 또는 Dropped 상태에서 미리보기 월드 좌표를 반환한다.</summary>
+        public bool HasPreviewPosition => _state != PlacerState.Idle && _gridSystem != null;
+
+        /// <summary>현재 앵커 셀의 월드 좌표 (HasPreviewPosition이 true일 때만 유효).</summary>
+        public Vector3 CurrentPreviewWorldPosition => _gridSystem.GridToWorldPosition(_currentAnchorCell);
+
         // -------------------------------------------------------
         // 유니티 생명주기
         // -------------------------------------------------------

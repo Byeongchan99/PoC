@@ -23,6 +23,9 @@ namespace POC4
         [Tooltip("카드 정보를 표시할 TMP_Text")]
         [SerializeField] private TMP_Text _label;
 
+        [Tooltip("카드 코스트를 표시할 TMP_Text")]
+        [SerializeField] private TMP_Text _costText;
+
         [Tooltip("선택 상태에 따라 색이 바뀌는 배경 Image")]
         [SerializeField] private Image _background;
 
@@ -52,6 +55,9 @@ namespace POC4
 
             if (_label != null)
                 _label.text = BuildLabel(card);
+
+            if (_costText != null)
+                _costText.text = card.Cost.ToString();
 
             SetHighlight(isPending);
 

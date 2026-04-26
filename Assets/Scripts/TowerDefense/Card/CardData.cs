@@ -27,6 +27,9 @@ namespace POC4
         [Tooltip("손패 UI에 표시할 이름. 비워두면 에셋 이름을 사용.")]
         [SerializeField] private string _displayName = "";
 
+        [Tooltip("카드에 표시할 코스트. 기본 카드는 0, 제작 카드는 제작 비용이 설정된다.")]
+        [SerializeField] private int _cost = 0;
+
         [Header("Card Content")]
         [Tooltip("벽 카드일 때 참조하는 WallData. Kind = Wall 일 때만 사용.")]
         [SerializeField] private WallData _wallData;
@@ -43,6 +46,7 @@ namespace POC4
         /// <summary>손패 UI에 표시할 카드 이름. 비어있으면 에셋 이름 사용.</summary>
         public string DisplayName => string.IsNullOrEmpty(_displayName) ? name : _displayName;
 
+        public int Cost => _cost;
         public WallData WallData => _wallData;
         public TowerData TowerData => _towerData;
 
@@ -54,22 +58,24 @@ namespace POC4
         /// 카드 제작 시스템이 ScriptableObject.CreateInstance 로 생성한 인스턴스에 WallData를 설정한다.
         /// 에디터에서 만든 에셋(CardData 파일)에는 절대 호출하지 말 것.
         /// </summary>
-        public void Initialize(WallData wallData)
+        public void Initialize(WallData wallData, int cost = 0)
         {
             _kind = CardKind.Wall;
             _wallData = wallData;
             _towerData = null;
+            _cost = cost;
         }
 
         /// <summary>
         /// 카드 제작 시스템이 ScriptableObject.CreateInstance 로 생성한 인스턴스에 TowerData를 설정한다.
         /// 에디터에서 만든 에셋(CardData 파일)에는 절대 호출하지 말 것.
         /// </summary>
-        public void Initialize(TowerData towerData)
+        public void Initialize(TowerData towerData, int cost = 0)
         {
             _kind = CardKind.Tower;
             _towerData = towerData;
             _wallData = null;
+            _cost = cost;
         }
 
         // -------------------------------------------------------

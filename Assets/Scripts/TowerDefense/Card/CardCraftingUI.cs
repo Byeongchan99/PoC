@@ -445,7 +445,7 @@ namespace POC4
             wallData.Initialize(type, effect, _wallAttackBonus, _wallRangeBonus, _wallAttackSpeedBonus);
 
             CardData cardData = ScriptableObject.CreateInstance<CardData>();
-            cardData.Initialize(wallData);
+            cardData.Initialize(wallData, cost);
 
             _hand.AddCard(cardData);
 
@@ -473,7 +473,7 @@ namespace POC4
             towerData.Initialize(template, effect);
 
             CardData cardData = ScriptableObject.CreateInstance<CardData>();
-            cardData.Initialize(towerData);
+            cardData.Initialize(towerData, cost);
 
             _hand.AddCard(cardData);
 

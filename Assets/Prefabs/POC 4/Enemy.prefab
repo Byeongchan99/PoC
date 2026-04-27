@@ -105,7 +105,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 134c21b9d5313e945ab7ae8392804d0f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::POC4.Enemy
-  _maxHp: 100
+  _maxHp: 75
   _attackPower: 1
   _moveSpeed: 2
   _showPathGizmo: 1

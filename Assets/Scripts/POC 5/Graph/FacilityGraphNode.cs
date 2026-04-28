@@ -31,6 +31,12 @@ namespace POC5.Graph
         {
             Data = data;
             InitializePorts();
+
+            // 설정 확인용 로그. 각 설비의 FacilityType과 포트 수가 올바른지 검증한다.
+            UnityEngine.Debug.Log(
+                $"[FacilityGraphNode] {data.DisplayName} 생성 — " +
+                $"FacilityType={data.FacilityType}, " +
+                $"입력포트={_inputPorts.Count}개, 출력포트={_outputPorts.Count}개");
         }
 
         /// <summary>

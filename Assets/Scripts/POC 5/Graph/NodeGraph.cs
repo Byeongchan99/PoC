@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 namespace POC5.Graph
@@ -37,9 +36,21 @@ namespace POC5.Graph
         public void RemoveNode(NodeBase node)
         {
             _nodes.Remove(node);
-            _connections.RemoveAll(c =>
-                node.InputPorts.Contains(c.InputPort) ||
-                node.OutputPorts.Contains(c.OutputPort));
+            // LINQ 없이 직접 순회해 노드 포트가 관여된 연결을 제거한다
+            _connections.RemoveAll(c => IsPortInNode(c.InputPort, node) || IsPortInNode(c.OutputPort, node));
+        }
+
+        /// <summary>
+        /// 특정 포트가 해당 노드에 속하는지 확인한다.
+        /// IReadOnlyList는 Contains가 없으므로 직접 루프로 비교한다.
+        /// </summary>
+        private static bool IsPortInNode(Port port, NodeBase node)
+        {
+            foreach (var p in node.InputPorts)
+                if (p == port) return true;
+            foreach (var p in node.OutputPorts)
+                if (p == port) return true;
+            return false;
         }
 
         /// <summary>

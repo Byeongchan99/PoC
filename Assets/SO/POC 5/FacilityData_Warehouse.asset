@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 254f187ea68797846ae97313a3723b5f, type: 3}
+  m_Name: FacilityData_Warehouse
+  m_EditorClassIdentifier: Assembly-CSharp::POC5.Data.FacilityData
+  _facilityType: 0
+  _displayName: 
+  _icon: {fileID: 0}
+  _inputPorts:
+  - resourceType: 2
+    capacity: 20
+  _outputPorts:
+  - resourceType: 2
+    capacity: 20
+  _baseProductionPerTick: 1
+  _requiresSpirit: 0
+  _requiredSpiritElement: 0
+  _purchasePrice: 100

@@ -24,4 +24,4 @@ MonoBehaviour:
   _baseProductionPerTick: 1
   _requiresSpirit: 1
   _requiredSpiritElement: 2
-  _purchasePrice: 100
+  _purchasePrice: 150

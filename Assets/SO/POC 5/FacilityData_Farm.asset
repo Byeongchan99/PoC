@@ -13,14 +13,16 @@ MonoBehaviour:
   m_Name: FacilityData_Farm
   m_EditorClassIdentifier: Assembly-CSharp::POC5.Data.FacilityData
   _facilityType: 2
-  _displayName: 
+  _displayName: "\uB18D\uC7A5"
   _icon: {fileID: 0}
   _inputPorts:
   - resourceType: 0
-    capacity: 0
-  - resourceType: 0
-    capacity: 0
-  _outputPorts: []
+    capacity: 5
+  - resourceType: 1
+    capacity: 5
+  _outputPorts:
+  - resourceType: 2
+    capacity: 5
   _baseProductionPerTick: 1
   _requiresSpirit: 0
   _requiredSpiritElement: 0

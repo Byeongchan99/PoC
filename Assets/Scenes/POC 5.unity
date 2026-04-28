@@ -119,6 +119,51 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &408575972
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 408575974}
+  - component: {fileID: 408575973}
+  m_Layer: 0
+  m_Name: Flow System
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &408575973
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 408575972}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b4ac0fa56e8e49d41abdc317e14c104b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::POC5.Runtime.ResourceFlowSystem
+  _tickInterval: 1
+--- !u!4 &408575974
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 408575972}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &612268050
 GameObject:
   m_ObjectHideFlags: 0
@@ -436,6 +481,58 @@ MonoBehaviour:
     m_VarianceClampScale: 0.9
     m_ContrastAdaptiveSharpening: 0
   m_Version: 2
+--- !u!1 &1931228639
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1931228641}
+  - component: {fileID: 1931228640}
+  m_Layer: 0
+  m_Name: Tester
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1931228640
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1931228639}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c1836cc5648e0fb479c0e90e19744f54, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::POC5.Runtime.FlowTester
+  _pumpData: {fileID: 11400000, guid: 7a8704757aaef4b47bfe3a67c20620eb, type: 2}
+  _cultivatorData: {fileID: 11400000, guid: 7a27f337dfeaf894880dafa04ca698fb, type: 2}
+  _farmData: {fileID: 11400000, guid: 1b5ea0aaaae59d74c9be7a9efd338edc, type: 2}
+  _warehouseData: {fileID: 11400000, guid: 985cca5511ff0a348ab8963725f82bc4, type: 2}
+  _marketData: {fileID: 11400000, guid: 86e0a15d1fb44a64bb913245cdc98b3b, type: 2}
+  _waterSpiritData: {fileID: 11400000, guid: c23a0429b8d30114cbf926a25616a65e, type: 2}
+  _grassSpiritData: {fileID: 11400000, guid: f0ca4f5f17b9c0842a5fd9c9e763726b, type: 2}
+  _flowSystem: {fileID: 408575973}
+--- !u!4 &1931228641
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1931228639}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -443,3 +540,5 @@ SceneRoots:
   - {fileID: 972699948}
   - {fileID: 612268054}
   - {fileID: 891175392}
+  - {fileID: 408575974}
+  - {fileID: 1931228641}

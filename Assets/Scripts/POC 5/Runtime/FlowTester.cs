@@ -81,31 +81,41 @@ namespace POC5.Runtime
             // 연결 생성
             NodeGraph graph = _flowSystem.Graph;
 
-            // 양수기(물) → 농장 물 입력 포트
-            graph.TryConnect(
-                pump.GraphNode.GetOutputPort(ResourceType.Water),
-                farm.GraphNode.GetInputPort(ResourceType.Water),
-                out _);
+            // 포트를 변수에 담아 null 여부를 미리 확인한다
+            Port pumpOut      = pump.GraphNode.GetOutputPort(ResourceType.Water);
+            Port farmWaterIn  = farm.GraphNode.GetInputPort(ResourceType.Water);
+            Port cultivOut    = cultivator.GraphNode.GetOutputPort(ResourceType.Seed);
+            Port farmSeedIn   = farm.GraphNode.GetInputPort(ResourceType.Seed);
+            Port farmOut      = farm.GraphNode.GetOutputPort(ResourceType.Crop);
+            Port warehouseIn  = warehouse.GraphNode.InputPorts.Count  > 0 ? warehouse.GraphNode.InputPorts[0]  : null;
+            Port warehouseOut = warehouse.GraphNode.OutputPorts.Count > 0 ? warehouse.GraphNode.OutputPorts[0] : null;
+            Port marketIn     = market.GraphNode.InputPorts.Count     > 0 ? market.GraphNode.InputPorts[0]     : null;
 
-            // 재배기(씨앗) → 농장 씨앗 입력 포트
-            graph.TryConnect(
-                cultivator.GraphNode.GetOutputPort(ResourceType.Seed),
-                farm.GraphNode.GetInputPort(ResourceType.Seed),
-                out _);
+            LogPortCheck("양수기 Water 출력",  pumpOut,      "FacilityData_Pump      > OutputPorts [0] resourceType=Water");
+            LogPortCheck("농장 Water 입력",    farmWaterIn,  "FacilityData_Farm      > InputPorts  [0] resourceType=Water");
+            LogPortCheck("재배기 Seed 출력",   cultivOut,    "FacilityData_Cultivator > OutputPorts [0] resourceType=Seed");
+            LogPortCheck("농장 Seed 입력",     farmSeedIn,   "FacilityData_Farm      > InputPorts  [1] resourceType=Seed");
+            LogPortCheck("농장 Crop 출력",     farmOut,      "FacilityData_Farm      > OutputPorts [0] resourceType=Crop");
+            LogPortCheck("창고 입력",          warehouseIn,  "FacilityData_Warehouse > InputPorts  [0] 항목 추가");
+            LogPortCheck("창고 출력",          warehouseOut, "FacilityData_Warehouse > OutputPorts [0] 항목 추가");
+            LogPortCheck("시장 입력",          marketIn,     "FacilityData_Market    > InputPorts  [0] 항목 추가");
 
-            // 농장(작물) → 창고 입력 포트
-            graph.TryConnect(
-                farm.GraphNode.GetOutputPort(ResourceType.Crop),
-                warehouse.GraphNode.InputPorts[0],
-                out _);
-
-            // 창고 출력 → 시장 입력 포트
-            graph.TryConnect(
-                warehouse.GraphNode.OutputPorts[0],
-                market.GraphNode.InputPorts[0],
-                out _);
+            graph.TryConnect(pumpOut,      farmWaterIn,  out _);
+            graph.TryConnect(cultivOut,    farmSeedIn,   out _);
+            graph.TryConnect(farmOut,      warehouseIn,  out _);
+            graph.TryConnect(warehouseOut, marketIn,     out _);
 
             Debug.Log("[FlowTester] 테스트 그래프 구성 완료: 양수기 + 재배기 → 농장 → 창고 → 시장");
+        }
+
+        /// <summary>
+        /// 포트가 null이면 어느 SO의 어느 필드를 수정해야 하는지 에러로 알려준다.
+        /// </summary>
+        private static void LogPortCheck(string portLabel, Port port, string fixHint)
+        {
+            if (port == null)
+                Debug.LogError($"[FlowTester] '{portLabel}' 포트가 null입니다. " +
+                               $"Inspector에서 확인: {fixHint}");
         }
 
         /// <summary>

@@ -560,8 +560,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::POC5.UI.GameSceneManager
   _cardPrefab: {fileID: 5363862965648090578, guid: ffa3412164af90141a548dfc1b26c5a4, type: 3}
+  _spiritCards:
+  - data: {fileID: 11400000, guid: c23a0429b8d30114cbf926a25616a65e, type: 2}
+    prefab: {fileID: -5328308659033096993, guid: 22f15aefe50c18b4983d2e0bf82dd54a, type: 3}
+    startPosition: {x: -350, y: -350}
+  - data: {fileID: 11400000, guid: 5af6bb67ba4e07a4d9ec2c9554a231be, type: 2}
+    prefab: {fileID: -5328308659033096993, guid: 57b4e24486d316d4cbe78741a264675d, type: 3}
+    startPosition: {x: 0, y: -350}
+  - data: {fileID: 11400000, guid: f0ca4f5f17b9c0842a5fd9c9e763726b, type: 2}
+    prefab: {fileID: -5328308659033096993, guid: 7f2fd7300eb23f14ca72d4e071736d8a, type: 3}
+    startPosition: {x: 350, y: -350}
   _portConnectHandler: {fileID: 282012175}
   _preWireConnections: 0
+  _preAssignSpirits: 0
   _pumpData: {fileID: 11400000, guid: 7a8704757aaef4b47bfe3a67c20620eb, type: 2}
   _cultivatorData: {fileID: 11400000, guid: 7a27f337dfeaf894880dafa04ca698fb, type: 2}
   _farmData: {fileID: 11400000, guid: 1b5ea0aaaae59d74c9be7a9efd338edc, type: 2}

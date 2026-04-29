@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using POC5.Data;
 using POC5.Runtime;
 using POC5.Graph;
 
@@ -35,6 +36,13 @@ namespace POC5.UI
 
         [Tooltip("업그레이드 가격 텍스트.")]
         [SerializeField] private TextMeshProUGUI _upgradePriceText;
+
+        [Header("스피릿 슬롯 (프리팹에서 연결, 스피릿이 필요한 설비에만 표시)")]
+        [Tooltip("스피릿 슬롯 패널. 설비가 RequiresSpirit=false이면 자동으로 숨겨진다.")]
+        [SerializeField] private GameObject _spiritSlotPanel;
+
+        [Tooltip("배치된 스피릿 이름과 속성을 표시하는 텍스트.")]
+        [SerializeField] private TextMeshProUGUI _spiritInfoText;
 
         [Header("포트 행 프리팹")]
         [Tooltip("입력 포트용 행 프리팹. 빨간 원이 왼쪽에 배치된 것을 사용한다.")]
@@ -79,6 +87,7 @@ namespace POC5.UI
                 _upgradePriceText.text = $"업그레이드  {data.PurchasePrice}G";
 
             BuildPortRows(facilityNode.GraphNode);
+            InitializeSpiritSlot(facilityNode.GraphNode.Data);
 
             // 포트 행 추가 후 ContentSizeFitter가 카드 높이를 즉시 재계산하도록 강제한다
             // 이 호출이 없으면 카드 높이가 첫 프레임에 0으로 보일 수 있다
@@ -92,6 +101,31 @@ namespace POC5.UI
             if (_refreshTimer > 0f) return;
             _refreshTimer = _refreshInterval;
             RefreshPortAmounts();
+        }
+
+        /// <summary>
+        /// 스피릿 슬롯 패널을 초기화한다.
+        /// RequiresSpirit이 false인 설비는 슬롯을 숨긴다.
+        /// </summary>
+        private void InitializeSpiritSlot(POC5.Data.FacilityData data)
+        {
+            if (_spiritSlotPanel == null) return;
+            _spiritSlotPanel.SetActive(data.RequiresSpirit);
+            if (data.RequiresSpirit && _spiritInfoText != null)
+                _spiritInfoText.text = "배치 없음";
+        }
+
+        /// <summary>
+        /// 배치된 스피릿 정보를 슬롯 텍스트에 표시한다.
+        /// spirit이 null이면 "배치 없음"으로 초기화한다.
+        /// SpiritDragHandler가 배치/해제 시 호출한다.
+        /// </summary>
+        public void UpdateSpiritDisplay(SpiritData spirit)
+        {
+            if (_spiritInfoText == null) return;
+            _spiritInfoText.text = spirit != null
+                ? $"{spirit.DisplayName}  ({spirit.Element})"
+                : "배치 없음";
         }
 
         /// <summary>모든 포트 뷰의 잔량 텍스트를 즉시 갱신한다.</summary>

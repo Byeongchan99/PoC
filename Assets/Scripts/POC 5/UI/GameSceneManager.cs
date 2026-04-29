@@ -112,6 +112,10 @@ namespace POC5.UI
             var view = Instantiate(_cardPrefab, _canvas.transform);
             view.name = data.DisplayName;
 
+            // 설비 카드는 항상 ConnectionLayer와 정령 카드 아래에 위치해야 한다.
+            // 가장 낮은 sibling index로 삽입해 연결선이 설비 카드 위에 렌더링되도록 한다.
+            view.transform.SetSiblingIndex(0);
+
             // Canvas 중심 기준으로 카드 초기 위치를 설정한다
             var rt = view.GetComponent<RectTransform>();
             rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0.5f, 0.5f);

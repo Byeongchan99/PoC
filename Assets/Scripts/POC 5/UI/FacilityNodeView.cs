@@ -49,6 +49,10 @@ namespace POC5.UI
         [Tooltip("힌트 오브젝트 안의 텍스트. 필요한 정령 원소 이름이 자동으로 채워진다.")]
         [SerializeField] private TextMeshProUGUI _spiritHintText;
 
+        [Tooltip("장착된 정령의 아이콘을 표시하는 Image. 정령이 없을 때는 숨겨진다.\n" +
+                 "raycastTarget을 false로 설정해야 슬롯 드래그 이벤트가 패널에 전달된다.")]
+        [SerializeField] private Image _assignedSpiritIcon;
+
         [Tooltip("배치된 스피릿 이름과 속성을 표시하는 텍스트. 선택 사항.")]
         [SerializeField] private TextMeshProUGUI _spiritInfoText;
 
@@ -123,6 +127,7 @@ namespace POC5.UI
         /// <summary>
         /// 스피릿 슬롯 패널을 초기화한다.
         /// RequiresSpirit이 false인 설비는 슬롯을 숨긴다.
+        /// SpiritSlotDragSource가 없으면 자동으로 추가한다.
         /// </summary>
         private void InitializeSpiritSlot(POC5.Data.FacilityData data)
         {
@@ -130,6 +135,10 @@ namespace POC5.UI
             _spiritSlotPanel.SetActive(data.RequiresSpirit);
 
             if (!data.RequiresSpirit) return;
+
+            // 슬롯 패널에 드래그 소스 컴포넌트가 없으면 런타임에 추가한다
+            if (_spiritSlotPanel.GetComponent<SpiritSlotDragSource>() == null)
+                _spiritSlotPanel.AddComponent<SpiritSlotDragSource>();
 
             // 필요한 정령 원소를 힌트 텍스트에 채운다
             if (_spiritHintText != null)
@@ -145,13 +154,23 @@ namespace POC5.UI
         /// </summary>
         /// <summary>
         /// 슬롯 상태를 갱신한다.
-        /// spirit이 null이면 빈 상태 힌트를 표시하고, 아니면 힌트를 숨긴다.
-        /// 정령 카드 자체가 슬롯을 채우므로 별도 텍스트 갱신은 하지 않는다.
+        /// spirit이 null이면 빈 상태 힌트를 표시하고, 아니면 정령 아이콘을 표시한다.
         /// SpiritDragHandler가 장착/탈착 시 호출한다.
         /// </summary>
         public void UpdateSpiritDisplay(SpiritData spirit)
         {
-            SetSlotEmptyState(isEmpty: spirit == null);
+            bool hasSpirit = spirit != null;
+            SetSlotEmptyState(isEmpty: !hasSpirit);
+
+            if (_assignedSpiritIcon != null)
+            {
+                _assignedSpiritIcon.gameObject.SetActive(hasSpirit);
+                if (hasSpirit && spirit.Icon != null)
+                {
+                    _assignedSpiritIcon.sprite = spirit.Icon;
+                    _assignedSpiritIcon.preserveAspect = true;
+                }
+            }
         }
 
         /// <summary>빈 상태 힌트의 표시 여부를 전환한다.</summary>

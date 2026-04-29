@@ -49,6 +49,10 @@ namespace POC5.UI
         [Tooltip("포트 드래그 연결을 처리하는 핸들러.")]
         [SerializeField] private PortConnectHandler _portConnectHandler;
 
+        [Header("재화 시스템")]
+        [Tooltip("골드 잔액을 관리하는 CurrencySystem.")]
+        [SerializeField] private CurrencySystem _currencySystem;
+
         [Tooltip("활성화하면 씬 시작 시 연결선을 자동으로 설정한다. 4단계 UI 테스트 전 그래프 동작 확인용.")]
         [SerializeField] private bool _preWireConnections = false;
 
@@ -100,8 +104,9 @@ namespace POC5.UI
             if (_marketData == null)     { Debug.LogError("[GameSceneManager] _marketData 없음");     ok = false; }
             if (_waterSpiritData == null){ Debug.LogError("[GameSceneManager] _waterSpiritData 없음");ok = false; }
             if (_grassSpiritData == null){ Debug.LogError("[GameSceneManager] _grassSpiritData 없음");ok = false; }
-            if (_flowSystem == null)     { Debug.LogError("[GameSceneManager] _flowSystem 없음");     ok = false; }
-            if (_canvas == null)         { Debug.LogError("[GameSceneManager] _canvas 없음");         ok = false; }
+            if (_flowSystem == null)      { Debug.LogError("[GameSceneManager] _flowSystem 없음");      ok = false; }
+            if (_canvas == null)          { Debug.LogError("[GameSceneManager] _canvas 없음");          ok = false; }
+            if (_currencySystem == null)  { Debug.LogError("[GameSceneManager] _currencySystem 없음");  ok = false; }
             return ok;
         }
 
@@ -181,6 +186,14 @@ namespace POC5.UI
                     $"[GameSceneManager] 연결 실패: " +
                     $"{output?.ResourceType.ToString() ?? "null"} → " +
                     $"{input?.ResourceType.ToString() ?? "null"}");
+        }
+
+        /// <summary>
+        /// 상점에서 설비를 구매했을 때 ShopPanel이 호출해 설비 카드를 씬에 생성한다.
+        /// </summary>
+        public FacilityNode SpawnFacility(FacilityData data, Vector2 canvasPosition)
+        {
+            return CreateFacility(data, canvasPosition);
         }
 
         /// <summary>

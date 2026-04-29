@@ -72,7 +72,7 @@ namespace POC5.UI
             // 카드보다 먼저 렌더링되어 카드 아래에 선이 그려진다
             var layerGo = new GameObject("ConnectionLayer", typeof(RectTransform));
             layerGo.transform.SetParent(_canvas.transform, false);
-            layerGo.transform.SetAsFirstSibling();
+            layerGo.transform.SetAsLastSibling();
 
             var rt = layerGo.GetComponent<RectTransform>();
             rt.anchorMin = Vector2.zero;

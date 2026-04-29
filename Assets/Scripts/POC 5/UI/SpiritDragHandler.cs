@@ -11,15 +11,17 @@ namespace POC5.UI
     ///
     /// 동작 흐름:
     ///   1. 스피릿 카드를 드래그 → 마우스를 따라 이동
-    ///   2. 설비 카드 위에 드롭 → 속성 검증
-    ///   3. 검증 통과 시 스피릿 배치, 설비 카드의 스피릿 슬롯 갱신
-    ///   4. 드래그 카드는 항상 원래 위치로 복귀
+    ///   2. 설비 카드 위에 드롭 → 속성 검증 후 배치
+    ///   3. 빈 곳에 드롭하거나 검증 실패 → 카드는 드롭한 위치에 그대로 머문다
     ///
     /// 속성 검증 규칙:
     ///   설비가 RequiresSpirit = true이고 RequiredSpiritElement가 스피릿의 Element와 일치해야 한다.
     ///
     /// 재배치 처리:
     ///   이 스피릿이 이미 다른 설비에 배치 중이면 이전 설비의 슬롯을 먼저 초기화한다.
+    ///
+    /// 레이캐스트 처리:
+    ///   드롭 시 자기 자신(스피릿 카드)이 레이캐스트 결과에 포함되므로 이를 걸러낸다.
     /// </summary>
     public class SpiritDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
     {
@@ -27,10 +29,6 @@ namespace POC5.UI
         private RectTransform _rectTransform;
         private Canvas _canvas;
         private GraphicRaycaster _raycaster;
-
-        // 드래그 시작 전 상태 저장 (드롭 후 복귀에 사용)
-        private int _originalSiblingIndex;
-        private Vector2 _originalAnchoredPosition;
 
         // 현재 이 스피릿이 배치된 설비 뷰 (재배치 시 이전 슬롯 초기화에 사용)
         private FacilityNodeView _currentAssignedFacilityView;
@@ -44,18 +42,16 @@ namespace POC5.UI
         }
 
         /// <summary>
-        /// 드래그 시작: 현재 위치를 저장하고 카드를 최상위로 이동해 다른 카드 위에 렌더링한다.
+        /// 드래그 시작: 카드를 Hierarchy 맨 뒤로 이동해 다른 UI 위에 렌더링한다.
         /// </summary>
         public void OnBeginDrag(PointerEventData eventData)
         {
-            _originalSiblingIndex    = transform.GetSiblingIndex();
-            _originalAnchoredPosition = _rectTransform.anchoredPosition;
-            // 다른 카드보다 앞에 그려지도록 Hierarchy 맨 뒤로 이동한다
             transform.SetAsLastSibling();
         }
 
         /// <summary>
         /// 드래그 중: 마우스 이동량만큼 카드를 이동한다.
+        /// 설비 노드와 동일하게 드롭한 위치에 카드가 그대로 남는다.
         /// </summary>
         public void OnDrag(PointerEventData eventData)
         {
@@ -63,14 +59,11 @@ namespace POC5.UI
         }
 
         /// <summary>
-        /// 드래그 종료: 드롭 대상 설비를 찾아 배치를 시도하고, 카드를 원래 위치로 복귀한다.
+        /// 드래그 종료: 드롭 위치 아래의 설비를 찾아 배치를 시도한다.
+        /// 배치 성공 여부와 무관하게 카드는 현재 위치에 머문다.
         /// </summary>
         public void OnEndDrag(PointerEventData eventData)
         {
-            // 렌더 순서와 위치를 드래그 전으로 복원한다
-            transform.SetSiblingIndex(_originalSiblingIndex);
-            _rectTransform.anchoredPosition = _originalAnchoredPosition;
-
             var facilityView = FindFacilityViewAtScreenPoint(eventData.position);
             if (facilityView != null)
                 TryAssignToFacility(facilityView);
@@ -112,7 +105,7 @@ namespace POC5.UI
             if (_currentAssignedFacilityView != null)
                 _currentAssignedFacilityView.UpdateSpiritDisplay(null);
 
-            // 그래프 노드에 스피릿을 배치하고 카드 UI를 갱신한다
+            // 그래프 노드에 스피릿을 배치하고 설비 카드 UI를 갱신한다
             facilityNode.GraphNode.AssignSpirit(spiritData);
             facilityView.UpdateSpiritDisplay(spiritData);
             _currentAssignedFacilityView = facilityView;
@@ -122,7 +115,8 @@ namespace POC5.UI
 
         /// <summary>
         /// 화면 좌표 아래의 FacilityNodeView를 반환한다.
-        /// GraphicRaycaster로 UI 오브젝트를 감지하고 계층에서 FacilityNodeView를 찾는다.
+        /// 이 스피릿 카드 자신(및 자식들)은 결과에서 제외한다.
+        /// 드래그 중 스피릿 카드가 최상위에 있어 자기 자신이 먼저 감지되기 때문이다.
         /// </summary>
         private FacilityNodeView FindFacilityViewAtScreenPoint(Vector2 screenPoint)
         {
@@ -132,6 +126,9 @@ namespace POC5.UI
 
             foreach (var result in results)
             {
+                // 자기 자신과 자신의 자식 오브젝트는 건너뛴다
+                if (result.gameObject.transform.IsChildOf(transform)) continue;
+
                 var fv = result.gameObject.GetComponentInParent<FacilityNodeView>();
                 if (fv != null) return fv;
             }

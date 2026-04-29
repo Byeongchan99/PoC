@@ -54,5 +54,16 @@ namespace POC5.UI
                 _iconImage.preserveAspect = true;
             }
         }
+
+        /// <summary>
+        /// 슬롯 장착 시 아이콘만 표시하고 나머지 텍스트를 숨긴다.
+        /// 탈착 시 false를 전달해 원래 레이아웃으로 복원한다.
+        /// </summary>
+        public void SetIconOnly(bool iconOnly)
+        {
+            if (_nameText != null)      _nameText.gameObject.SetActive(!iconOnly);
+            if (_elementText != null)   _elementText.gameObject.SetActive(!iconOnly);
+            if (_workPowerText != null) _workPowerText.gameObject.SetActive(!iconOnly);
+        }
     }
 }

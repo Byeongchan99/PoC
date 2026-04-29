@@ -25,3 +25,7 @@ MonoBehaviour:
   _requiresSpirit: 0
   _requiredSpiritElement: 0
   _purchasePrice: 80
+  _upgradeBaseCost: 100
+  _upgradeCostMultiplier: 1.5
+  _upgradeProductionBonus: 0.2
+  _maxLevel: 5

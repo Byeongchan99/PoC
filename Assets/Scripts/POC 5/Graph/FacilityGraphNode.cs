@@ -16,9 +16,22 @@ namespace POC5.Graph
         /// <summary>이 노드가 참조하는 설비 메타데이터.</summary>
         public FacilityData Data { get; }
 
+        /// <summary>현재 레벨. 초기값은 1이며 Upgrade() 호출마다 1씩 증가한다.</summary>
+        public int Level { get; private set; } = 1;
+
+        /// <summary>
+        /// 시장에서 자원을 판매했을 때 발행된다.
+        /// 인자: (판매한 자원 종류, 판매 수량)
+        /// MarketSalesHandler가 이 이벤트를 구독해 CurrencySystem에 골드를 추가한다.
+        /// </summary>
+        public event Action<ResourceType, int> OnResourceSold;
+
         // 틱 간 소수 생산량 누적값.
         // 생산 속도가 1 미만일 때 여러 틱에 걸쳐 정수 1개씩 생산하기 위해 사용한다.
         private float _productionAccumulator;
+
+        // 업그레이드에 의한 생산량 배율. Lv1=1.0, Lv2=1.2, Lv3=1.4, ...
+        private float _productionMultiplier = 1f;
 
         // 현재 배치된 스피릿. 배치 없으면 null.
         private SpiritData _assignedSpirit;
@@ -62,6 +75,29 @@ namespace POC5.Graph
         /// 배치된 스피릿을 해제한다.
         /// </summary>
         public void UnassignSpirit() => _assignedSpirit = null;
+
+        /// <summary>
+        /// 현재 레벨에서 다음 레벨로 업그레이드할 때 필요한 골드를 반환한다.
+        /// 비용 = UpgradeBaseCost * UpgradeCostMultiplier^(Level-1)
+        /// </summary>
+        public int GetUpgradeCost()
+        {
+            return Mathf.RoundToInt(
+                Data.UpgradeBaseCost * Mathf.Pow(Data.UpgradeCostMultiplier, Level - 1));
+        }
+
+        /// <summary>
+        /// 레벨을 1 올리고 생산량 배율을 갱신한다.
+        /// 최대 레벨 도달 시 아무 작업도 하지 않는다.
+        /// </summary>
+        public void Upgrade()
+        {
+            if (Level >= Data.MaxLevel) return;
+            Level++;
+            // Lv1=1.0, Lv2=1.2, Lv3=1.4 ...
+            _productionMultiplier = 1f + Data.UpgradeProductionBonus * (Level - 1);
+            Debug.Log($"[{Data.DisplayName}] Lv.{Level} 업그레이드 — 생산 배율 x{_productionMultiplier:F2}");
+        }
 
         /// <summary>
         /// 매 틱 NodeGraph에서 호출된다.
@@ -108,7 +144,7 @@ namespace POC5.Graph
         {
             if (_assignedSpirit == null) return;
 
-            _productionAccumulator += Data.BaseProductionPerTick * _assignedSpirit.WorkPower;
+            _productionAccumulator += Data.BaseProductionPerTick * _assignedSpirit.WorkPower * _productionMultiplier;
 
             while (_productionAccumulator >= 1f)
             {
@@ -141,7 +177,7 @@ namespace POC5.Graph
                 ? _assignedSpirit.WorkPower
                 : 1f;
 
-            _productionAccumulator += Data.BaseProductionPerTick * workPower;
+            _productionAccumulator += Data.BaseProductionPerTick * workPower * _productionMultiplier;
 
             while (_productionAccumulator >= 1f)
             {
@@ -198,11 +234,11 @@ namespace POC5.Graph
         {
             foreach (var port in _inputPorts)
             {
-                while (!port.IsEmpty)
-                {
-                    port.Take(1);
-                    Debug.Log($"[{Data.DisplayName}] {port.ResourceType} 판매 → 돈 획득");
-                }
+                int amount = port.CurrentAmount;
+                if (amount <= 0) continue;
+                port.Take(amount);
+                OnResourceSold?.Invoke(port.ResourceType, amount);
+                Debug.Log($"[{Data.DisplayName}] {port.ResourceType} x{amount} 판매");
             }
         }
     }

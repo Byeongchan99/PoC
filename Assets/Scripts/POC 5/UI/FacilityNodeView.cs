@@ -58,6 +58,10 @@ namespace POC5.UI
         private readonly List<PortView> _portViews = new List<PortView>();
         private float _refreshTimer;
 
+        // 업그레이드 버튼 처리에 사용하는 런타임 참조
+        private FacilityNode _facilityNode;
+        private CurrencySystem _currencySystem;
+
         /// <summary>
         /// 이 카드에 포함된 모든 PortView.
         /// 4단계에서 PortConnectHandler가 포트 버튼에 접근할 때 사용한다.
@@ -81,10 +85,9 @@ namespace POC5.UI
                 _iconImage.preserveAspect = true;
             }
 
+            // 업그레이드 버튼은 SetupUpgradeButton() 호출 전까지 비활성화 상태로 둔다
             if (_upgradeButton != null)
                 _upgradeButton.interactable = false;
-            if (_upgradePriceText != null)
-                _upgradePriceText.text = $"업그레이드  {data.PurchasePrice}G";
 
             BuildPortRows(facilityNode.GraphNode);
             InitializeSpiritSlot(facilityNode.GraphNode.Data);
@@ -126,6 +129,63 @@ namespace POC5.UI
             _spiritInfoText.text = spirit != null
                 ? $"{spirit.DisplayName}  ({spirit.Element})"
                 : "배치 없음";
+        }
+
+        /// <summary>
+        /// 업그레이드 버튼을 활성화하고 클릭 로직을 연결한다.
+        /// GameSceneManager가 설비 카드를 생성한 직후 호출한다.
+        /// </summary>
+        public void SetupUpgradeButton(FacilityNode facilityNode, CurrencySystem currencySystem)
+        {
+            _facilityNode    = facilityNode;
+            _currencySystem  = currencySystem;
+
+            if (_upgradeButton == null) return;
+            _upgradeButton.onClick.AddListener(OnUpgradeClicked);
+            _currencySystem.OnGoldChanged += OnGoldChanged;
+            UpdateUpgradeButtonState();
+        }
+
+        private void OnDestroy()
+        {
+            if (_currencySystem != null)
+                _currencySystem.OnGoldChanged -= OnGoldChanged;
+        }
+
+        /// <summary>업그레이드 버튼 클릭 핸들러.</summary>
+        private void OnUpgradeClicked()
+        {
+            if (_facilityNode == null || _currencySystem == null) return;
+            if (!_facilityNode.TryUpgrade(_currencySystem)) return;
+
+            _levelText.text = $"Lv.{_facilityNode.Level}";
+            UpdateUpgradeButtonState();
+        }
+
+        /// <summary>골드 변경 이벤트 콜백 — 구매 가능 여부를 재평가한다.</summary>
+        private void OnGoldChanged(int newGold)
+        {
+            UpdateUpgradeButtonState();
+        }
+
+        /// <summary>
+        /// 현재 레벨·골드 기준으로 업그레이드 버튼 상태와 가격 텍스트를 갱신한다.
+        /// </summary>
+        private void UpdateUpgradeButtonState()
+        {
+            if (_facilityNode == null || _upgradeButton == null) return;
+
+            bool canUpgrade = _facilityNode.CanUpgrade();
+            bool canAfford  = canUpgrade && _currencySystem.CanAfford(_facilityNode.GetUpgradeCost());
+
+            _upgradeButton.interactable = canUpgrade && canAfford;
+
+            if (_upgradePriceText != null)
+            {
+                _upgradePriceText.text = canUpgrade
+                    ? $"업그레이드  {_facilityNode.GetUpgradeCost()}G"
+                    : "최대 레벨";
+            }
         }
 
         /// <summary>모든 포트 뷰의 잔량 텍스트를 즉시 갱신한다.</summary>

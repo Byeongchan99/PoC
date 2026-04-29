@@ -53,6 +53,9 @@ namespace POC5.UI
         [Tooltip("골드 잔액을 관리하는 CurrencySystem.")]
         [SerializeField] private CurrencySystem _currencySystem;
 
+        [Tooltip("시장 판매 수익을 처리하는 MarketSalesHandler.")]
+        [SerializeField] private MarketSalesHandler _marketSalesHandler;
+
         [Tooltip("활성화하면 씬 시작 시 연결선을 자동으로 설정한다. 4단계 UI 테스트 전 그래프 동작 확인용.")]
         [SerializeField] private bool _preWireConnections = false;
 
@@ -106,7 +109,8 @@ namespace POC5.UI
             if (_grassSpiritData == null){ Debug.LogError("[GameSceneManager] _grassSpiritData 없음");ok = false; }
             if (_flowSystem == null)      { Debug.LogError("[GameSceneManager] _flowSystem 없음");      ok = false; }
             if (_canvas == null)          { Debug.LogError("[GameSceneManager] _canvas 없음");          ok = false; }
-            if (_currencySystem == null)  { Debug.LogError("[GameSceneManager] _currencySystem 없음");  ok = false; }
+            if (_currencySystem == null)      { Debug.LogError("[GameSceneManager] _currencySystem 없음");      ok = false; }
+            if (_marketSalesHandler == null)  { Debug.LogError("[GameSceneManager] _marketSalesHandler 없음");  ok = false; }
             return ok;
         }
 
@@ -220,9 +224,14 @@ namespace POC5.UI
 
             facilityNode.Initialize(data);
             view.Initialize(facilityNode);
+            view.SetupUpgradeButton(facilityNode, _currencySystem);
 
             _flowSystem.RegisterFacility(facilityNode);
             _facilityViewMap[facilityNode] = view;
+
+            // Market 타입이면 판매 이벤트를 MarketSalesHandler에 연결한다
+            if (data.FacilityType == FacilityType.Market)
+                _marketSalesHandler.RegisterMarketNode(facilityNode.GraphNode);
 
             // 이 카드의 모든 포트 뷰를 PortConnectHandler에 등록한다
             foreach (var portView in view.PortViews)

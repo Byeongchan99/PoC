@@ -77,6 +77,21 @@ namespace POC5.Data
         [Tooltip("상점에서 이 설비를 구매할 때 필요한 돈.")]
         [SerializeField] private int _purchasePrice = 100;
 
+        [Header("업그레이드 설정")]
+        [Tooltip("첫 번째 업그레이드 비용 (골드).")]
+        [SerializeField] private int _upgradeBaseCost = 200;
+
+        [Tooltip("레벨이 오를수록 업그레이드 비용에 곱해지는 배율.\n" +
+                 "예: 1.5 → Lv1→Lv2: 200G, Lv2→Lv3: 300G, Lv3→Lv4: 450G")]
+        [SerializeField] private float _upgradeCostMultiplier = 1.5f;
+
+        [Tooltip("레벨 1당 기본 생산량에 추가되는 비율.\n" +
+                 "예: 0.2 → Lv2: +20%, Lv3: +40%, Lv4: +60%")]
+        [SerializeField] private float _upgradeProductionBonus = 0.2f;
+
+        [Tooltip("최대 업그레이드 레벨.")]
+        [SerializeField] private int _maxLevel = 5;
+
         /// <summary>설비의 종류 식별자.</summary>
         public FacilityType FacilityType => _facilityType;
 
@@ -103,5 +118,17 @@ namespace POC5.Data
 
         /// <summary>상점 구매 가격.</summary>
         public int PurchasePrice => _purchasePrice;
+
+        /// <summary>첫 번째 업그레이드 비용.</summary>
+        public int UpgradeBaseCost => _upgradeBaseCost;
+
+        /// <summary>레벨당 업그레이드 비용 증가 배율.</summary>
+        public float UpgradeCostMultiplier => _upgradeCostMultiplier;
+
+        /// <summary>레벨당 생산량 증가 비율 (0.2 = 20%).</summary>
+        public float UpgradeProductionBonus => _upgradeProductionBonus;
+
+        /// <summary>최대 업그레이드 레벨.</summary>
+        public int MaxLevel => _maxLevel;
     }
 }

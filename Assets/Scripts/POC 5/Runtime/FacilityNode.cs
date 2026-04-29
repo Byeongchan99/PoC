@@ -39,5 +39,26 @@ namespace POC5.Runtime
         {
             GraphNode = new FacilityGraphNode(data);
         }
+
+        /// <summary>현재 레벨. FacilityGraphNode의 Level을 위임한다.</summary>
+        public int Level => GraphNode.Level;
+
+        /// <summary>최대 레벨 미만이면 업그레이드 가능하다.</summary>
+        public bool CanUpgrade() => GraphNode.Level < GraphNode.Data.MaxLevel;
+
+        /// <summary>현재 레벨에서 다음 레벨로 업그레이드하는 데 필요한 골드를 반환한다.</summary>
+        public int GetUpgradeCost() => GraphNode.GetUpgradeCost();
+
+        /// <summary>
+        /// 골드를 차감하고 레벨을 1 올린다.
+        /// 최대 레벨이거나 골드가 부족하면 false를 반환한다.
+        /// </summary>
+        public bool TryUpgrade(CurrencySystem currencySystem)
+        {
+            if (!CanUpgrade()) return false;
+            if (!currencySystem.TrySpend(GetUpgradeCost())) return false;
+            GraphNode.Upgrade();
+            return true;
+        }
     }
 }

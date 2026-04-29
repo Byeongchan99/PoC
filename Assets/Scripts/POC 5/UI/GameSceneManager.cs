@@ -130,7 +130,6 @@ namespace POC5.UI
             view.SetupUpgradeButton(facilityNode, _currencySystem);
 
             _flowSystem.RegisterFacility(facilityNode);
-            _facilityViewMap[facilityNode] = view;
 
             // Market 타입이면 판매 이벤트를 MarketSalesHandler에 연결한다
             if (data.FacilityType == FacilityType.Market)
@@ -141,30 +140,6 @@ namespace POC5.UI
                 _portConnectHandler.RegisterPortView(portView);
 
             return facilityNode;
-        }
-
-        /// <summary>
-        /// _spiritCards 배열의 설정을 읽어 스피릿을 양수기·재배기에 사전 배치한다.
-        /// Water 원소 → 양수기, Grass 원소 → 재배기에 매핑된다.
-        /// </summary>
-        private void PreAssignSpirits(FacilityNode pump, FacilityNode cultivator)
-        {
-            if (_spiritCards == null) return;
-            foreach (var entry in _spiritCards)
-            {
-                if (entry.data == null) continue;
-                switch (entry.data.Element)
-                {
-                    case POC5.Data.SpiritElement.Water:
-                        pump.GraphNode.AssignSpirit(entry.data);
-                        _facilityViewMap[pump].UpdateSpiritDisplay(entry.data);
-                        break;
-                    case POC5.Data.SpiritElement.Grass:
-                        cultivator.GraphNode.AssignSpirit(entry.data);
-                        _facilityViewMap[cultivator].UpdateSpiritDisplay(entry.data);
-                        break;
-                }
-            }
         }
 
         /// <summary>

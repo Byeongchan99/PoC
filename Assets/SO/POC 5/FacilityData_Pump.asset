@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 254f187ea68797846ae97313a3723b5f, type: 3}
+  m_Name: FacilityData_Pump
+  m_EditorClassIdentifier: Assembly-CSharp::POC5.Data.FacilityData
+  _facilityType: 0
+  _displayName: "\uC591\uC218\uAE30"
+  _icon: {fileID: 0}
+  _inputPorts: []
+  _outputPorts:
+  - resourceType: 0
+    capacity: 5
+  _baseProductionPerTick: 1
+  _requiresSpirit: 1
+  _requiredSpiritElement: 0
+  _purchasePrice: 100
+  _upgradeBaseCost: 100
+  _upgradeCostMultiplier: 1.5
+  _upgradeProductionBonus: 0.2
+  _maxLevel: 5

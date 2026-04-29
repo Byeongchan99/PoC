@@ -8,18 +8,19 @@ namespace POC5.UI
     /// <summary>
     /// 씬 초기화를 담당하는 매니저.
     /// Inspector에서 지정한 FacilityData SO와 SpiritData SO를 이용해
-    /// 설비 노드와 UI 카드를 생성하고 자원 흐름 연결을 사전 설정한다.
+    /// FacilityNodeCard 프리팹을 인스턴스화하고 자원 흐름 연결을 사전 설정한다.
     ///
     /// 사용법:
     ///   씬에 빈 GameObject를 만들고 이 컴포넌트를 붙인다.
     ///   Inspector에서 FacilityData SO 5개, SpiritData SO 2개,
-    ///   ResourceFlowSystem, Canvas를 연결한다.
-    ///
-    /// 4단계에서 UI를 통해 연결선을 직접 생성할 수 있게 되면
-    ///   WireConnections() 호출을 제거하거나 조건부로 유지한다.
+    ///   FacilityNodeCard 프리팹, ResourceFlowSystem, Canvas를 연결한다.
     /// </summary>
     public class GameSceneManager : MonoBehaviour
     {
+        [Header("카드 프리팹")]
+        [Tooltip("FacilityNodeView가 붙은 카드 프리팹. 모든 설비에 동일한 프리팹을 사용한다.")]
+        [SerializeField] private FacilityNodeView _cardPrefab;
+
         [Header("설비 데이터 (FacilityData SO)")]
         [SerializeField] private FacilityData _pumpData;
         [SerializeField] private FacilityData _cultivatorData;
@@ -48,6 +49,7 @@ namespace POC5.UI
         private bool ValidateReferences()
         {
             bool ok = true;
+            if (_cardPrefab == null)     { Debug.LogError("[GameSceneManager] _cardPrefab 없음");     ok = false; }
             if (_pumpData == null)       { Debug.LogError("[GameSceneManager] _pumpData 없음");       ok = false; }
             if (_cultivatorData == null) { Debug.LogError("[GameSceneManager] _cultivatorData 없음"); ok = false; }
             if (_farmData == null)       { Debug.LogError("[GameSceneManager] _farmData 없음");       ok = false; }
@@ -120,7 +122,6 @@ namespace POC5.UI
 
         /// <summary>
         /// 포트 연결을 시도하고 실패하면 에러를 출력한다.
-        /// TryConnect가 null 포트를 자체적으로 처리하므로 null 전달도 허용한다.
         /// </summary>
         private static void TryWire(NodeGraph graph, Port output, Port input)
         {
@@ -132,29 +133,29 @@ namespace POC5.UI
         }
 
         /// <summary>
-        /// FacilityData를 받아 설비 노드 GameObject를 생성하고 Canvas에 배치한다.
-        /// FacilityNode(로직) + FacilityNodeView(UI) + NodeDragHandler(드래그)를 조합한다.
+        /// FacilityNodeCard 프리팹을 인스턴스화하고 Canvas에 배치한다.
+        /// 프리팹에 이미 FacilityNode, FacilityNodeView, NodeDragHandler가 붙어 있어야 한다.
         /// </summary>
         private FacilityNode CreateFacility(FacilityData data, Vector2 canvasPosition)
         {
-            var go = new GameObject(data.DisplayName, typeof(RectTransform));
-            go.transform.SetParent(_canvas.transform, false);
+            var view = Instantiate(_cardPrefab, _canvas.transform);
+            view.name = data.DisplayName;
 
             // Canvas 중심 기준으로 카드 초기 위치를 설정한다
-            var rt = go.GetComponent<RectTransform>();
+            var rt = view.GetComponent<RectTransform>();
             rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0.5f, 0.5f);
             rt.anchoredPosition = canvasPosition;
 
-            // 로직 컴포넌트: 그래프 노드와 포트를 초기화한다
-            var facilityNode = go.AddComponent<FacilityNode>();
+            // 프리팹에 FacilityNode가 붙어 있으므로 GetComponent로 가져온다
+            var facilityNode = view.GetComponent<FacilityNode>();
+            if (facilityNode == null)
+            {
+                Debug.LogError($"[GameSceneManager] {_cardPrefab.name} 프리팹에 FacilityNode 컴포넌트가 없습니다.");
+                return null;
+            }
+
             facilityNode.Initialize(data);
-
-            // UI 컴포넌트: 카드 배경과 내부 요소(헤더, 아이콘, 포트, 버튼)를 생성한다
-            var view = go.AddComponent<FacilityNodeView>();
             view.Initialize(facilityNode);
-
-            // 드래그 핸들러: 카드 배경을 드래그하면 카드가 이동한다
-            go.AddComponent<NodeDragHandler>();
 
             _flowSystem.RegisterFacility(facilityNode);
             return facilityNode;

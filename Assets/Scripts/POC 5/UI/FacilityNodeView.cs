@@ -38,10 +38,15 @@ namespace POC5.UI
         [SerializeField] private TextMeshProUGUI _upgradePriceText;
 
         [Header("스피릿 슬롯 (프리팹에서 연결, 스피릿이 필요한 설비에만 표시)")]
-        [Tooltip("스피릿 슬롯 패널. 설비가 RequiresSpirit=false이면 자동으로 숨겨진다.")]
+        [Tooltip("스피릿 슬롯 패널. 설비가 RequiresSpirit=false이면 자동으로 숨겨진다.\n" +
+                 "SpiritDragHandler가 정령 카드를 이 패널의 자식으로 이동해 슬롯을 채운다.")]
         [SerializeField] private GameObject _spiritSlotPanel;
 
-        [Tooltip("배치된 스피릿 이름과 속성을 표시하는 텍스트.")]
+        [Tooltip("정령이 배치되지 않았을 때 슬롯 안에 표시할 힌트 오브젝트.\n" +
+                 "정령이 장착되면 자동으로 숨겨지고, 탈착되면 다시 표시된다.")]
+        [SerializeField] private GameObject _spiritEmptyHint;
+
+        [Tooltip("배치된 스피릿 이름과 속성을 표시하는 텍스트. 선택 사항.")]
         [SerializeField] private TextMeshProUGUI _spiritInfoText;
 
         [Header("포트 행 프리팹")]
@@ -67,6 +72,12 @@ namespace POC5.UI
         /// 4단계에서 PortConnectHandler가 포트 버튼에 접근할 때 사용한다.
         /// </summary>
         public IReadOnlyList<PortView> PortViews => _portViews;
+
+        /// <summary>
+        /// 정령 카드가 스냅될 슬롯 Transform.
+        /// SpiritDragHandler가 카드를 이 Transform의 자식으로 이동한다.
+        /// </summary>
+        public Transform SpiritSlotTransform => _spiritSlotPanel?.transform;
 
         /// <summary>
         /// 설비 데이터를 카드 UI에 바인딩하고 포트 행을 생성한다.
@@ -114,8 +125,10 @@ namespace POC5.UI
         {
             if (_spiritSlotPanel == null) return;
             _spiritSlotPanel.SetActive(data.RequiresSpirit);
-            if (data.RequiresSpirit && _spiritInfoText != null)
-                _spiritInfoText.text = "배치 없음";
+
+            // 슬롯이 보이는 설비는 처음에 빈 상태로 시작한다
+            if (data.RequiresSpirit)
+                SetSlotEmptyState(isEmpty: true);
         }
 
         /// <summary>
@@ -123,12 +136,22 @@ namespace POC5.UI
         /// spirit이 null이면 "배치 없음"으로 초기화한다.
         /// SpiritDragHandler가 배치/해제 시 호출한다.
         /// </summary>
+        /// <summary>
+        /// 슬롯 상태를 갱신한다.
+        /// spirit이 null이면 빈 상태 힌트를 표시하고, 아니면 힌트를 숨긴다.
+        /// 정령 카드 자체가 슬롯을 채우므로 별도 텍스트 갱신은 하지 않는다.
+        /// SpiritDragHandler가 장착/탈착 시 호출한다.
+        /// </summary>
         public void UpdateSpiritDisplay(SpiritData spirit)
         {
-            if (_spiritInfoText == null) return;
-            _spiritInfoText.text = spirit != null
-                ? $"{spirit.DisplayName}  ({spirit.Element})"
-                : "배치 없음";
+            SetSlotEmptyState(isEmpty: spirit == null);
+        }
+
+        /// <summary>빈 상태 힌트의 표시 여부를 전환한다.</summary>
+        private void SetSlotEmptyState(bool isEmpty)
+        {
+            if (_spiritEmptyHint != null)
+                _spiritEmptyHint.SetActive(isEmpty);
         }
 
         /// <summary>

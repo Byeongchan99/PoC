@@ -60,6 +60,7 @@ namespace POC5.UI
 
         /// <summary>
         /// 드래그 종료: 드롭 위치 아래의 설비를 찾아 배치를 시도한다.
+        /// 설비가 없는 빈 곳에 드롭하면 현재 배치를 해제한다.
         /// 배치 성공 여부와 무관하게 카드는 현재 위치에 머문다.
         /// </summary>
         public void OnEndDrag(PointerEventData eventData)
@@ -67,6 +68,26 @@ namespace POC5.UI
             var facilityView = FindFacilityViewAtScreenPoint(eventData.position);
             if (facilityView != null)
                 TryAssignToFacility(facilityView);
+            else
+                UnassignFromCurrentFacility();
+        }
+
+        /// <summary>
+        /// 현재 배치된 설비의 스피릿 슬롯을 초기화하고 배치 상태를 해제한다.
+        /// 빈 곳에 드롭했을 때 호출된다.
+        /// </summary>
+        private void UnassignFromCurrentFacility()
+        {
+            if (_currentAssignedFacilityView == null) return;
+
+            var facilityNode = _currentAssignedFacilityView.GetComponent<FacilityNode>();
+            if (facilityNode != null)
+                facilityNode.GraphNode.UnassignSpirit();
+
+            _currentAssignedFacilityView.UpdateSpiritDisplay(null);
+            _currentAssignedFacilityView = null;
+
+            Debug.Log($"[SpiritDragHandler] {_cardView.Data.DisplayName} 배치 해제");
         }
 
         /// <summary>

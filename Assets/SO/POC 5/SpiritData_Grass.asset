@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SpiritData_Grass
   m_EditorClassIdentifier: Assembly-CSharp::POC5.Data.SpiritData
   _displayName: "\uD480\uC758 \uC815\uB839 "
-  _icon: {fileID: 0}
+  _icon: {fileID: 6334569110881634294, guid: 20802f6640dfca94090cea26aeeb6282, type: 3}
   _element: 1
   _workPower: 1
   _attackPower: 10

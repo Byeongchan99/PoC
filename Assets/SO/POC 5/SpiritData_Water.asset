@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SpiritData_Water
   m_EditorClassIdentifier: Assembly-CSharp::POC5.Data.SpiritData
   _displayName: "\uBB3C\uC758 \uC815\uB839 "
-  _icon: {fileID: 0}
+  _icon: {fileID: -8018950919403410202, guid: 26027fe47b5fc8b41adb29f34087483c, type: 3}
   _element: 0
   _workPower: 1
   _attackPower: 10

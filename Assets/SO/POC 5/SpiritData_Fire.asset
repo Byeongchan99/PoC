@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SpiritData_Fire
   m_EditorClassIdentifier: Assembly-CSharp::POC5.Data.SpiritData
   _displayName: "\uBD88\uC758 \uC815\uB839 "
-  _icon: {fileID: 0}
+  _icon: {fileID: -1103742576703756148, guid: 3b86ca9172781c14d91199a1d0828e0e, type: 3}
   _element: 2
   _workPower: 1
   _attackPower: 10

@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using UnityEngine.InputSystem;
 using POC5.Graph;
 using POC5.Runtime;
 
@@ -82,7 +83,7 @@ namespace POC5.UI
             }
 
             // 우클릭 시 마우스 아래 포트의 연결을 모두 해제한다
-            if (Input.GetMouseButtonDown(1))
+            if (Mouse.current != null && Mouse.current.rightButton.wasPressedThisFrame)
                 TryDisconnectAtMousePosition();
         }
 
@@ -172,7 +173,7 @@ namespace POC5.UI
         {
             var results   = new List<RaycastResult>();
             var eventData = new PointerEventData(EventSystem.current)
-                { position = Input.mousePosition };
+                { position = Mouse.current.position.ReadValue() };
             _raycaster.Raycast(eventData, results);
 
             foreach (var result in results)

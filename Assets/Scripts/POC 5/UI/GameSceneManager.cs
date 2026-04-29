@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using POC5.Data;
 using POC5.Graph;
@@ -21,12 +22,19 @@ namespace POC5.UI
         [Tooltip("FacilityNodeView가 붙은 카드 프리팹. 모든 설비에 동일한 프리팹을 사용한다.")]
         [SerializeField] private FacilityNodeView _cardPrefab;
 
+        [Header("스피릿 카드 프리팹")]
+        [Tooltip("SpiritCardView와 SpiritDragHandler가 붙은 스피릿 카드 프리팹.")]
+        [SerializeField] private SpiritCardView _spiritCardPrefab;
+
         [Header("연결 시스템")]
         [Tooltip("포트 드래그 연결을 처리하는 핸들러.")]
         [SerializeField] private PortConnectHandler _portConnectHandler;
 
         [Tooltip("활성화하면 씬 시작 시 연결선을 자동으로 설정한다. 4단계 UI 테스트 전 그래프 동작 확인용.")]
         [SerializeField] private bool _preWireConnections = false;
+
+        [Tooltip("활성화하면 씬 시작 시 스피릿을 자동으로 배치한다. 5단계 드래그 테스트 전 동작 확인용.")]
+        [SerializeField] private bool _preAssignSpirits = false;
 
         [Header("설비 데이터 (FacilityData SO)")]
         [SerializeField] private FacilityData _pumpData;
@@ -43,6 +51,10 @@ namespace POC5.UI
         [SerializeField] private ResourceFlowSystem _flowSystem;
         [SerializeField] private Canvas _canvas;
 
+        // 스피릿 사전 배치 시 FacilityNodeView 갱신에 사용하는 매핑
+        private readonly Dictionary<FacilityNode, FacilityNodeView> _facilityViewMap
+            = new Dictionary<FacilityNode, FacilityNodeView>();
+
         private void Start()
         {
             if (!ValidateReferences()) return;
@@ -56,8 +68,9 @@ namespace POC5.UI
         private bool ValidateReferences()
         {
             bool ok = true;
-            if (_cardPrefab == null)          { Debug.LogError("[GameSceneManager] _cardPrefab 없음");          ok = false; }
-            if (_portConnectHandler == null)  { Debug.LogError("[GameSceneManager] _portConnectHandler 없음");  ok = false; }
+            if (_cardPrefab == null)         { Debug.LogError("[GameSceneManager] _cardPrefab 없음");         ok = false; }
+            if (_spiritCardPrefab == null)   { Debug.LogError("[GameSceneManager] _spiritCardPrefab 없음");   ok = false; }
+            if (_portConnectHandler == null) { Debug.LogError("[GameSceneManager] _portConnectHandler 없음"); ok = false; }
             if (_pumpData == null)       { Debug.LogError("[GameSceneManager] _pumpData 없음");       ok = false; }
             if (_cultivatorData == null) { Debug.LogError("[GameSceneManager] _cultivatorData 없음"); ok = false; }
             if (_farmData == null)       { Debug.LogError("[GameSceneManager] _farmData 없음");       ok = false; }
@@ -82,9 +95,20 @@ namespace POC5.UI
             var warehouse  = CreateFacility(_warehouseData,  new Vector2( 160f,   0f));
             var market     = CreateFacility(_marketData,     new Vector2( 400f,   0f));
 
-            // 스피릿 배치: 양수기 → 물 스피릿, 재배기 → 풀 스피릿
-            pump.GraphNode.AssignSpirit(_waterSpiritData);
-            cultivator.GraphNode.AssignSpirit(_grassSpiritData);
+            // 스피릿 카드 생성 (화면 하단에 배치)
+            CreateSpiritCard(_waterSpiritData, new Vector2(-120f, -220f));
+            CreateSpiritCard(_grassSpiritData, new Vector2(  80f, -220f));
+
+            // _preAssignSpirits가 true일 때만 스피릿을 자동 배치한다
+            // 5단계 드래그로 직접 배치하려면 false로 둔다
+            if (_preAssignSpirits)
+            {
+                pump.GraphNode.AssignSpirit(_waterSpiritData);
+                _facilityViewMap[pump].UpdateSpiritDisplay(_waterSpiritData);
+
+                cultivator.GraphNode.AssignSpirit(_grassSpiritData);
+                _facilityViewMap[cultivator].UpdateSpiritDisplay(_grassSpiritData);
+            }
 
             // _preWireConnections가 true일 때만 자동으로 연결선을 설정한다
             // 4단계 UI로 연결선을 직접 만들려면 false로 둔다
@@ -168,12 +192,28 @@ namespace POC5.UI
             view.Initialize(facilityNode);
 
             _flowSystem.RegisterFacility(facilityNode);
+            _facilityViewMap[facilityNode] = view;
 
             // 이 카드의 모든 포트 뷰를 PortConnectHandler에 등록한다
             foreach (var portView in view.PortViews)
                 _portConnectHandler.RegisterPortView(portView);
 
             return facilityNode;
+        }
+
+        /// <summary>
+        /// SpiritCard 프리팹을 인스턴스화하고 Canvas에 배치한다.
+        /// </summary>
+        private void CreateSpiritCard(SpiritData data, Vector2 canvasPosition)
+        {
+            var card = Instantiate(_spiritCardPrefab, _canvas.transform);
+            card.name = data.DisplayName;
+
+            var rt = card.GetComponent<RectTransform>();
+            rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0.5f, 0.5f);
+            rt.anchoredPosition = canvasPosition;
+
+            card.Initialize(data);
         }
     }
 }

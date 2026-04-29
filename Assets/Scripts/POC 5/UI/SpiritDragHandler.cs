@@ -11,16 +11,15 @@ namespace POC5.UI
     ///
     /// 장착 흐름:
     ///   1. 스피릿 카드를 드래그 → Canvas 위에서 자유롭게 이동
-    ///   2. 설비 슬롯에 드롭 → 검증 통과 시 카드가 슬롯 위치로 이동하고 아이콘만 표시
-    ///   3. 설비의 빈 상태 힌트가 사라진다
+    ///   2. 설비 슬롯에 드롭 → 검증 통과 시 슬롯 위치로 이동, 아이콘만 표시, 크기를 슬롯에 맞춤
+    ///   3. 설비가 이동하면 LateUpdate에서 카드 위치를 슬롯에 동기화한다
     ///
     /// 탈착 흐름:
-    ///   1. 슬롯 위에 있는 카드를 드래그 → 카드가 원래 레이아웃으로 복원되며 자유 이동
+    ///   1. 장착된 카드를 드래그 → LateUpdate 추적 중단, 카드 원래 레이아웃 복원
     ///   2. 설비의 빈 상태 힌트가 즉시 표시된다
-    ///   3. 빈 곳에 드롭 → 탈착 확정
-    ///   4. 다른 설비에 드롭 → 새 슬롯에 장착
+    ///   3. 빈 곳에 드롭 → 탈착 확정, 다른 설비에 드롭 → 새 슬롯에 장착
     ///
-    /// 카드는 항상 Canvas의 직접 자식으로 유지되므로 설비 카드의 레이아웃에 영향을 주지 않는다.
+    /// 카드는 항상 Canvas의 직접 자식으로 유지되므로 설비 카드 레이아웃에 영향을 주지 않는다.
     /// </summary>
     public class SpiritDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
     {
@@ -28,35 +27,52 @@ namespace POC5.UI
         private RectTransform _rectTransform;
         private Canvas _canvas;
         private GraphicRaycaster _raycaster;
+        private ContentSizeFitter _contentSizeFitter;
 
         // 현재 장착된 설비 뷰. null이면 미장착 상태.
         private FacilityNodeView _currentAssignedFacilityView;
 
+        // 슬롯에 고정(도킹)된 상태. 드래그 중에는 false가 되어 LateUpdate 추적을 멈춘다.
+        private bool _isDocked = false;
+
         private void Awake()
         {
-            _cardView      = GetComponent<SpiritCardView>();
-            _rectTransform = GetComponent<RectTransform>();
-            _canvas        = GetComponentInParent<Canvas>();
-            _raycaster     = _canvas.GetComponent<GraphicRaycaster>();
+            _cardView          = GetComponent<SpiritCardView>();
+            _rectTransform     = GetComponent<RectTransform>();
+            _canvas            = GetComponentInParent<Canvas>();
+            _raycaster         = _canvas.GetComponent<GraphicRaycaster>();
+            _contentSizeFitter = GetComponent<ContentSizeFitter>();
+        }
+
+        /// <summary>
+        /// 도킹 중일 때 슬롯의 월드 위치를 매 프레임 추적한다.
+        /// NodeDragHandler가 Update에서 설비를 이동시키므로 LateUpdate에서 동기화해야
+        /// 같은 프레임 안에서 1프레임 지연 없이 따라갈 수 있다.
+        /// </summary>
+        private void LateUpdate()
+        {
+            if (!_isDocked || _currentAssignedFacilityView == null) return;
+
+            var slotTransform = _currentAssignedFacilityView.SpiritSlotTransform;
+            if (slotTransform != null)
+                _rectTransform.position = slotTransform.position;
         }
 
         /// <summary>
         /// 드래그 시작.
-        /// 장착 상태라면 슬롯에 빈 힌트를 표시하고 카드를 전체 레이아웃으로 복원한다.
+        /// 도킹 상태라면 LateUpdate 추적을 멈추고 카드를 원래 레이아웃으로 복원한다.
         /// </summary>
         public void OnBeginDrag(PointerEventData eventData)
         {
             if (_currentAssignedFacilityView != null)
+            {
                 _currentAssignedFacilityView.UpdateSpiritDisplay(null);
-
-            _cardView.SetIconOnly(false);
-            LayoutRebuilder.ForceRebuildLayoutImmediate(_rectTransform);
+                Undock();
+            }
             transform.SetAsLastSibling();
         }
 
-        /// <summary>
-        /// 드래그 중: 마우스 이동량만큼 카드를 이동한다.
-        /// </summary>
+        /// <summary>드래그 중: 마우스 이동량만큼 카드를 이동한다.</summary>
         public void OnDrag(PointerEventData eventData)
         {
             _rectTransform.anchoredPosition += eventData.delta / _canvas.scaleFactor;
@@ -77,7 +93,7 @@ namespace POC5.UI
 
         /// <summary>
         /// 대상 설비에 스피릿 장착을 시도한다.
-        /// 검증을 통과하면 카드가 슬롯 위치로 이동하고 아이콘만 표시된다.
+        /// 검증을 통과하면 카드가 슬롯에 도킹된다.
         /// </summary>
         private void TryAssignToFacility(FacilityNodeView facilityView)
         {
@@ -108,7 +124,7 @@ namespace POC5.UI
             if (_currentAssignedFacilityView == facilityView)
             {
                 facilityView.UpdateSpiritDisplay(spiritData);
-                MoveToSlot(facilityView.SpiritSlotTransform);
+                Dock(facilityView);
                 return;
             }
 
@@ -123,17 +139,14 @@ namespace POC5.UI
             facilityView.UpdateSpiritDisplay(spiritData);
             _currentAssignedFacilityView = facilityView;
 
-            MoveToSlot(facilityView.SpiritSlotTransform);
+            Dock(facilityView);
 
             Debug.Log(
                 $"[SpiritDragHandler] {spiritData.DisplayName}({spiritData.Element}) → " +
                 $"{facilityData.DisplayName} 장착");
         }
 
-        /// <summary>
-        /// 빈 곳에 드롭했을 때 탈착을 확정한다.
-        /// 그래프에서 스피릿을 제거하고 카드는 드롭 위치에 그대로 머문다.
-        /// </summary>
+        /// <summary>빈 곳에 드롭했을 때 탈착을 확정한다.</summary>
         private void UnassignFromCurrentFacility()
         {
             if (_currentAssignedFacilityView == null) return;
@@ -146,27 +159,49 @@ namespace POC5.UI
             Debug.Log($"[SpiritDragHandler] {_cardView.Data.DisplayName} 탈착");
         }
 
-        /// <summary>
-        /// 검증 실패 시 이전 슬롯이 있으면 되돌아가고, 없으면 현재 위치에 머문다.
-        /// 그래프 데이터는 OnBeginDrag에서 변경하지 않으므로 UI만 복원한다.
-        /// </summary>
+        /// <summary>검증 실패 시 이전 슬롯이 있으면 되돌아가고, 없으면 현재 위치에 머문다.</summary>
         private void ReturnToCurrentSlotOrStay()
         {
             if (_currentAssignedFacilityView == null) return;
             _currentAssignedFacilityView.UpdateSpiritDisplay(_cardView.Data);
-            MoveToSlot(_currentAssignedFacilityView.SpiritSlotTransform);
+            Dock(_currentAssignedFacilityView);
         }
 
         /// <summary>
-        /// 카드를 슬롯의 월드 위치로 이동하고 아이콘만 표시 모드로 전환한다.
-        /// 카드는 Canvas의 자식으로 유지되므로 설비 카드 레이아웃에 영향을 주지 않는다.
+        /// 카드를 슬롯 크기로 조정하고 아이콘만 표시한 뒤 LateUpdate 추적을 시작한다.
+        /// ContentSizeFitter를 비활성화해 크기를 직접 제어한다.
         /// </summary>
-        private void MoveToSlot(Transform slotTransform)
+        private void Dock(FacilityNodeView facilityView)
         {
+            var slotTransform = facilityView.SpiritSlotTransform;
             if (slotTransform == null) return;
+
             _cardView.SetIconOnly(true);
-            LayoutRebuilder.ForceRebuildLayoutImmediate(_rectTransform);
+
+            if (_contentSizeFitter != null)
+                _contentSizeFitter.enabled = false;
+
+            // 슬롯의 실제 크기를 읽어 카드에 적용한다
+            var slotRT = slotTransform as RectTransform;
+            if (slotRT != null && slotRT.rect.size.sqrMagnitude > 0.01f)
+                _rectTransform.sizeDelta = slotRT.rect.size;
+
             _rectTransform.position = slotTransform.position;
+            _isDocked = true;
+        }
+
+        /// <summary>
+        /// LateUpdate 추적을 중단하고 카드를 원래 레이아웃(ContentSizeFitter)으로 복원한다.
+        /// </summary>
+        private void Undock()
+        {
+            _isDocked = false;
+            _cardView.SetIconOnly(false);
+
+            if (_contentSizeFitter != null)
+                _contentSizeFitter.enabled = true;
+
+            LayoutRebuilder.ForceRebuildLayoutImmediate(_rectTransform);
         }
 
         /// <summary>

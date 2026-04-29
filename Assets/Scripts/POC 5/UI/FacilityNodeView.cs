@@ -46,6 +46,9 @@ namespace POC5.UI
                  "정령이 장착되면 자동으로 숨겨지고, 탈착되면 다시 표시된다.")]
         [SerializeField] private GameObject _spiritEmptyHint;
 
+        [Tooltip("힌트 오브젝트 안의 텍스트. 필요한 정령 원소 이름이 자동으로 채워진다.")]
+        [SerializeField] private TextMeshProUGUI _spiritHintText;
+
         [Tooltip("배치된 스피릿 이름과 속성을 표시하는 텍스트. 선택 사항.")]
         [SerializeField] private TextMeshProUGUI _spiritInfoText;
 
@@ -126,9 +129,13 @@ namespace POC5.UI
             if (_spiritSlotPanel == null) return;
             _spiritSlotPanel.SetActive(data.RequiresSpirit);
 
-            // 슬롯이 보이는 설비는 처음에 빈 상태로 시작한다
-            if (data.RequiresSpirit)
-                SetSlotEmptyState(isEmpty: true);
+            if (!data.RequiresSpirit) return;
+
+            // 필요한 정령 원소를 힌트 텍스트에 채운다
+            if (_spiritHintText != null)
+                _spiritHintText.text = $"{data.RequiredSpiritElement} 정령 슬롯";
+
+            SetSlotEmptyState(isEmpty: true);
         }
 
         /// <summary>

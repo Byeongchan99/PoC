@@ -15,14 +15,18 @@ namespace POC6
         [SerializeField] private Camera _mainCamera;
 
         [Header("미리보기 설정")]
-        [Tooltip("배치 가능 상태 미리보기 색상 (반투명 초록)")]
-        [SerializeField] private Color _validColor = new Color(0f, 1f, 0f, 0.5f);
-
         [Tooltip("배치 불가 상태 미리보기 색상 (반투명 빨강)")]
         [SerializeField] private Color _invalidColor = new Color(1f, 0f, 0f, 0.5f);
 
+        [Tooltip("배치 가능 상태 미리보기 알파값. 노드 색상에 이 알파를 적용합니다.")]
+        [Range(0f, 1f)]
+        [SerializeField] private float _validAlpha = 0.5f;
+
         // 현재 배치 대기 중인 노드 데이터 (null이면 배치 모드 비활성)
         private NodeData _pendingNode;
+
+        // 현재 노드의 TintColor에 _validAlpha를 적용한 색상 (배치 가능 상태)
+        private Color _validColor;
 
         // 현재 회전 단계
         private int _rotationStep = 0;
@@ -78,6 +82,10 @@ namespace POC6
             _pendingNode = nodeData;
             _rotationStep = 0;
             _isPlacing = true;
+
+            // 노드의 TintColor에 투명도를 적용해 Valid 미리보기 색상으로 사용
+            Color tint = nodeData.TintColor;
+            _validColor = new Color(tint.r, tint.g, tint.b, _validAlpha);
 
             CreatePreview(nodeData);
         }

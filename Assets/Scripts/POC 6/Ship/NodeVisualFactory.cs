@@ -46,16 +46,23 @@ namespace POC6
 
         /// <summary>
         /// 미리보기용 반투명 2D 오브젝트를 생성합니다.
+        /// initialColor의 알파값으로 반투명하게 시작합니다.
         /// 콜라이더 없이 SpriteRenderer만 가집니다.
         /// </summary>
-        public static GameObject CreatePreviewVisual(NodeData nodeData, float cellSize)
+        public static GameObject CreatePreviewVisual(NodeData nodeData, float cellSize, Color initialColor)
         {
             if (nodeData.VisualPrefab != null)
             {
                 var prefabInstance = Object.Instantiate(nodeData.VisualPrefab);
-                // 콜라이더 제거 (클릭 이벤트 방해 방지)
+
+                // 콜라이더 제거
                 foreach (var col in prefabInstance.GetComponentsInChildren<Collider2D>())
                     Object.Destroy(col);
+
+                // 프리팹의 모든 SpriteRenderer에 반투명 색상 적용
+                foreach (var sr in prefabInstance.GetComponentsInChildren<SpriteRenderer>())
+                    sr.color = initialColor;
+
                 return prefabInstance;
             }
 
@@ -65,7 +72,7 @@ namespace POC6
                 null,
                 nodeData.Size,
                 cellSize,
-                Color.white   // 색상은 이후 SetColor로 덮어씀
+                initialColor  // 처음부터 반투명 색상으로 생성
             );
 
             // 미리보기는 콜라이더 불필요

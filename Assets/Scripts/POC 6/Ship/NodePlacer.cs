@@ -114,9 +114,8 @@ namespace POC6
         /// </summary>
         private void CreatePreview(NodeData nodeData)
         {
-            _previewInstance = NodeVisualFactory.CreatePreviewVisual(nodeData, _shipGrid.CellSize);
+            _previewInstance = NodeVisualFactory.CreatePreviewVisual(nodeData, _shipGrid.CellSize, _validColor);
             _previewSpriteRenderers = _previewInstance.GetComponentsInChildren<SpriteRenderer>();
-            SetPreviewColor(_validColor);
         }
 
         /// <summary>

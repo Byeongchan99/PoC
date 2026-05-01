@@ -14,6 +14,7 @@ namespace POC6
         [SerializeField] private ShipGrid _shipGrid;
         [SerializeField] private PowerGraph _powerGraph;
         [SerializeField] private PowerConnectionDragger _dragger;
+        [SerializeField] private NodePlacer _nodePlacer;
         [SerializeField] private Camera _mainCamera;
 
         private void Awake()
@@ -24,6 +25,9 @@ namespace POC6
 
         private void Update()
         {
+            // NodePlacer가 배치 중일 때는 드래그 입력을 무시
+            if (_nodePlacer != null && _nodePlacer.IsPlacing) return;
+
             // 좌클릭: 클릭 위치의 노드로 드래그 시작
             if (Mouse.current.leftButton.wasPressedThisFrame)
             {

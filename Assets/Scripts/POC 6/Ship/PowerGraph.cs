@@ -29,6 +29,12 @@ namespace POC6
         [Tooltip("정상 연결선 색상")]
         [SerializeField] private Color _lineColor = new Color(1f, 0.8f, 0f, 0.8f);
 
+        [Tooltip("연결선 Sorting Layer 이름. 노드보다 앞에 표시하려면 노드와 같은 레이어에서 Order를 높게 설정합니다.")]
+        [SerializeField] private string _sortingLayerName = "Default";
+
+        [Tooltip("연결선 Sorting Order. 노드 오브젝트보다 높은 값으로 설정하면 앞에 표시됩니다.")]
+        [SerializeField] private int _sortingOrder = 1;
+
         private ShipGrid _grid;
 
         private void Awake()
@@ -334,6 +340,8 @@ namespace POC6
             lr.startColor = _lineColor;
             lr.endColor = _lineColor;
             lr.useWorldSpace = true;
+            lr.sortingLayerName = _sortingLayerName;
+            lr.sortingOrder = _sortingOrder;
 
             lr.SetPosition(0, _grid.NodeCenterToWorld(from));
             lr.SetPosition(1, _grid.NodeCenterToWorld(to));

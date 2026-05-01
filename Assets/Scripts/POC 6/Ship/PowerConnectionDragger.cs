@@ -25,6 +25,12 @@ namespace POC6
         [Tooltip("연결 불가 상태일 때 미리보기 선 색상")]
         [SerializeField] private Color _invalidDragColor = new Color(1f, 0f, 0f, 0.8f);
 
+        [Tooltip("드래그 미리보기 선 Sorting Layer 이름")]
+        [SerializeField] private string _sortingLayerName = "Default";
+
+        [Tooltip("드래그 미리보기 선 Sorting Order. 노드보다 앞에 표시되도록 높게 설정합니다.")]
+        [SerializeField] private int _sortingOrder = 2;
+
         // 드래그 시작 노드
         private PlacedNode _dragFromNode;
 
@@ -135,6 +141,8 @@ namespace POC6
                 _previewLine.material = _previewLineMaterial;
 
             _previewLine.useWorldSpace = true;
+            _previewLine.sortingLayerName = _sortingLayerName;
+            _previewLine.sortingOrder = _sortingOrder;
             _previewLine.enabled = false;
         }
 

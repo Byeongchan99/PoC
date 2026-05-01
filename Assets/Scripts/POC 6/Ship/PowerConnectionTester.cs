@@ -25,8 +25,9 @@ namespace POC6
 
         private void Update()
         {
-            // NodePlacer가 배치 중일 때는 드래그 입력을 무시
-            if (_nodePlacer != null && _nodePlacer.IsPlacing) return;
+            // NodePlacer가 배치 중이거나 이번 프레임에 배치를 완료한 경우 드래그 입력을 무시
+            // (배치 완료와 드래그 시작이 동일 프레임에 일어나면 라인 렌더러가 튀는 현상 발생)
+            if (_nodePlacer != null && (_nodePlacer.IsPlacing || _nodePlacer.WasPlacedThisFrame)) return;
 
             // 좌클릭: 클릭 위치의 노드로 드래그 시작
             if (Mouse.current.leftButton.wasPressedThisFrame)

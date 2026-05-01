@@ -40,6 +40,9 @@ namespace POC6
         // 배치 모드 활성 여부
         private bool _isPlacing = false;
 
+        // 이번 프레임에 노드를 배치했는지 여부 (동일 프레임 드래그 시작 방지용)
+        private bool _placedThisFrame = false;
+
         private void Awake()
         {
             if (_mainCamera == null)
@@ -48,6 +51,9 @@ namespace POC6
 
         private void Update()
         {
+            // 매 프레임 시작 시 초기화 (이전 프레임 배치 플래그 리셋)
+            _placedThisFrame = false;
+
             if (!_isPlacing || _pendingNode == null) return;
 
             // R 키로 회전
@@ -115,6 +121,12 @@ namespace POC6
         /// </summary>
         public bool IsPlacing => _isPlacing;
 
+        /// <summary>
+        /// 이번 프레임에 노드를 배치했는지 반환합니다.
+        /// 동일 프레임에 배치 완료 후 드래그가 시작되는 것을 방지하는 데 사용합니다.
+        /// </summary>
+        public bool WasPlacedThisFrame => _placedThisFrame;
+
         // ────────────────────────────────────────────────
         // 내부 로직
         // ────────────────────────────────────────────────
@@ -170,6 +182,9 @@ namespace POC6
 
             // 그리드에 등록
             _shipGrid.PlaceNode(placedNode);
+
+            // 이번 프레임에 배치 완료 플래그 설정 (CancelPlacement 전에 설정해야 함)
+            _placedThisFrame = true;
 
             // 배치 후 미리보기 제거 및 배치 모드 종료
             CancelPlacement();

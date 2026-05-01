@@ -30,6 +30,16 @@ namespace POC6
         [Header("참조")]
         [SerializeField] private ShipGrid _shipGrid;
 
+        [Header("테스트")]
+        [Tooltip("체크하면 Start()에서 자동으로 기본 배치를 실행합니다. GameManager 없이 단독 테스트용.")]
+        [SerializeField] private bool _setupOnStart = false;
+
+        private void Start()
+        {
+            if (_setupOnStart)
+                SetupDefaultShip();
+        }
+
         /// <summary>
         /// 정의된 기본 노드 목록을 그리드에 배치합니다.
         /// GameManager의 Init 단계에서 호출됩니다.

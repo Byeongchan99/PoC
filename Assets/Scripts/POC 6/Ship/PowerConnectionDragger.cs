@@ -53,6 +53,13 @@ namespace POC6
 
         private void Update()
         {
+            // Build Phase에서만 동력 연결 가능
+            if (GameManager.Instance != null && GameManager.Instance.CurrentState != GameState.BuildPhase)
+            {
+                if (_isDragging) CancelDrag();
+                return;
+            }
+
             if (!_isDragging) return;
 
             // 드래그 중: 미리보기 선을 마우스까지 업데이트

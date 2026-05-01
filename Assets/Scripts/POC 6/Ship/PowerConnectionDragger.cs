@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 namespace POC6
 {
@@ -49,7 +50,7 @@ namespace POC6
             UpdatePreviewLine();
 
             // 마우스 버튼 놓으면 연결 시도
-            if (Input.GetMouseButtonUp(0))
+            if (Mouse.current.leftButton.wasReleasedThisFrame)
                 TryFinishDrag();
         }
 
@@ -151,9 +152,9 @@ namespace POC6
         /// </summary>
         private Vector3 GetMouseWorldPosition()
         {
-            Vector3 mouseScreenPos = Input.mousePosition;
-            mouseScreenPos.z = Mathf.Abs(_mainCamera.transform.position.z);
-            return _mainCamera.ScreenToWorldPoint(mouseScreenPos);
+            Vector2 mouseScreenPos = Mouse.current.position.ReadValue();
+            Vector3 pos = new Vector3(mouseScreenPos.x, mouseScreenPos.y, Mathf.Abs(_mainCamera.transform.position.z));
+            return _mainCamera.ScreenToWorldPoint(pos);
         }
     }
 }

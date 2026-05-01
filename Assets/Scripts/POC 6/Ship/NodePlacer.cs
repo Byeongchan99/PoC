@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 namespace POC6
 {
@@ -46,18 +47,18 @@ namespace POC6
             if (!_isPlacing || _pendingNode == null) return;
 
             // R 키로 회전
-            if (Input.GetKeyDown(KeyCode.R))
+            if (Keyboard.current.rKey.wasPressedThisFrame)
                 RotatePreview();
 
             // 마우스 위치에 맞춰 미리보기 이동
             UpdatePreviewPosition();
 
             // 마우스 클릭으로 배치
-            if (Input.GetMouseButtonDown(0))
+            if (Mouse.current.leftButton.wasPressedThisFrame)
                 TryPlaceNode();
 
             // 우클릭 또는 Escape로 배치 취소
-            if (Input.GetMouseButtonDown(1) || Input.GetKeyDown(KeyCode.Escape))
+            if (Mouse.current.rightButton.wasPressedThisFrame || Keyboard.current.escapeKey.wasPressedThisFrame)
                 CancelPlacement();
         }
 
@@ -259,9 +260,9 @@ namespace POC6
         /// </summary>
         private Vector3 GetMouseWorldPosition()
         {
-            Vector3 mouseScreenPos = Input.mousePosition;
-            mouseScreenPos.z = Mathf.Abs(_mainCamera.transform.position.z);
-            return _mainCamera.ScreenToWorldPoint(mouseScreenPos);
+            Vector2 mouseScreenPos = Mouse.current.position.ReadValue();
+            Vector3 pos = new Vector3(mouseScreenPos.x, mouseScreenPos.y, Mathf.Abs(_mainCamera.transform.position.z));
+            return _mainCamera.ScreenToWorldPoint(pos);
         }
     }
 }

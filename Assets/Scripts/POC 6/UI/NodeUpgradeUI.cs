@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.InputSystem;
 using TMPro;
 
 namespace POC6
@@ -45,7 +46,7 @@ namespace POC6
             if (GameManager.Instance?.CurrentState != GameState.BuildPhase) return;
 
             // 마우스 클릭으로 노드 선택
-            if (Input.GetMouseButtonDown(0))
+            if (Mouse.current.leftButton.wasPressedThisFrame)
                 TrySelectNodeAtMouse();
         }
 
@@ -143,9 +144,9 @@ namespace POC6
 
         private Vector3 GetMouseWorldPosition()
         {
-            Vector3 mouseScreenPos = Input.mousePosition;
-            mouseScreenPos.z = Mathf.Abs(_mainCamera.transform.position.z);
-            return _mainCamera.ScreenToWorldPoint(mouseScreenPos);
+            Vector2 mouseScreenPos = Mouse.current.position.ReadValue();
+            Vector3 pos = new Vector3(mouseScreenPos.x, mouseScreenPos.y, Mathf.Abs(_mainCamera.transform.position.z));
+            return _mainCamera.ScreenToWorldPoint(pos);
         }
     }
 }

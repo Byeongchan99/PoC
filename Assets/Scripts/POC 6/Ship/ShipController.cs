@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 namespace POC6
 {
@@ -59,7 +60,7 @@ namespace POC6
             if (!_isControlEnabled) return;
 
             // 마우스 좌클릭 유지 중에 계속 전진
-            if (Input.GetMouseButton(0))
+            if (Mouse.current.leftButton.isPressed)
                 ApplyThrust();
         }
 
@@ -125,9 +126,9 @@ namespace POC6
         /// </summary>
         private Vector3 GetMouseWorldPosition()
         {
-            Vector3 mouseScreenPos = Input.mousePosition;
-            mouseScreenPos.z = Mathf.Abs(_mainCamera.transform.position.z);
-            return _mainCamera.ScreenToWorldPoint(mouseScreenPos);
+            Vector2 mouseScreenPos = Mouse.current.position.ReadValue();
+            Vector3 pos = new Vector3(mouseScreenPos.x, mouseScreenPos.y, Mathf.Abs(_mainCamera.transform.position.z));
+            return _mainCamera.ScreenToWorldPoint(pos);
         }
     }
 }

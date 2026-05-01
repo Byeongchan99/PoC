@@ -5,7 +5,7 @@ namespace POC6
     /// <summary>
     /// 카메라가 우주선을 부드럽게 추적합니다.
     /// Cinemachine 없이 직접 SmoothDamp로 구현했습니다.
-    /// 탑다운 2D 뷰를 유지하며 Z 좌표는 변경하지 않습니다.
+    /// 탑다운 2D 뷰를 유지하며 Z 좌표는 항상 _zOffset으로 고정합니다.
     /// </summary>
     public class CameraController : MonoBehaviour
     {
@@ -24,6 +24,15 @@ namespace POC6
         // SmoothDamp에 필요한 현재 속도 값 (내부 계산용)
         private Vector3 _velocity = Vector3.zero;
 
+        private void Start()
+        {
+            if (_target == null) return;
+
+            // 시작 시 스무딩 없이 즉시 올바른 위치로 이동
+            // SmoothDamp 과도기 중 카메라 Z값이 변하면 스프라이트가 클리핑될 수 있음
+            transform.position = new Vector3(_target.position.x, _target.position.y, _zOffset);
+        }
+
         private void LateUpdate()
         {
             if (_target == null) return;
@@ -37,10 +46,14 @@ namespace POC6
         public void SetTarget(Transform target)
         {
             _target = target;
+            // 대상이 설정되는 즉시 카메라를 올바른 위치로 스냅
+            if (target != null)
+                transform.position = new Vector3(target.position.x, target.position.y, _zOffset);
         }
 
         /// <summary>
         /// SmoothDamp를 사용해 카메라가 대상을 부드럽게 추적합니다.
+        /// Z는 항상 _zOffset으로 고정해서 스프라이트 클리핑을 방지합니다.
         /// </summary>
         private void FollowTarget()
         {
@@ -50,12 +63,16 @@ namespace POC6
                 _zOffset
             );
 
-            transform.position = Vector3.SmoothDamp(
+            Vector3 smoothed = Vector3.SmoothDamp(
                 transform.position,
                 desiredPosition,
                 ref _velocity,
                 _smoothTime
             );
+
+            // Z는 SmoothDamp 계산에서 제외하고 항상 고정값 사용
+            smoothed.z = _zOffset;
+            transform.position = smoothed;
         }
     }
 }

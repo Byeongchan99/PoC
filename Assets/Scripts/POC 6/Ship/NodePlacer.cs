@@ -31,7 +31,7 @@ namespace POC6
         private GameObject _previewInstance;
 
         // 미리보기 렌더러들 (색상 변경에 사용)
-        private Renderer[] _previewRenderers;
+        private SpriteRenderer[] _previewSpriteRenderers;
 
         // 배치 모드 활성 여부
         private bool _isPlacing = false;
@@ -110,35 +110,12 @@ namespace POC6
 
         /// <summary>
         /// 미리보기 게임오브젝트를 생성합니다.
-        /// 노드 비주얼 프리팹이 있으면 인스턴스화하고, 없으면 기본 큐브를 사용합니다.
+        /// NodeVisualFactory를 통해 2D SpriteRenderer 기반으로 만듭니다.
         /// </summary>
         private void CreatePreview(NodeData nodeData)
         {
-            GameObject source = nodeData.VisualPrefab;
-
-            if (source != null)
-            {
-                _previewInstance = Instantiate(source);
-            }
-            else
-            {
-                // 비주얼 프리팹이 없을 때 임시 큐브 생성
-                _previewInstance = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                // POC: 노드 크기에 맞춰 스케일 조정
-                float cellSize = _shipGrid.CellSize;
-                _previewInstance.transform.localScale = new Vector3(
-                    nodeData.Size.x * cellSize * 0.9f,
-                    nodeData.Size.y * cellSize * 0.9f,
-                    0.1f
-                );
-
-                // 콜라이더 제거 (클릭 이벤트 방해 방지)
-                var col = _previewInstance.GetComponent<Collider>();
-                if (col != null) Destroy(col);
-            }
-
-            // 렌더러 수집
-            _previewRenderers = _previewInstance.GetComponentsInChildren<Renderer>();
+            _previewInstance = NodeVisualFactory.CreatePreviewVisual(nodeData, _shipGrid.CellSize);
+            _previewSpriteRenderers = _previewInstance.GetComponentsInChildren<SpriteRenderer>();
             SetPreviewColor(_validColor);
         }
 
@@ -197,61 +174,22 @@ namespace POC6
         }
 
         /// <summary>
-        /// PlacedNode에 맞는 씬 오브젝트를 생성하고 배치합니다.
+        /// PlacedNode에 맞는 2D 씬 오브젝트를 생성하고 배치합니다.
         /// </summary>
         private GameObject SpawnNodeVisual(PlacedNode node)
         {
-            Vector3 worldPos = _shipGrid.NodeCenterToWorld(node);
-            Quaternion rotation = _shipGrid.transform.rotation
-                * Quaternion.Euler(0f, 0f, node.RotationStep * 90f);
-
-            GameObject obj;
-
-            if (node.Data.VisualPrefab != null)
-            {
-                obj = Instantiate(node.Data.VisualPrefab, worldPos, rotation, _shipGrid.transform);
-            }
-            else
-            {
-                // 프리팹 없으면 기본 큐브 생성
-                obj = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                obj.transform.SetParent(_shipGrid.transform);
-                obj.transform.position = worldPos;
-                obj.transform.rotation = rotation;
-
-                float cellSize = _shipGrid.CellSize;
-                Vector2Int size = node.GetRotatedSize();
-                obj.transform.localScale = new Vector3(
-                    size.x * cellSize * 0.9f,
-                    size.y * cellSize * 0.9f,
-                    0.1f
-                );
-
-                // 노드 색상 적용
-                var renderer = obj.GetComponent<Renderer>();
-                if (renderer != null)
-                {
-                    renderer.material = new Material(Shader.Find("Universal Render Pipeline/Lit"));
-                    renderer.material.color = node.Data.TintColor;
-                }
-            }
-
-            obj.name = $"Node_{node.Data.NodeName}_{node.GridPosition}";
-            return obj;
+            return NodeVisualFactory.CreateNodeVisual(node, _shipGrid, _shipGrid.transform);
         }
 
         /// <summary>
-        /// 미리보기의 모든 렌더러 색상을 변경합니다.
+        /// 미리보기의 모든 SpriteRenderer 색상을 변경합니다.
         /// </summary>
         private void SetPreviewColor(Color color)
         {
-            if (_previewRenderers == null) return;
+            if (_previewSpriteRenderers == null) return;
 
-            foreach (var r in _previewRenderers)
-            {
-                if (r.material != null)
-                    r.material.color = color;
-            }
+            foreach (var sr in _previewSpriteRenderers)
+                sr.color = color;
         }
 
         /// <summary>

@@ -83,45 +83,11 @@ namespace POC6
         }
 
         /// <summary>
-        /// PlacedNode에 맞는 씬 오브젝트를 생성하고 반환합니다.
+        /// PlacedNode에 맞는 2D 씬 오브젝트를 생성하고 반환합니다.
         /// </summary>
         private GameObject SpawnNodeVisual(PlacedNode node)
         {
-            Vector3 worldPos = _shipGrid.NodeCenterToWorld(node);
-            Quaternion rotation = _shipGrid.transform.rotation
-                * Quaternion.Euler(0f, 0f, node.RotationStep * 90f);
-
-            GameObject obj;
-
-            if (node.Data.VisualPrefab != null)
-            {
-                obj = Instantiate(node.Data.VisualPrefab, worldPos, rotation, _shipGrid.transform);
-            }
-            else
-            {
-                obj = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                obj.transform.SetParent(_shipGrid.transform);
-                obj.transform.position = worldPos;
-                obj.transform.rotation = rotation;
-
-                float cellSize = _shipGrid.CellSize;
-                Vector2Int size = node.GetRotatedSize();
-                obj.transform.localScale = new Vector3(
-                    size.x * cellSize * 0.9f,
-                    size.y * cellSize * 0.9f,
-                    0.1f
-                );
-
-                var renderer = obj.GetComponent<Renderer>();
-                if (renderer != null)
-                {
-                    renderer.material = new Material(Shader.Find("Universal Render Pipeline/Lit"));
-                    renderer.material.color = node.Data.TintColor;
-                }
-            }
-
-            obj.name = $"Node_{node.Data.NodeName}_{node.GridPosition}";
-            return obj;
+            return NodeVisualFactory.CreateNodeVisual(node, _shipGrid, _shipGrid.transform);
         }
     }
 }

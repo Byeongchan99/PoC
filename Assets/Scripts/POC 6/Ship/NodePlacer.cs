@@ -91,7 +91,7 @@ namespace POC6
             {
                 Destroy(_previewInstance);
                 _previewInstance = null;
-                _previewRenderers = null;
+                _previewSpriteRenderers = null;
             }
 
             _pendingNode = null;

@@ -16,9 +16,6 @@ namespace POC6
         [Header("설정")]
         [SerializeField] private GameConfig _config;
 
-        [Header("웨이브 데이터")]
-        [SerializeField] private List<WaveData> _allWaves = new();
-
         [Header("카드 풀 (웨이브 클리어 후 제시될 전체 카드 목록)")]
         [SerializeField] private List<CardData> _cardPool = new();
 

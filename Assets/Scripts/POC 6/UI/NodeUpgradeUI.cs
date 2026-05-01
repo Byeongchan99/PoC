@@ -104,7 +104,7 @@ namespace POC6
             _selectedNode.UpgradeLevel();
 
             // 업그레이드 후 체력 재계산 (건강 기여도가 변할 수 있음)
-            _healthSystem.Initialize(_shipGrid);
+            _healthSystem.Initialize();
 
             RefreshUI();
         }

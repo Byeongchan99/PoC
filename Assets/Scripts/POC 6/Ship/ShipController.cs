@@ -51,20 +51,22 @@ namespace POC6
             // Z축 회전만 사용
             _rigidbody.constraints = RigidbodyConstraints2D.None;
 
+            // 물리(FixedUpdate)와 렌더링(Update) 프레임 불일치로 인한 지터를 방지합니다.
+            // Interpolate: 두 FixedUpdate 사이의 렌더 프레임을 보간하여 부드럽게 표시합니다.
+            _rigidbody.interpolation = RigidbodyInterpolation2D.Interpolate;
+
             if (_enableOnStart)
                 _isControlEnabled = true;
-        }
-
-        private void Update()
-        {
-            if (!_isControlEnabled) return;
-
-            RotateTowardsMouse();
         }
 
         private void FixedUpdate()
         {
             if (!_isControlEnabled) return;
+
+            // 회전과 이동을 모두 FixedUpdate에서 처리합니다.
+            // transform.rotation을 Update에서 직접 변경하면 Rigidbody2D와 충돌해 지터가 생깁니다.
+            // MoveRotation()은 물리 시스템을 통해 회전하므로 안전합니다.
+            RotateTowardsMouse();
 
             // 마우스 좌클릭 유지 중에 계속 전진
             if (Mouse.current.leftButton.isPressed)
@@ -98,20 +100,21 @@ namespace POC6
 
         /// <summary>
         /// 마우스 위치를 향해 우주선을 부드럽게 회전시킵니다.
-        /// RotateTowards를 사용해서 최대 회전속도로 제한합니다.
+        /// Rigidbody2D.MoveRotation()을 사용해서 물리 시스템을 통해 회전합니다.
+        /// transform.rotation 직접 수정은 Rigidbody2D와 충돌하므로 사용하지 않습니다.
         /// </summary>
         private void RotateTowardsMouse()
         {
             Vector3 mouseWorld = GetMouseWorldPosition();
-            Vector2 direction = (mouseWorld - transform.position).normalized;
+            Vector2 direction = ((Vector2)mouseWorld - _rigidbody.position).normalized;
 
             // 방향 벡터를 각도로 변환 (2D에서 위쪽이 기본 방향)
             float targetAngle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg - 90f;
 
-            float currentAngle = transform.eulerAngles.z;
-            float newAngle = Mathf.MoveTowardsAngle(currentAngle, targetAngle, _rotationSpeed * Time.deltaTime);
+            // FixedUpdate에서 호출되므로 Time.fixedDeltaTime 사용
+            float newAngle = Mathf.MoveTowardsAngle(_rigidbody.rotation, targetAngle, _rotationSpeed * Time.fixedDeltaTime);
 
-            transform.rotation = Quaternion.Euler(0f, 0f, newAngle);
+            _rigidbody.MoveRotation(newAngle);
         }
 
         /// <summary>

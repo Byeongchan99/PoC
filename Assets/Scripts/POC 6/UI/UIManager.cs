@@ -38,10 +38,9 @@ namespace POC6
 
         private void Awake()
         {
-            _startWaveButton?.onClick.AddListener(HandleStartWaveClicked);
-            _restartButton?.onClick.AddListener(HandleRestartClicked);
-
-            _gameOverPanel?.SetActive(false);
+            if (_startWaveButton != null) _startWaveButton.onClick.AddListener(HandleStartWaveClicked);
+            if (_restartButton != null) _restartButton.onClick.AddListener(HandleRestartClicked);
+            if (_gameOverPanel != null) _gameOverPanel.SetActive(false);
         }
 
         private void OnEnable()
@@ -107,9 +106,10 @@ namespace POC6
             bool isBuild = state == GameState.BuildPhase;
             bool isCombat = state == GameState.CombatPhase;
 
-            _buildPhaseUI?.SetActive(isBuild);
-            _combatPhaseUI?.SetActive(isCombat);
-            _startWaveButton?.gameObject.SetActive(isBuild);
+            // Unity SerializedField는 ?.가 fake-null을 처리하지 못하므로 명시적 null 체크 사용
+            if (_buildPhaseUI != null) _buildPhaseUI.SetActive(isBuild);
+            if (_combatPhaseUI != null) _combatPhaseUI.SetActive(isCombat);
+            if (_startWaveButton != null) _startWaveButton.gameObject.SetActive(isBuild);
         }
 
         /// <summary>
@@ -117,7 +117,7 @@ namespace POC6
         /// </summary>
         private void ShowGameOver()
         {
-            _gameOverPanel?.SetActive(true);
+            if (_gameOverPanel != null) _gameOverPanel.SetActive(true);
         }
 
         // ────────────────────────────────────────────────
@@ -131,8 +131,8 @@ namespace POC6
 
         private void HandleRestartClicked()
         {
-            _gameOverPanel?.SetActive(false);
-            GameManager.Instance?.RestartGame();
+            if (_gameOverPanel != null) _gameOverPanel.SetActive(false);
+            if (GameManager.Instance != null) GameManager.Instance.RestartGame();
         }
     }
 }

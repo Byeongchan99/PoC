@@ -161,7 +161,6 @@ namespace POC6
             // config가 없으면 기본값 0 (완전 정지)
             Time.timeScale = _config != null ? _config.BuildPhaseTimeScale : 0f;
             _shipController?.DisableControl();
-            _attackShooter?.Deactivate();
         }
 
         /// <summary>
@@ -189,7 +188,6 @@ namespace POC6
             Time.timeScale = 1f;
             _healthSystem.Initialize();
             _shipController?.EnableControl();
-            _attackShooter?.Activate();
             _waveManager.StartCurrentWave();
         }
 
@@ -208,7 +206,6 @@ namespace POC6
 
             Time.timeScale = 0f;
             _shipController?.DisableControl();
-            _attackShooter?.Deactivate();
 
             // 마지막 웨이브를 클리어했으면 게임 클리어
             if (_waveManager.IsAllWavesCleared)
@@ -235,7 +232,6 @@ namespace POC6
 
             Time.timeScale = 0f;
             _shipController?.DisableControl();
-            _attackShooter?.Deactivate();
             _waveManager.StopCurrentWave();
 
             OnWaveFailed?.Invoke();

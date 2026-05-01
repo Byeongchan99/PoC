@@ -286,8 +286,8 @@ namespace POC6
                 waveNumber = _waveManager.CurrentWaveNumber,
                 nodes = _shipGrid.SerializeNodes(),
                 connections = _powerGraph.SerializeConnections(),
-                deckCardNames = _deckManager.GetCardNames(),
-                gold = _goldSystem.CurrentGold
+                deckCardNames = _deckManager != null ? _deckManager.GetCardNames() : new List<string>(),
+                gold = _goldSystem != null ? _goldSystem.CurrentGold : 0
             };
         }
 

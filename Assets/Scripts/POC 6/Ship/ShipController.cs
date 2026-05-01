@@ -12,6 +12,10 @@ namespace POC6
     [RequireComponent(typeof(Rigidbody2D))]
     public class ShipController : MonoBehaviour
     {
+        [Header("테스트")]
+        [Tooltip("체크하면 게임 시작 시 바로 조작 가능합니다. GameManager 없이 단독 테스트용.")]
+        [SerializeField] private bool _enableOnStart = false;
+
         [Header("회전 설정")]
         [Tooltip("마우스를 향한 회전 속도 (도/초). 낮을수록 부드럽게 회전합니다.")]
         [Range(60f, 720f)]
@@ -46,6 +50,9 @@ namespace POC6
             _rigidbody.gravityScale = 0f;
             // Z축 회전만 사용
             _rigidbody.constraints = RigidbodyConstraints2D.None;
+
+            if (_enableOnStart)
+                _isControlEnabled = true;
         }
 
         private void Update()

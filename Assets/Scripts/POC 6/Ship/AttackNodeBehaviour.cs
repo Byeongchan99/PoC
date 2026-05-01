@@ -34,12 +34,23 @@ namespace POC6
 
         private void Update()
         {
-            // 적이 없거나 초기화 전이면 처리 안 함
-            if (_placedNode == null || Enemy.AllActive.Count == 0) return;
+            // 초기화 전이면 처리 안 함
+            if (_placedNode == null) return;
+
+            // PowerGraph 참조 없으면 경고 (ShipGrid와 같은 GameObject에 PowerGraph가 없을 때 발생)
+            if (_powerGraph == null)
+            {
+                Debug.LogWarning($"[AttackNodeBehaviour] {gameObject.name}: PowerGraph 참조가 없습니다. ShipGrid와 같은 GameObject에 PowerGraph 컴포넌트가 있는지 확인하세요.");
+                return;
+            }
+
+            // 적이 없으면 처리 안 함
+            if (Enemy.AllActive.Count == 0) return;
 
             AttackStats stats = _powerGraph.GetEffectiveStats(_placedNode);
 
             // 동력이 없으면 (Damage == 0) 발사 안 함
+            // 원인: 코어와 동력 연결이 안 됐거나, NodeData.BaseAttackStats.Damage가 0
             if (stats.Damage <= 0f) return;
 
             TryFire(stats);
@@ -105,6 +116,12 @@ namespace POC6
         /// </summary>
         private void FireAt(Enemy target, AttackStats stats)
         {
+            if (ProjectilePool.Instance == null)
+            {
+                Debug.LogWarning("[AttackNodeBehaviour] ProjectilePool.Instance가 null입니다. 씬에 ProjectilePool 컴포넌트가 있는지 확인하세요.");
+                return;
+            }
+
             Vector3 firePos = _shipGrid.NodeCenterToWorld(_placedNode);
             Vector2 aimDir = ((Vector2)target.transform.position - (Vector2)firePos).normalized;
 
@@ -117,7 +134,7 @@ namespace POC6
                 float angle = startAngle + i * spreadAngle;
                 Vector2 dir = RotateVector(aimDir, angle);
 
-                ProjectilePool.Instance?.Get(
+                ProjectilePool.Instance.Get(
                     firePos,
                     dir,
                     stats.ProjectileSpeed,

@@ -78,16 +78,21 @@ namespace POC6
             }
             else
             {
-                // 프리팹 없을 때 기본 오브젝트 생성
+                // 프리팹 없을 때 기본 원형 도형으로 생성
                 var go = new GameObject("Projectile");
                 go.transform.SetParent(transform);
-                go.AddComponent<Rigidbody2D>();
+
+                var rb = go.AddComponent<Rigidbody2D>();
+                rb.gravityScale = 0f;
+                rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
 
                 var col = go.AddComponent<CircleCollider2D>();
                 col.isTrigger = true;
                 col.radius = 0.15f;
 
                 var sr = go.AddComponent<SpriteRenderer>();
+                // SpriteRenderer는 Sprite가 없으면 렌더링이 안 되므로 반드시 할당
+                sr.sprite = GetFallbackSprite();
                 sr.color = Color.yellow;
 
                 go.transform.localScale = Vector3.one * 0.3f;
@@ -96,6 +101,23 @@ namespace POC6
 
             p.gameObject.SetActive(false);
             return p;
+        }
+
+        // 폴백용 1x1 흰색 스프라이트 (한 번만 생성해서 재사용)
+        private static Sprite _fallbackSprite;
+
+        /// <summary>
+        /// 프리팹 없이 생성된 발사체에 적용할 기본 흰색 스프라이트를 반환합니다.
+        /// </summary>
+        private static Sprite GetFallbackSprite()
+        {
+            if (_fallbackSprite != null) return _fallbackSprite;
+
+            var tex = new Texture2D(1, 1);
+            tex.SetPixel(0, 0, Color.white);
+            tex.Apply();
+            _fallbackSprite = Sprite.Create(tex, new Rect(0, 0, 1, 1), new Vector2(0.5f, 0.5f), 1f);
+            return _fallbackSprite;
         }
     }
 }

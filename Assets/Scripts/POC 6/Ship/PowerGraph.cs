@@ -326,11 +326,14 @@ namespace POC6
 
         /// <summary>
         /// 두 노드 사이에 LineRenderer로 연결선을 생성합니다.
+        /// useWorldSpace = false로 설정해서 우주선(부모 Transform)을 따라 함께 이동합니다.
         /// </summary>
         private void CreateConnectionLine(PlacedNode from, PlacedNode to)
         {
             var lineObj = new GameObject($"PowerLine_{from.GridPosition}->{to.GridPosition}");
             lineObj.transform.SetParent(transform);
+            lineObj.transform.localPosition = Vector3.zero;
+            lineObj.transform.localRotation = Quaternion.identity;
 
             var lr = lineObj.AddComponent<LineRenderer>();
             lr.positionCount = 2;
@@ -342,16 +345,24 @@ namespace POC6
 
             lr.startColor = _lineColor;
             lr.endColor = _lineColor;
-            lr.useWorldSpace = true;
+
+            // useWorldSpace = false: 위치를 부모(우주선) 로컬 좌표로 지정.
+            // 우주선이 이동/회전하면 라인도 함께 움직입니다.
+            lr.useWorldSpace = false;
             lr.sortingLayerName = _sortingLayerName;
             lr.sortingOrder = _sortingOrder;
 
-            Vector3 fromPos = _grid.NodeCenterToWorld(from);
-            Vector3 toPos = _grid.NodeCenterToWorld(to);
-            fromPos.z += _lineZOffset;
-            toPos.z += _lineZOffset;
-            lr.SetPosition(0, fromPos);
-            lr.SetPosition(1, toPos);
+            // 월드 좌표를 우주선 로컬 좌표로 변환
+            Vector3 fromWorld = _grid.NodeCenterToWorld(from);
+            Vector3 toWorld = _grid.NodeCenterToWorld(to);
+
+            Vector3 fromLocal = transform.InverseTransformPoint(fromWorld);
+            Vector3 toLocal = transform.InverseTransformPoint(toWorld);
+            fromLocal.z = _lineZOffset;
+            toLocal.z = _lineZOffset;
+
+            lr.SetPosition(0, fromLocal);
+            lr.SetPosition(1, toLocal);
 
             _connectionLines.Add(lineObj);
         }

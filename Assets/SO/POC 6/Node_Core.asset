@@ -15,7 +15,7 @@ MonoBehaviour:
   _nodeName: "\uCF54\uC5B4 \uB178\uB4DC"
   _nodeType: 0
   _size: {x: 1, y: 1}
-  _healthContribution: 10
+  _healthContribution: 50
   _visualPrefab: {fileID: 0}
   _icon: {fileID: 0}
   _tintColor: {r: 0.9150943, g: 0.73441917, b: 0.22014059, a: 1}

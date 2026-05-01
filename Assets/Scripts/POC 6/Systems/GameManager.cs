@@ -43,6 +43,9 @@ namespace POC6
         /// <summary>웨이브 실패 처리 완료 후 발행됩니다.</summary>
         public static event Action OnWaveFailed;
 
+        /// <summary>모든 웨이브를 클리어했을 때 발행됩니다.</summary>
+        public static event Action OnGameCleared;
+
         // ────────────────────────────────────────────────
         // 상태
         // ────────────────────────────────────────────────
@@ -333,8 +336,9 @@ namespace POC6
 
         private void HandleGameClear()
         {
-            Debug.Log("[GameManager] 게임 클리어! 5웨이브 모두 완료.");
-            // TODO: 게임 클리어 UI 표시
+            Time.timeScale = 0f;
+            _shipController?.DisableControl();
+            OnGameCleared?.Invoke();
         }
 
         /// <summary>

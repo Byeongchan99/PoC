@@ -32,15 +32,27 @@ namespace POC6
         [Tooltip("다음 웨이브 시작 버튼 (Build Phase에서 표시)")]
         [SerializeField] private Button _startWaveButton;
 
-        [Header("게임오버 UI")]
-        [SerializeField] private GameObject _gameOverPanel;
-        [SerializeField] private Button _restartButton;
+        [Header("웨이브 실패 UI")]
+        [Tooltip("웨이브 실패 시 표시됩니다. 닫으면 스냅샷이 복원된 빌드 페이즈가 그대로 진행됩니다.")]
+        [SerializeField] private GameObject _waveFailedPanel;
+        [Tooltip("웨이브 실패 패널의 닫기 버튼. 클릭 시 패널만 숨기고 빌드 페이즈를 계속 진행합니다.")]
+        [SerializeField] private Button _waveFailedCloseButton;
+
+        [Header("게임 클리어 UI")]
+        [Tooltip("모든 웨이브 클리어 시 표시됩니다.")]
+        [SerializeField] private GameObject _gameClearPanel;
 
         private void Awake()
         {
-            if (_startWaveButton != null) _startWaveButton.onClick.AddListener(HandleStartWaveClicked);
-            if (_restartButton != null) _restartButton.onClick.AddListener(HandleRestartClicked);
-            if (_gameOverPanel != null) _gameOverPanel.SetActive(false);
+            if (_startWaveButton != null)
+                _startWaveButton.onClick.AddListener(HandleStartWaveClicked);
+
+            // 웨이브 실패 닫기 버튼: 패널만 닫고 이미 복원된 빌드 페이즈를 이어서 진행
+            if (_waveFailedCloseButton != null)
+                _waveFailedCloseButton.onClick.AddListener(HandleWaveFailedCloseClicked);
+
+            if (_waveFailedPanel != null) _waveFailedPanel.SetActive(false);
+            if (_gameClearPanel != null) _gameClearPanel.SetActive(false);
         }
 
         private void OnEnable()
@@ -49,7 +61,9 @@ namespace POC6
             GoldSystem.OnGoldChanged += RefreshGold;
             GameManager.OnGameStateChanged += RefreshPhaseUI;
             WaveManager.OnWaveStarted += RefreshWaveNumber;
-            HealthSystem.OnDied += ShowGameOver;
+            GameManager.OnWaveFailed += ShowWaveFailed;
+            GameManager.OnWaveCleared += HandleWaveCleared;
+            GameManager.OnGameCleared += ShowGameClear;
         }
 
         private void OnDisable()
@@ -58,7 +72,9 @@ namespace POC6
             GoldSystem.OnGoldChanged -= RefreshGold;
             GameManager.OnGameStateChanged -= RefreshPhaseUI;
             WaveManager.OnWaveStarted -= RefreshWaveNumber;
-            HealthSystem.OnDied -= ShowGameOver;
+            GameManager.OnWaveFailed -= ShowWaveFailed;
+            GameManager.OnWaveCleared -= HandleWaveCleared;
+            GameManager.OnGameCleared -= ShowGameClear;
         }
 
         // ────────────────────────────────────────────────
@@ -113,11 +129,21 @@ namespace POC6
         }
 
         /// <summary>
-        /// 우주선이 파괴되면 게임오버 패널을 표시합니다.
+        /// 웨이브 실패 시 실패 패널을 표시합니다.
+        /// GameManager가 이미 스냅샷을 복원하고 빌드 페이즈로 전환한 상태이므로
+        /// 패널을 닫기만 하면 바로 이어서 플레이할 수 있습니다.
         /// </summary>
-        private void ShowGameOver()
+        private void ShowWaveFailed()
         {
-            if (_gameOverPanel != null) _gameOverPanel.SetActive(true);
+            if (_waveFailedPanel != null) _waveFailedPanel.SetActive(true);
+        }
+
+        /// <summary>
+        /// 모든 웨이브 클리어 시 게임 클리어 패널을 표시합니다.
+        /// </summary>
+        private void ShowGameClear()
+        {
+            if (_gameClearPanel != null) _gameClearPanel.SetActive(true);
         }
 
         // ────────────────────────────────────────────────
@@ -129,10 +155,13 @@ namespace POC6
             GameManager.Instance?.OnStartWaveButtonPressed();
         }
 
-        private void HandleRestartClicked()
+        /// <summary>
+        /// 웨이브 실패 패널의 닫기 버튼 핸들러입니다.
+        /// 패널만 닫으면 됩니다. GameManager는 이미 빌드 페이즈 상태입니다.
+        /// </summary>
+        private void HandleWaveFailedCloseClicked()
         {
-            if (_gameOverPanel != null) _gameOverPanel.SetActive(false);
-            if (GameManager.Instance != null) GameManager.Instance.RestartGame();
+            if (_waveFailedPanel != null) _waveFailedPanel.SetActive(false);
         }
     }
 }

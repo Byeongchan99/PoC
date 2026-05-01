@@ -86,6 +86,8 @@ namespace POC6
 
         /// <summary>
         /// WaveData의 SpawnInfos를 순서대로 처리해서 적을 스폰하는 코루틴입니다.
+        /// 모든 스폰이 끝나면 _spawnCoroutine을 null로 직접 초기화합니다.
+        /// 코루틴 완료 시점에 이미 모든 적이 처치된 경우도 처리합니다.
         /// </summary>
         private IEnumerator SpawnRoutine(WaveData waveData)
         {
@@ -103,6 +105,14 @@ namespace POC6
                         yield return new WaitForSeconds(spawnInfo.SpawnInterval);
                 }
             }
+
+            // 코루틴이 끝나도 참조가 남아 있으면 HandleEnemyDied의 null 체크가 항상 실패합니다.
+            // 여기서 직접 null로 초기화해서 '스폰 완료' 상태를 표시합니다.
+            _spawnCoroutine = null;
+
+            // 스폰 도중 적이 모두 처치된 경우를 처리합니다.
+            if (_defeatedCount >= _totalEnemiesInWave)
+                OnAllEnemiesDefeated?.Invoke();
         }
 
         /// <summary>

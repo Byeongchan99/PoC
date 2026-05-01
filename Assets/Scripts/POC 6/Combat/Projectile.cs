@@ -105,11 +105,17 @@ namespace POC6
                 enemy.TakeDamage(_damage);
                 HandlePierce();
             }
-            // 우주선에 데미지 적용
-            else if (_ownerTag == "Enemy" && other.TryGetComponent<HealthSystem>(out var health))
+            // 우주선 노드에 데미지 적용
+            // 노드의 WorldInstance에 콜라이더가 있고 HealthSystem은 부모(Ship)에 있으므로
+            // GetComponentInParent로 탐색
+            else if (_ownerTag == "Enemy")
             {
-                health.TakeDamage(_damage);
-                HandlePierce();
+                HealthSystem health = other.GetComponentInParent<HealthSystem>();
+                if (health != null)
+                {
+                    health.TakeDamage(_damage);
+                    HandlePierce();
+                }
             }
         }
 

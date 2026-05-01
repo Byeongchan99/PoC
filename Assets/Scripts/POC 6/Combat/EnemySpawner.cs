@@ -109,10 +109,11 @@ namespace POC6
         /// <summary>
         /// 우주선 주변 360도 랜덤 위치에서 적 한 마리를 스폰합니다.
         /// 카메라가 우주선을 따라다니므로 화면 밖의 기준이 우주선 위치입니다.
+        /// VisualPrefab이 없으면 기본 원형 도형으로 생성합니다.
         /// </summary>
         private void SpawnEnemy(EnemyData enemyData)
         {
-            if (enemyData == null || enemyData.VisualPrefab == null) return;
+            if (enemyData == null) return;
 
             Vector3 shipPos = _shipTransform != null ? _shipTransform.position : Vector3.zero;
 
@@ -120,7 +121,31 @@ namespace POC6
             Vector2 randomDir = Random.insideUnitCircle.normalized;
             Vector3 spawnPos = shipPos + (Vector3)(randomDir * _spawnRadius);
 
-            GameObject enemyObj = Instantiate(enemyData.VisualPrefab, spawnPos, Quaternion.identity);
+            GameObject enemyObj;
+
+            if (enemyData.VisualPrefab != null)
+            {
+                enemyObj = Instantiate(enemyData.VisualPrefab, spawnPos, Quaternion.identity);
+            }
+            else
+            {
+                // 프리팹 없을 때 기본 원형 도형으로 생성
+                enemyObj = new GameObject($"Enemy_{enemyData.EnemyName}");
+                enemyObj.transform.position = spawnPos;
+                enemyObj.transform.localScale = Vector3.one * 0.8f;
+
+                var rb = enemyObj.AddComponent<Rigidbody2D>();
+                rb.gravityScale = 0f;
+                rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
+
+                var col = enemyObj.AddComponent<CircleCollider2D>();
+                col.isTrigger = true;
+                col.radius = 0.5f;
+
+                var sr = enemyObj.AddComponent<SpriteRenderer>();
+                sr.sprite = GetFallbackSprite();
+                sr.color = Color.red;
+            }
 
             // Enemy 컴포넌트가 없으면 추가
             Enemy enemy = enemyObj.GetComponent<Enemy>();
@@ -132,6 +157,23 @@ namespace POC6
 
             // AttackNodeShooter에 적 목록 업데이트
             _attackShooter?.SetEnemies(_activeEnemies);
+        }
+
+        // 폴백용 1x1 흰색 스프라이트 (한 번만 생성해서 재사용)
+        private static Sprite _fallbackSprite;
+
+        /// <summary>
+        /// 프리팹 없이 생성된 적에게 적용할 기본 흰색 스프라이트를 반환합니다.
+        /// </summary>
+        private static Sprite GetFallbackSprite()
+        {
+            if (_fallbackSprite != null) return _fallbackSprite;
+
+            var tex = new Texture2D(1, 1);
+            tex.SetPixel(0, 0, Color.white);
+            tex.Apply();
+            _fallbackSprite = Sprite.Create(tex, new Rect(0, 0, 1, 1), new Vector2(0.5f, 0.5f), 1f);
+            return _fallbackSprite;
         }
 
         // ────────────────────────────────────────────────

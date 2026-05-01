@@ -133,12 +133,13 @@ namespace POC6
 
         /// <summary>
         /// 게임을 초기화합니다. 기본 우주선 배치, 시작 덱 설정, 시작 골드 지급.
+        /// GoldSystem, DeckManager는 연결되지 않아도 동작합니다.
         /// </summary>
         private void HandleInit()
         {
             _waveManager.Initialize();
-            _goldSystem.Initialize(_config.StartingGold);
-            _deckManager.Initialize();
+            _goldSystem?.Initialize(_config != null ? _config.StartingGold : 0);
+            _deckManager?.Initialize();
 
             // 기본 우주선 배치
             _defaultShipSetup.SetupDefaultShip();
@@ -158,9 +159,10 @@ namespace POC6
         /// </summary>
         private void HandleEnterBuildPhase()
         {
-            Time.timeScale = _config.BuildPhaseTimeScale;
-            _shipController.DisableControl();
-            _attackShooter.Deactivate();
+            // config가 없으면 기본값 0 (완전 정지)
+            Time.timeScale = _config != null ? _config.BuildPhaseTimeScale : 0f;
+            _shipController?.DisableControl();
+            _attackShooter?.Deactivate();
         }
 
         /// <summary>
@@ -187,8 +189,8 @@ namespace POC6
         {
             Time.timeScale = 1f;
             _healthSystem.Initialize(_shipGrid);
-            _shipController.EnableControl();
-            _attackShooter.Activate();
+            _shipController?.EnableControl();
+            _attackShooter?.Activate();
             _waveManager.StartCurrentWave();
         }
 
@@ -206,8 +208,8 @@ namespace POC6
             OnGameStateChanged?.Invoke(GameState.WaveResult);
 
             Time.timeScale = 0f;
-            _shipController.DisableControl();
-            _attackShooter.Deactivate();
+            _shipController?.DisableControl();
+            _attackShooter?.Deactivate();
 
             // 마지막 웨이브를 클리어했으면 게임 클리어
             if (_waveManager.IsAllWavesCleared)
@@ -233,8 +235,8 @@ namespace POC6
             OnGameStateChanged?.Invoke(GameState.WaveResult);
 
             Time.timeScale = 0f;
-            _shipController.DisableControl();
-            _attackShooter.Deactivate();
+            _shipController?.DisableControl();
+            _attackShooter?.Deactivate();
             _waveManager.StopCurrentWave();
 
             OnWaveFailed?.Invoke();
@@ -252,10 +254,18 @@ namespace POC6
 
         /// <summary>
         /// 카드 선택 단계 진입: 카드 풀에서 랜덤으로 cardChoiceCount장을 제시합니다.
+        /// DeckManager나 카드 풀이 없으면 바로 BuildPhase로 복귀합니다.
         /// </summary>
         private void HandleEnterCardSelection()
         {
-            var choices = GetRandomCardChoices(_config.CardChoiceCount);
+            if (_deckManager == null || _cardPool.Count == 0)
+            {
+                ChangeState(GameState.BuildPhase);
+                return;
+            }
+
+            int count = _config != null ? _config.CardChoiceCount : 3;
+            var choices = GetRandomCardChoices(count);
             _deckManager.ShowCardSelection(choices);
         }
 
@@ -298,11 +308,10 @@ namespace POC6
 
             _defaultShipSetup.RestoreFromSnapshot(_lastWaveSnapshot.nodes);
             _powerGraph.Clear();
-            // 연결 복원
             RestorePowerConnections(_lastWaveSnapshot.connections);
 
-            _deckManager.RestoreFromSnapshot(_lastWaveSnapshot.deckCardNames);
-            _goldSystem.SetGold(_lastWaveSnapshot.gold);
+            _deckManager?.RestoreFromSnapshot(_lastWaveSnapshot.deckCardNames);
+            _goldSystem?.SetGold(_lastWaveSnapshot.gold);
         }
 
         /// <summary>

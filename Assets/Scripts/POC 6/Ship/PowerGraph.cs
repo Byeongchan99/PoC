@@ -35,6 +35,9 @@ namespace POC6
         [Tooltip("연결선 Sorting Order. 노드 오브젝트보다 높은 값으로 설정하면 앞에 표시됩니다.")]
         [SerializeField] private int _sortingOrder = 1;
 
+        [Tooltip("라인의 Z 오프셋. 노드(Z=0)보다 카메라 쪽으로 당겨서 앞에 표시합니다.")]
+        [SerializeField] private float _lineZOffset = -0.1f;
+
         private ShipGrid _grid;
 
         private void Awake()
@@ -343,8 +346,12 @@ namespace POC6
             lr.sortingLayerName = _sortingLayerName;
             lr.sortingOrder = _sortingOrder;
 
-            lr.SetPosition(0, _grid.NodeCenterToWorld(from));
-            lr.SetPosition(1, _grid.NodeCenterToWorld(to));
+            Vector3 fromPos = _grid.NodeCenterToWorld(from);
+            Vector3 toPos = _grid.NodeCenterToWorld(to);
+            fromPos.z += _lineZOffset;
+            toPos.z += _lineZOffset;
+            lr.SetPosition(0, fromPos);
+            lr.SetPosition(1, toPos);
 
             _connectionLines.Add(lineObj);
         }

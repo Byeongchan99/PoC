@@ -31,6 +31,9 @@ namespace POC6
         [Tooltip("드래그 미리보기 선 Sorting Order. 노드보다 앞에 표시되도록 높게 설정합니다.")]
         [SerializeField] private int _sortingOrder = 2;
 
+        [Tooltip("라인의 Z 오프셋. 노드(Z=0)보다 카메라 쪽으로 당겨서 앞에 표시합니다.")]
+        [SerializeField] private float _lineZOffset = -0.1f;
+
         // 드래그 시작 노드
         private PlacedNode _dragFromNode;
 
@@ -75,7 +78,9 @@ namespace POC6
 
             // 미리보기 선 활성화
             _previewLine.enabled = true;
-            _previewLine.SetPosition(0, _shipGrid.NodeCenterToWorld(fromNode));
+            Vector3 startPos = _shipGrid.NodeCenterToWorld(fromNode);
+            startPos.z += _lineZOffset;
+            _previewLine.SetPosition(0, startPos);
         }
 
         /// <summary>
@@ -114,6 +119,7 @@ namespace POC6
         private void UpdatePreviewLine()
         {
             Vector3 mouseWorld = GetMouseWorldPosition();
+            mouseWorld.z += _lineZOffset;
             _previewLine.SetPosition(1, mouseWorld);
 
             // 마우스 아래 노드 확인 후 색상 변경

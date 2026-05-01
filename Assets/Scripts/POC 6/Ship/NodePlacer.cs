@@ -88,6 +88,9 @@ namespace POC6
             _validColor = new Color(tint.r, tint.g, tint.b, _validAlpha);
 
             CreatePreview(nodeData);
+
+            // 생성 직후 바로 위치를 잡아 첫 프레임에 (0,0,0)에서 튀는 현상 방지
+            UpdatePreviewPosition();
         }
 
         /// <summary>

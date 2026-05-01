@@ -106,14 +106,13 @@ namespace POC6
                 HandlePierce();
             }
             // 우주선 노드에 데미지 적용
-            // 노드의 WorldInstance에 콜라이더가 있고 HealthSystem은 부모(Ship)에 있으므로
-            // GetComponentInParent로 탐색
+            // 각 노드의 WorldInstance에 NodeHealth가 붙어 있으므로 직접 접근
             else if (_ownerTag == "Enemy")
             {
-                HealthSystem health = other.GetComponentInParent<HealthSystem>();
-                if (health != null)
+                NodeHealth nodeHealth = other.GetComponent<NodeHealth>();
+                if (nodeHealth != null)
                 {
-                    health.TakeDamage(_damage);
+                    nodeHealth.TakeDamage(_damage);
                     HandlePierce();
                 }
             }

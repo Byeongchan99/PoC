@@ -12,14 +12,13 @@ namespace POC6
     {
         [Header("참조")]
         [SerializeField] private ShipGrid _shipGrid;
-        [SerializeField] private AttackNodeShooter _attackShooter;
         [SerializeField] private Transform _shipTransform;
 
         [Header("스폰 설정")]
         [Tooltip("우주선 중심에서 적이 스폰될 반경. 카메라 시야 밖이어야 합니다.")]
         [SerializeField] private float _spawnRadius = 20f;
 
-        // 현재 활성화된 적 목록 (AttackNodeShooter와 WaveManager에서 참조)
+        // 현재 활성화된 적 목록 (WaveManager 완료 판정에 사용)
         private List<Enemy> _activeEnemies = new();
 
         // 현재 진행 중인 스폰 코루틴
@@ -77,7 +76,7 @@ namespace POC6
         }
 
         /// <summary>
-        /// 현재 활성 적 목록을 반환합니다. AttackNodeShooter가 사용합니다.
+        /// 현재 활성 적 목록을 반환합니다.
         /// </summary>
         public List<Enemy> GetActiveEnemies() => _activeEnemies;
 
@@ -154,9 +153,6 @@ namespace POC6
 
             enemy.Initialize(enemyData, _shipGrid);
             _activeEnemies.Add(enemy);
-
-            // AttackNodeShooter에 적 목록 업데이트
-            _attackShooter?.SetEnemies(_activeEnemies);
         }
 
         // 폴백용 1x1 흰색 스프라이트 (한 번만 생성해서 재사용)
@@ -187,8 +183,6 @@ namespace POC6
         private void HandleEnemyDied(Enemy enemy)
         {
             _activeEnemies.Remove(enemy);
-            _attackShooter?.SetEnemies(_activeEnemies);
-
             _defeatedCount++;
 
             if (_defeatedCount >= _totalEnemiesInWave && _spawnCoroutine == null)
@@ -211,7 +205,6 @@ namespace POC6
             }
 
             _activeEnemies.Clear();
-            _attackShooter?.SetEnemies(_activeEnemies);
         }
     }
 }

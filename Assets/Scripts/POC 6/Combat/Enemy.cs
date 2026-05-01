@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace POC6
@@ -12,6 +13,9 @@ namespace POC6
     /// </summary>
     public class Enemy : MonoBehaviour
     {
+        /// <summary>씬에 활성화된 모든 Enemy 목록. AttackNodeBehaviour가 타겟 탐색에 사용합니다.</summary>
+        public static readonly List<Enemy> AllActive = new();
+
         /// <summary>적이 처치되었을 때 발행됩니다. (드롭 골드 양)</summary>
         public static event Action<int> OnGoldDropped;
 
@@ -45,10 +49,12 @@ namespace POC6
         {
             _rigidbody = GetComponent<Rigidbody2D>();
             if (_rigidbody != null)
-            {
                 _rigidbody.gravityScale = 0f;
-            }
         }
+
+        private void OnEnable() => AllActive.Add(this);
+
+        private void OnDisable() => AllActive.Remove(this);
 
         private void Update()
         {

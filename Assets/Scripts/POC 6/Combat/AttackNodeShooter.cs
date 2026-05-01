@@ -5,10 +5,10 @@ using UnityEngine;
 namespace POC6
 {
     /// <summary>
-    /// 우주선의 모든 공격 노드가 자동으로 적을 조준하고 발사하는 시스템입니다.
-    /// ShipGrid에서 Attack 타입 노드를 조회하고 PowerGraph에서 유효 스탯을 받아 처리합니다.
-    /// 발사 가능 조건: 사거리 안에 적이 있고, 노드 발사 방향의 180도 전방 범위 내에 있어야 합니다.
+    /// [사용 중단] 각 Attack 노드의 AttackNodeBehaviour로 대체되었습니다.
+    /// 노드가 자신의 Update()에서 직접 타겟 탐색과 발사를 처리합니다.
     /// </summary>
+    [System.Obsolete("AttackNodeBehaviour로 대체됨. 이 컴포넌트는 씬에서 제거하세요.")]
     public class AttackNodeShooter : MonoBehaviour
     {
         [Header("참조")]

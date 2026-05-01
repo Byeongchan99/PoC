@@ -27,7 +27,6 @@ namespace POC6
         [SerializeField] private PowerGraph _powerGraph;
         [SerializeField] private HealthSystem _healthSystem;
         [SerializeField] private ShipController _shipController;
-        [SerializeField] private AttackNodeShooter _attackShooter;
         [SerializeField] private EnemySpawner _enemySpawner;
         [SerializeField] private WaveManager _waveManager;
         [SerializeField] private DefaultShipSetup _defaultShipSetup;
@@ -145,7 +144,7 @@ namespace POC6
             _defaultShipSetup.SetupDefaultShip();
 
             // 체력 초기화
-            _healthSystem.Initialize(_shipGrid);
+            _healthSystem.Initialize();
 
             ChangeState(GameState.BuildPhase);
         }
@@ -188,7 +187,7 @@ namespace POC6
         private void HandleEnterCombatPhase()
         {
             Time.timeScale = 1f;
-            _healthSystem.Initialize(_shipGrid);
+            _healthSystem.Initialize();
             _shipController?.EnableControl();
             _attackShooter?.Activate();
             _waveManager.StartCurrentWave();

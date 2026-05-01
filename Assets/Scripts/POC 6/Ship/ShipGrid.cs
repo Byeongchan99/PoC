@@ -42,6 +42,9 @@ namespace POC6
         /// <summary>셀 크기 (월드 유닛)</summary>
         public float CellSize => _cellSize;
 
+        /// <summary>동력 연결 그래프. NodeVisualFactory가 AttackNodeBehaviour 초기화에 사용합니다.</summary>
+        public PowerGraph PowerGraph => _powerGraph;
+
         private void Awake()
         {
             _nodeGraph = GetComponent<NodeGraph>();

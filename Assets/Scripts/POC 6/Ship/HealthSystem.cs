@@ -4,8 +4,9 @@ using UnityEngine;
 namespace POC6
 {
     /// <summary>
-    /// 우주선의 단일 체력 풀을 관리합니다.
-    /// 최대 체력 = 모든 배치 노드의 healthContribution 합계입니다.
+    /// 우주선의 전체 체력 풀을 관리합니다.
+    /// 개별 노드의 NodeHealth에서 데미지 이벤트를 받아 전체 체력을 감소시킵니다.
+    /// 전체 체력 = 웨이브 시작 시 모든 NodeHealth.MaxHealth 합산.
     /// 체력이 0 이하가 되면 OnDied 이벤트를 발행합니다.
     /// </summary>
     public class HealthSystem : MonoBehaviour
@@ -22,28 +23,48 @@ namespace POC6
 
         private bool _isDead = false;
 
-        // 읽기 전용 프로퍼티
         public float CurrentHealth => _currentHealth;
         public float MaxHealth => _maxHealth;
         public float HealthRatio => _maxHealth > 0 ? _currentHealth / _maxHealth : 0f;
 
-        /// <summary>
-        /// ShipGrid의 노드 체력 합산으로 최대 체력을 초기화합니다.
-        /// 웨이브 시작 전, 스냅샷 복원 후 GameManager에서 호출합니다.
-        /// </summary>
-        public void Initialize(ShipGrid grid)
+        private void OnEnable()
         {
-            _maxHealth = grid.CalculateTotalHealth();
-            _currentHealth = _maxHealth;
-            _isDead = false;
+            NodeHealth.OnDamageTaken += HandleNodeDamage;
+        }
 
-            OnHealthChanged?.Invoke(_currentHealth, _maxHealth);
+        private void OnDisable()
+        {
+            NodeHealth.OnDamageTaken -= HandleNodeDamage;
         }
 
         /// <summary>
-        /// 데미지를 적용합니다. 0 이하로 떨어지면 OnDied 이벤트를 발행합니다.
+        /// 웨이브 시작 시 GameManager에서 호출합니다.
+        /// 모든 NodeHealth를 최대 체력으로 초기화하고 전체 최대 체력을 합산합니다.
         /// </summary>
-        public void TakeDamage(float amount)
+        public void Initialize()
+        {
+            _isDead = false;
+            _maxHealth = 0f;
+
+            foreach (var nodeHealth in NodeHealth.All)
+            {
+                nodeHealth.ResetToFull();
+                _maxHealth += nodeHealth.MaxHealth;
+            }
+
+            _currentHealth = _maxHealth;
+            OnHealthChanged?.Invoke(_currentHealth, _maxHealth);
+        }
+
+        // ────────────────────────────────────────────────
+        // 내부 처리
+        // ────────────────────────────────────────────────
+
+        /// <summary>
+        /// NodeHealth.OnDamageTaken 이벤트 수신 시 호출됩니다.
+        /// 전체 체력에서 해당 데미지만큼 빼기만 하면 되어 재합산이 필요 없습니다.
+        /// </summary>
+        private void HandleNodeDamage(float amount)
         {
             if (_isDead) return;
 
@@ -55,17 +76,6 @@ namespace POC6
                 _isDead = true;
                 OnDied?.Invoke();
             }
-        }
-
-        /// <summary>
-        /// 체력을 회복합니다. 최대 체력을 초과하지 않습니다.
-        /// </summary>
-        public void Heal(float amount)
-        {
-            if (_isDead) return;
-
-            _currentHealth = Mathf.Min(_maxHealth, _currentHealth + amount);
-            OnHealthChanged?.Invoke(_currentHealth, _maxHealth);
         }
     }
 }

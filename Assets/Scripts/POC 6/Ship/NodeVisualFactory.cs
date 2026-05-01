@@ -40,6 +40,27 @@ namespace POC6
                 );
             }
 
+            // 모든 노드에 공통으로 NodeHealth 부착
+            var nodeHealth = obj.AddComponent<NodeHealth>();
+            nodeHealth.Initialize(node.Data);
+
+            // NodeType에 따라 행동 컴포넌트 부착
+            switch (node.Data.NodeType)
+            {
+                case NodeType.Attack:
+                    var attack = obj.AddComponent<AttackNodeBehaviour>();
+                    attack.Initialize(node, grid, grid.PowerGraph);
+                    break;
+                case NodeType.Core:
+                    var core = obj.AddComponent<CoreNodeBehaviour>();
+                    core.Initialize(node);
+                    break;
+                case NodeType.Special:
+                    var special = obj.AddComponent<SpecialNodeBehaviour>();
+                    special.Initialize(node);
+                    break;
+            }
+
             obj.name = $"Node_{node.Data.NodeName}_{node.GridPosition}";
             return obj;
         }

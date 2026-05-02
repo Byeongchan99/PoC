@@ -74,7 +74,7 @@ namespace POC6
             foreach (var data in nodeDataList)
             {
                 // 에셋 이름으로 NodeData ScriptableObject 로드
-                NodeData nodeData = Resources.Load<NodeData>($"POC6/Nodes/{data.nodeDataName}");
+                NodeData nodeData = Resources.Load<NodeData>($"Assets/SO/POC 6/{data.nodeDataName}");
 
                 if (nodeData == null)
                 {

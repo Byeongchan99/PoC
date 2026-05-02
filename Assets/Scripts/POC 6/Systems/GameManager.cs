@@ -232,16 +232,13 @@ namespace POC6
 
             Time.timeScale = 0f;
             _shipController?.DisableControl();
-
-            // 스폰 중단 (RevertToPreviousWave 대신 StopCurrentWave만 호출)
-            // 스냅샷이 이미 이 웨이브 시작 직전 상태를 저장하므로
-            // 웨이브 인덱스를 되돌리지 않아야 같은 웨이브를 다시 시도할 수 있습니다.
             _waveManager.StopCurrentWave();
 
             OnWaveFailed?.Invoke();
 
-            // 스냅샷 복원: 노드 배치, 동력 연결, 덱, 골드를 웨이브 시작 전으로 되돌림
+            // 스냅샷 복원 후 이전 웨이브로 복귀
             RestoreWaveSnapshot();
+            _waveManager.RevertToPreviousWave();
 
             ChangeState(GameState.BuildPhase);
         }

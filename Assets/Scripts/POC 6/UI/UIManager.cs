@@ -62,7 +62,6 @@ namespace POC6
             GameManager.OnGameStateChanged += RefreshPhaseUI;
             WaveManager.OnWaveStarted += RefreshWaveNumber;
             GameManager.OnWaveFailed += ShowWaveFailed;
-            GameManager.OnWaveCleared += HandleWaveCleared;
             GameManager.OnGameCleared += ShowGameClear;
         }
 
@@ -73,7 +72,6 @@ namespace POC6
             GameManager.OnGameStateChanged -= RefreshPhaseUI;
             WaveManager.OnWaveStarted -= RefreshWaveNumber;
             GameManager.OnWaveFailed -= ShowWaveFailed;
-            GameManager.OnWaveCleared -= HandleWaveCleared;
             GameManager.OnGameCleared -= ShowGameClear;
         }
 

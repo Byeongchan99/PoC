@@ -717,7 +717,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::POC7.EnemySpawner
   _enemyPrefab: {fileID: 275834676584187379, guid: 2a8b1be711d54344e82137f0e14c935f, type: 3}
-  _spawnRadius: 4
+  _spawnRadius: 5
   _spawnCountCurve:
     serializedVersion: 2
     m_Curve:
@@ -743,9 +743,13 @@ MonoBehaviour:
     m_PostInfinity: 2
     m_RotationOrder: 4
   _maxDifficultyWaves: 30
-  _healthMinExponent: 1
-  _healthMaxExponent: 4
+  _wavesPerHealthDouble: 5
   _sectorJitter: 0.4
+  _spawnClearance: 0.2
+  _spawnAttemptLimit: 20
+  _enemyBaseSize: 0.3
+  _enemySizePerHealth: 0.1
+  _enemyMaxVisualSize: 2
 --- !u!4 &1554768322
 Transform:
   m_ObjectHideFlags: 0
@@ -795,7 +799,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::POC7.EnemyHealthHUD
   _labelYOffset: 0
   _fontSize: 36
-  _labelColor: {r: 1, g: 1, b: 1, a: 1}
+  _labelColor: {r: 0, g: 0, b: 0, a: 1}
 --- !u!114 &1613023357
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1245,7 +1249,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::POC7.SaturationSystem
-  _maxEnemyCount: 20
+  _maxEnemyCount: 30
 --- !u!1 &2011380996
 GameObject:
   m_ObjectHideFlags: 0

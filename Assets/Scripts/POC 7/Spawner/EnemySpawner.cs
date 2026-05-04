@@ -34,6 +34,7 @@ namespace POC7
         /// </summary>
         [SerializeField] private int _healthMaxExponent = 4;
 
+
         /// <summary>각도 섹터 내에서 랜덤 배치 시 허용하는 지터 비율 (0~0.5).</summary>
         [SerializeField] private float _sectorJitter = 0.4f;
 

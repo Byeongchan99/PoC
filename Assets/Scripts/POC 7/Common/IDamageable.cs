@@ -1,4 +1,4 @@
-namespace RingSlasher
+namespace POC7
 {
     /// <summary>
     /// 데미지를 받을 수 있는 객체가 구현해야 하는 인터페이스.

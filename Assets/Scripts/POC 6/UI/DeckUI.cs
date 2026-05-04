@@ -30,6 +30,17 @@ namespace POC6
             if (_panelRoot != null) _panelRoot.SetActive(false);
         }
 
+        private void Start()
+        {
+            // OnEnable 구독보다 GameManager의 상태 전환이 먼저 일어날 수 있으므로
+            // Start에서 현재 상태를 직접 확인해 초기 표시를 처리합니다.
+            if (GameManager.Instance != null && GameManager.Instance.CurrentState == GameState.BuildPhase)
+            {
+                if (_panelRoot != null) _panelRoot.SetActive(true);
+                RefreshDeck();
+            }
+        }
+
         private void OnEnable()
         {
             GameManager.OnGameStateChanged += HandleGameStateChanged;

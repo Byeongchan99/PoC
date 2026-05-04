@@ -88,6 +88,12 @@ namespace POC6
         /// </summary>
         private void TrySelectNodeAtMouse()
         {
+            if (_shipGrid == null)
+            {
+                Debug.LogWarning("[NodeInfoUI] ShipGrid 참조가 없습니다. Inspector에서 연결해주세요.");
+                return;
+            }
+
             Vector3 mouseWorld = GetMouseWorldPosition();
             Vector2Int cell = _shipGrid.WorldToGrid(mouseWorld);
             PlacedNode node = _shipGrid.GetNodeAt(cell);

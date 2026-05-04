@@ -30,43 +30,28 @@ namespace POC6
             if (_panelRoot != null) _panelRoot.SetActive(false);
         }
 
-        private void Start()
-        {
-            Debug.Log($"[DeckUI] Start - GameManager.Instance: {GameManager.Instance != null}, " +
-                      $"State: {GameManager.Instance?.CurrentState}, " +
-                      $"_panelRoot: {_panelRoot != null}, " +
-                      $"_deckManager: {_deckManager != null}, " +
-                      $"_cardButtonPrefab: {_cardButtonPrefab != null}");
-
-            if (GameManager.Instance != null && GameManager.Instance.CurrentState == GameState.BuildPhase)
-            {
-                if (_panelRoot != null) _panelRoot.SetActive(true);
-                RefreshDeck();
-            }
-        }
-
         private void OnEnable()
         {
-            GameManager.OnGameStateChanged += HandleGameStateChanged;
             DeckManager.OnDeckChanged += RefreshDeck;
         }
 
         private void OnDisable()
         {
-            GameManager.OnGameStateChanged -= HandleGameStateChanged;
             DeckManager.OnDeckChanged -= RefreshDeck;
         }
 
-        /// <summary>
-        /// 게임 상태가 바뀔 때 호출됩니다.
-        /// Build Phase에서만 패널을 표시하고, 진입 시 덱 목록을 갱신합니다.
-        /// </summary>
-        private void HandleGameStateChanged(GameState state)
+        private void Update()
         {
-            Debug.Log($"[DeckUI] HandleGameStateChanged: {state}, _panelRoot: {_panelRoot != null}");
-            bool isBuild = state == GameState.BuildPhase;
-            if (_panelRoot != null) _panelRoot.SetActive(isBuild);
-            if (isBuild) RefreshDeck();
+            bool shouldBeVisible = GameManager.Instance != null &&
+                                   GameManager.Instance.CurrentState == GameState.BuildPhase;
+
+            if (_panelRoot == null) return;
+
+            if (_panelRoot.activeSelf != shouldBeVisible)
+            {
+                _panelRoot.SetActive(shouldBeVisible);
+                if (shouldBeVisible) RefreshDeck();
+            }
         }
 
         /// <summary>
@@ -75,9 +60,6 @@ namespace POC6
         /// </summary>
         private void RefreshDeck()
         {
-            Debug.Log($"[DeckUI] RefreshDeck - deckManager: {_deckManager != null}, " +
-                      $"prefab: {_cardButtonPrefab != null}, " +
-                      $"deckCount: {_deckManager?.Deck?.Count}");
             ClearButtons();
 
             if (_deckManager == null || _cardButtonPrefab == null) return;

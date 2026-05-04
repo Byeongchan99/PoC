@@ -11,8 +11,8 @@ GameObject:
   - component: {fileID: 6285409970816960463}
   - component: {fileID: 4521824289164661645}
   - component: {fileID: 4162291271896093971}
-  - component: {fileID: 5949561243545182025}
   - component: {fileID: 7529489134662350248}
+  - component: {fileID: 4487265225716592483}
   m_Layer: 0
   m_Name: Enemy
   m_TagString: Enemy
@@ -130,22 +130,6 @@ CircleCollider2D:
   m_CompositeOrder: 0
   m_Offset: {x: 0, y: 0}
   m_Radius: 0.5
---- !u!114 &5949561243545182025
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 275834676584187379}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d1f70bcdea1fc9e4aab0ddf35838d137, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::POC7.Enemy
-  maxHp: 10
-  currentHp: 0
-  minScale: 0.5
-  maxScale: 2.5
 --- !u!50 &7529489134662350248
 Rigidbody2D:
   serializedVersion: 5
@@ -173,3 +157,19 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 0
   m_Constraints: 0
+--- !u!114 &4487265225716592483
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 275834676584187379}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::POC7.Enemy
+  _maxHealth: 1
+  _baseSize: 0.3
+  _sizePerHealth: 0.1
+  _maxVisualSize: 2

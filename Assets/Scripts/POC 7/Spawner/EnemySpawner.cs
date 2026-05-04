@@ -25,14 +25,10 @@ namespace POC7
         [SerializeField] private int _maxDifficultyWaves = 30;
 
         /// <summary>
-        /// 난이도 0일 때 적 체력 지수. 체력 = 2^지수이므로 기본값 1 → 시작 체력 2.
+        /// 이 웨이브 수마다 적 체력이 2배로 증가한다.
+        /// 예: 값이 5이면 웨이브 1~5는 체력 2, 6~10은 4, 11~15는 8 ... 상한 없이 계속 증가.
         /// </summary>
-        [SerializeField] private int _healthMinExponent = 1;
-
-        /// <summary>
-        /// 난이도 1일 때 적 체력 지수. 기본값 4 → 최대 체력 16 (2, 4, 8, 16 순서로 증가).
-        /// </summary>
-        [SerializeField] private int _healthMaxExponent = 4;
+        [SerializeField] private int _wavesPerHealthDouble = 5;
 
 
         /// <summary>각도 섹터 내에서 랜덤 배치 시 허용하는 지터 비율 (0~0.5).</summary>
@@ -88,8 +84,10 @@ namespace POC7
 
             // 체력을 2의 거듭제곱으로 계산한다.
             // 예: exponent=1→2, exponent=2→4, exponent=3→8, exponent=4→16
-            int exponent = Mathf.RoundToInt(Mathf.Lerp(_healthMinExponent, _healthMaxExponent, difficulty));
-            int health = Mathf.Max(1, (int)Mathf.Pow(2, exponent));
+            // 웨이브 수를 _wavesPerHealthDouble로 나눠 지수를 구한다. 상한 없이 계속 증가한다.
+            // 예: wavesPerDouble=5 → 웨이브 1→2, 6→4, 11→8, 16→16, 21→32 ...
+            int exponent = Mathf.FloorToInt((_currentWave - 1) / (float)_wavesPerHealthDouble) + 1;
+            int health = (int)Mathf.Pow(2, exponent);
 
             // 겹침 체크에 사용할 적의 반경을 미리 계산한다
             float enemySize = Mathf.Min(_enemyBaseSize + health * _enemySizePerHealth, _enemyMaxVisualSize);

@@ -32,8 +32,12 @@ namespace POC6
 
         private void Start()
         {
-            // OnEnable 구독보다 GameManager의 상태 전환이 먼저 일어날 수 있으므로
-            // Start에서 현재 상태를 직접 확인해 초기 표시를 처리합니다.
+            Debug.Log($"[DeckUI] Start - GameManager.Instance: {GameManager.Instance != null}, " +
+                      $"State: {GameManager.Instance?.CurrentState}, " +
+                      $"_panelRoot: {_panelRoot != null}, " +
+                      $"_deckManager: {_deckManager != null}, " +
+                      $"_cardButtonPrefab: {_cardButtonPrefab != null}");
+
             if (GameManager.Instance != null && GameManager.Instance.CurrentState == GameState.BuildPhase)
             {
                 if (_panelRoot != null) _panelRoot.SetActive(true);
@@ -59,6 +63,7 @@ namespace POC6
         /// </summary>
         private void HandleGameStateChanged(GameState state)
         {
+            Debug.Log($"[DeckUI] HandleGameStateChanged: {state}, _panelRoot: {_panelRoot != null}");
             bool isBuild = state == GameState.BuildPhase;
             if (_panelRoot != null) _panelRoot.SetActive(isBuild);
             if (isBuild) RefreshDeck();
@@ -70,6 +75,9 @@ namespace POC6
         /// </summary>
         private void RefreshDeck()
         {
+            Debug.Log($"[DeckUI] RefreshDeck - deckManager: {_deckManager != null}, " +
+                      $"prefab: {_cardButtonPrefab != null}, " +
+                      $"deckCount: {_deckManager?.Deck?.Count}");
             ClearButtons();
 
             if (_deckManager == null || _cardButtonPrefab == null) return;

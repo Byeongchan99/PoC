@@ -52,6 +52,14 @@ namespace POC7
         }
 
         /// <summary>
+        /// GameManager가 게임 시작 시 첫 웨이브를 강제 스폰하기 위해 호출한다.
+        /// </summary>
+        public void SpawnInitialWave()
+        {
+            SpawnWave();
+        }
+
+        /// <summary>
         /// 현재 웨이브 번호에 따른 난이도를 계산하고, 그에 맞는 수와 체력의 적을 스폰한다.
         /// PlayerController.OnDashStarted 이벤트 수신 시 호출된다.
         /// </summary>

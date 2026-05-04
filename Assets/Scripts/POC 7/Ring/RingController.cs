@@ -13,6 +13,15 @@ namespace POC7
         [SerializeField] private PlayerController _playerController;
 
         /// <summary>
+        /// PlayerController가 Inspector에서 연결되지 않은 경우 자식 오브젝트에서 자동으로 찾는다.
+        /// </summary>
+        private void Awake()
+        {
+            if (_playerController == null)
+                _playerController = GetComponentInChildren<PlayerController>();
+        }
+
+        /// <summary>
         /// 매 프레임 A/D 키 입력을 감지하여 링을 회전한다.
         /// 플레이어가 Dashing 상태이면 입력을 무시한다.
         /// </summary>

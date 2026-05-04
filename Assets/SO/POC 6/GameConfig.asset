@@ -20,5 +20,6 @@ MonoBehaviour:
   _enemySpawnRadius: 20
   _upgradeCostMultiplier: 1.5
   _upgradeStatBonus: 0.2
-  _baseUpgradeCost: 30
+  _baseUpgradeCost: 25
   _cardChoiceCount: 3
+  _basePowerCapacity: 100

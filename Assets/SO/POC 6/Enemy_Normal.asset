@@ -16,7 +16,7 @@ MonoBehaviour:
   _tier: 0
   _maxHealth: 30
   _attackRange: 5
-  _attackDamage: 5
+  _attackDamage: 10
   _attackInterval: 1.5
   _moveSpeed: 3
   _projectileSpeed: 8

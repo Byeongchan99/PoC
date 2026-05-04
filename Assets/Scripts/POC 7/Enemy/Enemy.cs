@@ -29,6 +29,20 @@ namespace POC7
         [SerializeField] private float _sizePerHealth = 0.1f;
         [SerializeField] private float _maxVisualSize = 2.0f;
 
+        /// <summary>
+        /// 체력 단계(2의 거듭제곱 지수)에 따른 색상 배열.
+        /// 지수 1(체력 2) → 빨강, 2(4) → 주황, 3(8) → 노랑, 4(16) → 초록, 5+(32 이상) → 파랑.
+        /// </summary>
+        private static readonly Color[] HealthTierColors =
+        {
+            new Color(1f, 0.2f, 0.2f),   // 빨강 (체력 2)
+            new Color(1f, 0.5f, 0f),      // 주황 (체력 4)
+            new Color(1f, 0.9f, 0f),      // 노랑 (체력 8)
+            new Color(0.2f, 0.8f, 0.2f),  // 초록 (체력 16)
+            new Color(0.2f, 0.4f, 1f),    // 파랑 (체력 32 이상)
+        };
+
+        private SpriteRenderer _spriteRenderer;
         private int _currentHealth;
 
         /// <summary>현재 체력. 외부에서 읽기 전용.</summary>
@@ -47,6 +61,8 @@ namespace POC7
 
             var col = GetComponent<CircleCollider2D>();
             col.isTrigger = true;
+
+            _spriteRenderer = GetComponent<SpriteRenderer>();
         }
 
         /// <summary>
@@ -57,6 +73,7 @@ namespace POC7
             _maxHealth = health;
             _currentHealth = health;
             UpdateVisualSize();
+            UpdateColor();
             OnHealthChanged?.Invoke(_currentHealth);
             OnEnemySpawned?.Invoke(this);
         }
@@ -71,6 +88,7 @@ namespace POC7
 
             _currentHealth -= damage;
             UpdateVisualSize();
+            UpdateColor();
             OnHealthChanged?.Invoke(Mathf.Max(0, _currentHealth));
 
             if (_currentHealth <= 0)
@@ -85,6 +103,22 @@ namespace POC7
         {
             float size = Mathf.Min(_baseSize + _currentHealth * _sizePerHealth, _maxVisualSize);
             transform.localScale = Vector3.one * size;
+        }
+
+        /// <summary>
+        /// 체력을 2의 거듭제곱 지수(exponent)로 변환하여 단계별 색상을 적용한다.
+        /// exponent = floor(log2(health)): 체력 2→1, 4→2, 8→3, 16→4, 32→5
+        /// HealthTierColors 배열 마지막 색상은 최대 단계 이상에 모두 적용된다.
+        /// </summary>
+        private void UpdateColor()
+        {
+            if (_spriteRenderer == null)
+                return;
+
+            // 체력이 1이면 지수 0, 이후 2의 거듭제곱마다 1씩 증가
+            int exponent = _currentHealth > 0 ? Mathf.FloorToInt(Mathf.Log(_currentHealth, 2)) : 0;
+            int colorIndex = Mathf.Clamp(exponent - 1, 0, HealthTierColors.Length - 1);
+            _spriteRenderer.color = HealthTierColors[colorIndex];
         }
 
         /// <summary>

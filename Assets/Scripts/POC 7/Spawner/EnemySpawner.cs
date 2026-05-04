@@ -82,20 +82,26 @@ namespace POC7
             float difficulty = Mathf.Clamp01(_currentWave / (float)_maxDifficultyWaves);
             int spawnCount = Mathf.Max(1, Mathf.RoundToInt(_spawnCountCurve.Evaluate(difficulty)));
 
-            // 체력을 2의 거듭제곱으로 계산한다.
-            // 예: exponent=1→2, exponent=2→4, exponent=3→8, exponent=4→16
-            // 웨이브 수를 _wavesPerHealthDouble로 나눠 지수를 구한다. 상한 없이 계속 증가한다.
-            // 예: wavesPerDouble=5 → 웨이브 1→2, 6→4, 11→8, 16→16, 21→32 ...
-            int exponent = Mathf.FloorToInt((_currentWave - 1) / (float)_wavesPerHealthDouble) + 1;
-            int health = (int)Mathf.Pow(2, exponent);
+            // 현재 웨이브에서 도달 가능한 최대 체력 지수를 구한다.
+            // 예: wavesPerDouble=5 → 웨이브 1→지수1(체력2), 6→지수2(체력4), 11→지수3(체력8) ...
+            int maxExponent = Mathf.FloorToInt((_currentWave - 1) / (float)_wavesPerHealthDouble) + 1;
 
-            // 겹침 체크에 사용할 적의 반경을 미리 계산한다
-            float enemySize = Mathf.Min(_enemyBaseSize + health * _enemySizePerHealth, _enemyMaxVisualSize);
+            // 지수 1부터 maxExponent까지의 모든 체력 단계(2^1, 2^2, ..., 2^maxExponent)를 목록으로 만든다.
+            // 이 목록에서 균등 분포로 랜덤 선택하여 각 적의 체력을 결정한다.
+            int maxHealth = (int)Mathf.Pow(2, maxExponent);
+
+            // 겹침 체크에 사용할 적의 반경은 최대 체력 기준으로 계산한다 (최악의 크기 기준).
+            float enemySize = Mathf.Min(_enemyBaseSize + maxHealth * _enemySizePerHealth, _enemyMaxVisualSize);
             float enemyRadius = enemySize / 2f;
 
             int actualSpawned = 0;
             for (int i = 0; i < spawnCount; i++)
             {
+                // 1~maxExponent 범위에서 랜덤 지수를 선택하여 체력을 결정한다.
+                // 예: maxExponent=3이면 지수 1,2,3 중 하나 → 체력 2,4,8 중 하나가 균등 확률로 선택된다.
+                int randomExponent = UnityEngine.Random.Range(1, maxExponent + 1);
+                int health = (int)Mathf.Pow(2, randomExponent);
+
                 Vector2 spawnPos = GetSectorSpawnPosition(i, spawnCount, enemyRadius);
                 if (SpawnEnemy(spawnPos, health))
                     actualSpawned++;

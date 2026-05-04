@@ -41,9 +41,6 @@ namespace POC7
         private PlayerState _currentState = PlayerState.Landed;
         private Vector2 _dashTarget;
 
-        // StartDash와 UpdateDash가 같은 프레임에 실행되어 즉시 착지하는 것을 방지하는 플래그
-        private bool _dashedThisFrame;
-
         /// <summary>현재 돌진 중인지 외부에서 확인할 때 사용한다.</summary>
         public bool IsDashing => _currentState == PlayerState.Dashing;
 
@@ -54,23 +51,36 @@ namespace POC7
         public static bool IsPlayerDashing { get; private set; }
 
         /// <summary>
-        /// Rigidbody2D를 Kinematic으로 설정하고 참조를 캐시한다.
+        /// Rigidbody2D를 Kinematic + Continuous 감지 모드로 초기화한다.
+        /// Continuous 모드는 빠른 이동 시 적을 통과하는 터널링을 방지한다.
         /// </summary>
         private void Awake()
         {
             _rigidbody = GetComponent<Rigidbody2D>();
             _rigidbody.bodyType = RigidbodyType2D.Kinematic;
+
+            // Discrete(기본값)는 각 물리 스텝의 끝 위치만 검사하여 빠른 오브젝트가 충돌체를 통과할 수 있다.
+            // Continuous는 이동 경로 전체를 스윕 테스트하여 충돌 누락을 방지한다.
+            _rigidbody.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
         }
 
+        /// <summary>
+        /// 입력 처리는 Update에서, 이동은 FixedUpdate에서 실행한다.
+        /// MovePosition은 FixedUpdate에서 호출해야 물리 엔진과 동기화되어 충돌 감지가 정확해진다.
+        /// </summary>
         private void Update()
         {
-            _dashedThisFrame = false;
             HandleInput();
+        }
 
-            // 이 프레임에 StartDash가 호출됐으면 UpdateDash는 다음 프레임부터 실행한다.
-            // 같은 프레임에 StartDash → UpdateDash → Land가 연달아 호출되는 것을 방지한다.
-            if (!_dashedThisFrame)
-                UpdateDash();
+        /// <summary>
+        /// MovePosition을 FixedUpdate에서 호출하여 물리 스텝과 이동을 동기화한다.
+        /// Update에서 StartDash가 호출되어도 FixedUpdate는 다음 물리 스텝에서 실행되므로
+        /// 같은 프레임 내 즉시 착지 문제가 자연스럽게 방지된다.
+        /// </summary>
+        private void FixedUpdate()
+        {
+            UpdateDash();
         }
 
         /// <summary>
@@ -152,7 +162,6 @@ namespace POC7
             _dashTarget = targetPos;
             _currentState = PlayerState.Dashing;
             IsPlayerDashing = true;
-            _dashedThisFrame = true;
 
             if (_slashTrail != null && _trailEmitDuringDash)
                 _slashTrail.emitting = true;
@@ -161,20 +170,18 @@ namespace POC7
         }
 
         /// <summary>
-        /// Dashing 상태일 때 매 프레임 목표 지점을 향해 이동한다.
-        /// 목표 지점에 충분히 가까워지면 Land()를 호출한다.
+        /// Dashing 상태일 때 매 물리 스텝마다 목표 지점을 향해 이동한다.
+        /// FixedUpdate에서 호출되므로 Time.fixedDeltaTime을 사용한다.
         /// </summary>
         private void UpdateDash()
         {
             if (_currentState != PlayerState.Dashing)
                 return;
 
-            // _rigidbody.position은 FixedUpdate 기준 값이므로 transform.position으로 읽는다
-            Vector2 currentPos = transform.position;
-            Vector2 newPos = Vector2.MoveTowards(currentPos, _dashTarget, _dashSpeed * Time.deltaTime);
+            Vector2 currentPos = _rigidbody.position;
+            Vector2 newPos = Vector2.MoveTowards(currentPos, _dashTarget, _dashSpeed * Time.fixedDeltaTime);
             _rigidbody.MovePosition(newPos);
 
-            // 목표 지점 도달 판정 (부동소수점 오차를 고려해 작은 임계값 사용)
             if (Vector2.Distance(newPos, _dashTarget) < 0.05f)
                 Land();
         }

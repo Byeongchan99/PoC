@@ -37,6 +37,17 @@ namespace POC7
         /// <summary>각도 섹터 내에서 랜덤 배치 시 허용하는 지터 비율 (0~0.5).</summary>
         [SerializeField] private float _sectorJitter = 0.4f;
 
+        /// <summary>적 간 최소 여백 (적 지름 외 추가 간격). 겹침 방지에 사용한다.</summary>
+        [SerializeField] private float _spawnClearance = 0.2f;
+
+        /// <summary>겹침 없는 위치를 찾지 못할 때 재시도하는 최대 횟수.</summary>
+        [SerializeField] private int _spawnAttemptLimit = 20;
+
+        // Enemy의 크기 공식을 미러링한다. Enemy._baseSize, _sizePerHealth와 동일한 값을 유지해야 한다.
+        [SerializeField] private float _enemyBaseSize = 0.3f;
+        [SerializeField] private float _enemySizePerHealth = 0.1f;
+        [SerializeField] private float _enemyMaxVisualSize = 2.0f;
+
         private int _currentWave;
 
         /// <summary>
@@ -79,10 +90,14 @@ namespace POC7
             int exponent = Mathf.RoundToInt(Mathf.Lerp(_healthMinExponent, _healthMaxExponent, difficulty));
             int health = Mathf.Max(1, (int)Mathf.Pow(2, exponent));
 
+            // 겹침 체크에 사용할 적의 반경을 미리 계산한다
+            float enemySize = Mathf.Min(_enemyBaseSize + health * _enemySizePerHealth, _enemyMaxVisualSize);
+            float enemyRadius = enemySize / 2f;
+
             int actualSpawned = 0;
             for (int i = 0; i < spawnCount; i++)
             {
-                Vector2 spawnPos = GetSectorSpawnPosition(i, spawnCount);
+                Vector2 spawnPos = GetSectorSpawnPosition(i, spawnCount, enemyRadius);
                 if (SpawnEnemy(spawnPos, health))
                     actualSpawned++;
             }
@@ -117,23 +132,37 @@ namespace POC7
         }
 
         /// <summary>
-        /// 원형 영역을 spawnCount개의 각도 섹터로 나누고, index번째 섹터 안에서 랜덤 위치를 반환한다.
-        /// 이 방식은 적들이 특정 방향에 몰리지 않고 링 전체에 고루 퍼지게 한다.
+        /// 원형 영역을 spawnCount개의 각도 섹터로 나누고 index번째 섹터 안에서 위치를 찾는다.
+        /// 겹침 체크를 통과할 때까지 _spawnAttemptLimit 횟수만큼 재시도한다.
         /// </summary>
-        private Vector2 GetSectorSpawnPosition(int index, int spawnCount)
+        /// <param name="enemyRadius">스폰할 적의 반경. 겹침 판정 거리 계산에 사용한다.</param>
+        private Vector2 GetSectorSpawnPosition(int index, int spawnCount, float enemyRadius)
         {
             float sectorAngle = 360f / Mathf.Max(spawnCount, 1);
 
-            // 섹터 중앙 각도에 ±jitter 범위의 랜덤 오프셋을 추가한다
-            float baseAngle = sectorAngle * index;
-            float jitterRange = sectorAngle * _sectorJitter;
-            float angle = (baseAngle + UnityEngine.Random.Range(-jitterRange, jitterRange)) * Mathf.Deg2Rad;
+            // 두 적이 겹치지 않으려면 중심 간 거리가 지름 + clearance 이상이어야 한다
+            float minCenterDistance = enemyRadius * 2f + _spawnClearance;
 
-            // sqrt 보정으로 원형 내부에 균등하게 분포시킨다
-            float dist = Mathf.Sqrt(UnityEngine.Random.Range(0.1f, 1f)) * _spawnRadius;
+            Vector2 candidate = (Vector2)transform.position;
 
-            Vector2 dir = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle));
-            return (Vector2)transform.position + dir * dist;
+            for (int attempt = 0; attempt < _spawnAttemptLimit; attempt++)
+            {
+                float baseAngle = sectorAngle * index;
+                float jitterRange = sectorAngle * _sectorJitter;
+                float angle = (baseAngle + UnityEngine.Random.Range(-jitterRange, jitterRange)) * Mathf.Deg2Rad;
+                float dist = Mathf.Sqrt(UnityEngine.Random.Range(0.1f, 1f)) * _spawnRadius;
+
+                Vector2 dir = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle));
+                candidate = (Vector2)transform.position + dir * dist;
+
+                // minCenterDistance 반경 내에 다른 적이 없으면 이 위치를 사용한다
+                Collider2D overlap = Physics2D.OverlapCircle(candidate, minCenterDistance);
+                if (overlap == null || !overlap.TryGetComponent(out Enemy _))
+                    return candidate;
+            }
+
+            // 재시도 한계 초과 시 마지막 후보 위치를 반환한다
+            return candidate;
         }
     }
 }

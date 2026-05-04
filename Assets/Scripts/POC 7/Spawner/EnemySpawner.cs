@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 namespace POC7
@@ -8,6 +9,9 @@ namespace POC7
     /// </summary>
     public class EnemySpawner : MonoBehaviour
     {
+        /// <summary>웨이브 스폰 완료 시 발생. 인자는 이번 웨이브에서 스폰된 적 수.</summary>
+        public static event Action<int> OnEnemiesSpawned;
+
         /// <summary>스폰할 Enemy 프리팹. Enemy 컴포넌트가 부착되어 있어야 한다.</summary>
         [SerializeField] private GameObject _enemyPrefab;
 
@@ -59,11 +63,16 @@ namespace POC7
             int spawnCount = Mathf.Max(1, Mathf.RoundToInt(_spawnCountCurve.Evaluate(difficulty)));
             int health = Mathf.Max(1, Mathf.RoundToInt(_enemyHealthCurve.Evaluate(difficulty)));
 
+            int actualSpawned = 0;
             for (int i = 0; i < spawnCount; i++)
             {
                 Vector2 spawnPos = GetRandomSpawnPosition();
-                SpawnEnemy(spawnPos, health);
+                if (SpawnEnemy(spawnPos, health))
+                    actualSpawned++;
             }
+
+            if (actualSpawned > 0)
+                OnEnemiesSpawned?.Invoke(actualSpawned);
         }
 
         /// <summary>
@@ -74,18 +83,21 @@ namespace POC7
         /// Unity의 ObjectPool(UnityEngine.Pool.ObjectPool)을 사용해
         /// GC 할당을 최소화하는 것을 권장한다.
         /// </summary>
-        private void SpawnEnemy(Vector2 position, int health)
+        /// <returns>스폰 성공 시 true, 프리팹 미설정으로 실패 시 false</returns>
+        private bool SpawnEnemy(Vector2 position, int health)
         {
             if (_enemyPrefab == null)
             {
                 Debug.LogWarning("[EnemySpawner] Enemy 프리팹이 연결되지 않았습니다.");
-                return;
+                return false;
             }
 
             GameObject obj = Instantiate(_enemyPrefab, position, Quaternion.identity);
 
             if (obj.TryGetComponent(out Enemy enemy))
                 enemy.Initialize(health);
+
+            return true;
         }
 
         /// <summary>

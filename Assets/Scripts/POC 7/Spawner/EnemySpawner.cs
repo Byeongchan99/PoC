@@ -111,8 +111,8 @@ namespace POC7
             for (int attempt = 0; attempt < _spawnAttemptLimit; attempt++)
             {
                 // 원형 균등 분포: Random.insideUnitCircle은 중심 부근에 밀집하므로 sqrt로 보정한다
-                Vector2 randomDir = Random.insideUnitCircle.normalized;
-                float randomDist = Mathf.Sqrt(Random.value) * _spawnRadius;
+                Vector2 randomDir = UnityEngine.Random.insideUnitCircle.normalized;
+                float randomDist = Mathf.Sqrt(UnityEngine.Random.value) * _spawnRadius;
                 candidate = (Vector2)transform.position + randomDir * randomDist;
 
                 // 해당 위치에 기존 적이 없으면 바로 사용한다

@@ -128,7 +128,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 265334220}
+  - component: {fileID: 265334222}
   - component: {fileID: 265334221}
+  - component: {fileID: 265334223}
   m_Layer: 0
   m_Name: Ring Container
   m_TagString: Untagged
@@ -163,11 +165,130 @@ MonoBehaviour:
   m_GameObject: {fileID: 265334219}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8fdc3877c44208540aa90ac067da5daf, type: 3}
+  m_Script: {fileID: 11500000, guid: e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::POC7.RingManager
-  rotateSpeed: 100
-  player: {fileID: 1799977932}
+  m_EditorClassIdentifier: Assembly-CSharp::POC7.RingColliderBuilder
+  _innerRadius: 7
+  _pointCount: 64
+--- !u!68 &265334222
+EdgeCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 265334219}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 0
+  m_UsedByEffector: 0
+  m_CompositeOperation: 0
+  m_CompositeOrder: 0
+  m_Offset: {x: 0, y: 0}
+  m_EdgeRadius: 0
+  m_Points:
+  - {x: 7, y: 0}
+  - {x: 6.966293, y: 0.68612}
+  - {x: 6.8654966, y: 1.3656323}
+  - {x: 6.6985826, y: 2.0319927}
+  - {x: 6.4671564, y: 2.6787841}
+  - {x: 6.1734486, y: 3.2997773}
+  - {x: 5.820287, y: 3.8889918}
+  - {x: 5.411073, y: 4.4407535}
+  - {x: 4.9497476, y: 4.9497476}
+  - {x: 4.440753, y: 5.411073}
+  - {x: 3.8889914, y: 5.8202877}
+  - {x: 3.2997766, y: 6.173449}
+  - {x: 2.678784, y: 6.4671564}
+  - {x: 2.0319924, y: 6.6985826}
+  - {x: 1.3656316, y: 6.865497}
+  - {x: 0.6861199, y: 6.966293}
+  - {x: -0.0000003059797, y: 7}
+  - {x: -0.68612057, y: 6.966293}
+  - {x: -1.3656323, y: 6.8654966}
+  - {x: -2.0319932, y: 6.698582}
+  - {x: -2.6787846, y: 6.4671564}
+  - {x: -3.2997777, y: 6.1734486}
+  - {x: -3.8889925, y: 5.8202868}
+  - {x: -4.440753, y: 5.4110737}
+  - {x: -4.9497476, y: 4.9497476}
+  - {x: -5.4110737, y: 4.440753}
+  - {x: -5.8202877, y: 3.8889914}
+  - {x: -6.1734495, y: 3.2997763}
+  - {x: -6.4671574, y: 2.678783}
+  - {x: -6.6985826, y: 2.0319932}
+  - {x: -6.865497, y: 1.3656322}
+  - {x: -6.966293, y: 0.6861197}
+  - {x: -7, y: -0.0000006119594}
+  - {x: -6.966293, y: -0.68612087}
+  - {x: -6.8654966, y: -1.3656334}
+  - {x: -6.698582, y: -2.031994}
+  - {x: -6.4671564, y: -2.678784}
+  - {x: -6.1734486, y: -3.2997775}
+  - {x: -5.8202868, y: -3.888992}
+  - {x: -5.4110727, y: -4.440754}
+  - {x: -4.9497466, y: -4.949748}
+  - {x: -4.4407535, y: -5.411073}
+  - {x: -3.88899, y: -5.8202887}
+  - {x: -3.2997768, y: -6.173449}
+  - {x: -2.678782, y: -6.467158}
+  - {x: -2.0319917, y: -6.6985826}
+  - {x: -1.3656327, y: -6.8654966}
+  - {x: -0.68611854, y: -6.966293}
+  - {x: 0.00000008347416, y: -7}
+  - {x: 0.686122, y: -6.966293}
+  - {x: 1.3656329, y: -6.8654966}
+  - {x: 2.031995, y: -6.6985817}
+  - {x: 2.6787853, y: -6.467156}
+  - {x: 3.299777, y: -6.173449}
+  - {x: 3.888993, y: -5.8202863}
+  - {x: 4.4407535, y: -5.411073}
+  - {x: 4.949749, y: -4.9497457}
+  - {x: 5.4110737, y: -4.440752}
+  - {x: 5.820287, y: -3.888992}
+  - {x: 6.1734495, y: -3.2997758}
+  - {x: 6.467157, y: -2.678784}
+  - {x: 6.6985826, y: -2.0319908}
+  - {x: 6.865497, y: -1.3656316}
+  - {x: 6.9662933, y: -0.6861174}
+  - {x: 7, y: 0}
+  m_AdjacentStartPoint: {x: 0, y: 0}
+  m_AdjacentEndPoint: {x: 0, y: 0}
+  m_UseAdjacentStartPoint: 0
+  m_UseAdjacentEndPoint: 0
+--- !u!114 &265334223
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 265334219}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::POC7.RingController
+  _rotationSpeed: 90
 --- !u!1 &391968332
 GameObject:
   m_ObjectHideFlags: 0
@@ -178,7 +299,6 @@ GameObject:
   m_Component:
   - component: {fileID: 391968333}
   - component: {fileID: 391968334}
-  - component: {fileID: 391968335}
   m_Layer: 6
   m_Name: Circle Inner
   m_TagString: Untagged
@@ -260,49 +380,6 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
---- !u!68 &391968335
-EdgeCollider2D:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 391968332}
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Density: 1
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_ForceSendLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_ForceReceiveLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_ContactCaptureLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_CallbackLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_IsTrigger: 0
-  m_UsedByEffector: 0
-  m_CompositeOperation: 0
-  m_CompositeOrder: 0
-  m_Offset: {x: 0, y: 0}
-  m_EdgeRadius: 0
-  m_Points:
-  - {x: -0.49999997, y: 0}
-  - {x: 0.49999997, y: 0}
-  m_AdjacentStartPoint: {x: 0, y: 0}
-  m_AdjacentEndPoint: {x: 0, y: 0}
-  m_UseAdjacentStartPoint: 0
-  m_UseAdjacentEndPoint: 0
 --- !u!1 &1316555792
 GameObject:
   m_ObjectHideFlags: 0
@@ -531,6 +608,103 @@ MonoBehaviour:
     m_VarianceClampScale: 0.9
     m_ContrastAdaptiveSharpening: 0
   m_Version: 2
+--- !u!1 &1554768320
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1554768322}
+  - component: {fileID: 1554768321}
+  m_Layer: 0
+  m_Name: Enemy Spawner
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1554768321
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1554768320}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::POC7.EnemySpawner
+  _enemyPrefab: {fileID: 275834676584187379, guid: 2a8b1be711d54344e82137f0e14c935f, type: 3}
+  _spawnRadius: 4
+  _spawnCountCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 4
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 5
+      inSlope: 4
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  _enemyHealthCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 9
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 10
+      inSlope: 9
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  _maxDifficultyWaves: 30
+  _minDistanceBetweenEnemies: 0.5
+  _spawnAttemptLimit: 10
+--- !u!4 &1554768322
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1554768320}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1799977926
 GameObject:
   m_ObjectHideFlags: 0
@@ -545,6 +719,7 @@ GameObject:
   - component: {fileID: 1799977930}
   - component: {fileID: 1799977931}
   - component: {fileID: 1799977932}
+  - component: {fileID: 1799977933}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -808,15 +983,70 @@ MonoBehaviour:
   m_GameObject: {fileID: 1799977926}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9854c3d2d5a9a4c468937cfb786ab8a3, type: 3}
+  m_Script: {fileID: 11500000, guid: d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::POC7.PlayerController
-  dashSpeed: 50
-  attackPower: 1
-  ringLayer:
-    serializedVersion: 2
-    m_Bits: 64
-  isDashing: 0
+  _dashSpeed: 100
+  _ringTransform: {fileID: 391968333}
+--- !u!114 &1799977933
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1799977926}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::POC7.PlayerCombat
+  _initialAttackPower: 1
+  _attackPowerGainPerKill: 1
+--- !u!1 &1822435369
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1822435370}
+  - component: {fileID: 1822435371}
+  m_Layer: 0
+  m_Name: 'SaturationSystem '
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1822435370
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1822435369}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1822435371
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1822435369}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::POC7.SaturationSystem
+  _maxEnemyCount: 20
 --- !u!1 &2011380996
 GameObject:
   m_ObjectHideFlags: 0
@@ -826,7 +1056,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2011380998}
-  - component: {fileID: 2011380997}
   m_Layer: 0
   m_Name: Game Manager
   m_TagString: Untagged
@@ -834,21 +1063,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &2011380997
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2011380996}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3a7e2c6888442064fb1f4432466b79fb, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::POC7.GameManager
-  enemyPrefab: {fileID: 275834676584187379, guid: 2a8b1be711d54344e82137f0e14c935f, type: 3}
-  ringRadius: 4.5
-  maxEnemies: 20
 --- !u!4 &2011380998
 Transform:
   m_ObjectHideFlags: 0
@@ -871,3 +1085,5 @@ SceneRoots:
   - {fileID: 1544266849}
   - {fileID: 2011380998}
   - {fileID: 265334220}
+  - {fileID: 1554768322}
+  - {fileID: 1822435370}

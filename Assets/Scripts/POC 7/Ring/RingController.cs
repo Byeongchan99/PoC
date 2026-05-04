@@ -10,16 +10,6 @@ namespace POC7
     public class RingController : MonoBehaviour
     {
         [SerializeField] private float _rotationSpeed = 90f;
-        [SerializeField] private PlayerController _playerController;
-
-        /// <summary>
-        /// PlayerController가 Inspector에서 연결되지 않은 경우 자식 오브젝트에서 자동으로 찾는다.
-        /// </summary>
-        private void Awake()
-        {
-            if (_playerController == null)
-                _playerController = GetComponentInChildren<PlayerController>();
-        }
 
         /// <summary>
         /// 매 프레임 A/D 키 입력을 감지하여 링을 회전한다.
@@ -27,8 +17,8 @@ namespace POC7
         /// </summary>
         private void Update()
         {
-            // 돌진 중에는 회전 차단. IsDashing을 매 프레임 직접 확인하여 타이밍 오류를 방지한다.
-            if (_playerController != null && _playerController.IsDashing)
+            // 정적 프로퍼티로 확인하여 인스턴스 참조 없이 돌진 여부를 판단한다.
+            if (PlayerController.IsPlayerDashing)
                 return;
 
             float input = 0f;

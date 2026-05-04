@@ -36,6 +36,12 @@ namespace POC7
         public bool IsDashing => _currentState == PlayerState.Dashing;
 
         /// <summary>
+        /// 씬 내 플레이어가 돌진 중인지 나타내는 정적 프로퍼티.
+        /// 인스턴스 참조 없이 어디서든 읽을 수 있다.
+        /// </summary>
+        public static bool IsPlayerDashing { get; private set; }
+
+        /// <summary>
         /// Rigidbody2D를 Kinematic으로 설정하고 참조를 캐시한다.
         /// </summary>
         private void Awake()
@@ -111,6 +117,7 @@ namespace POC7
         {
             _dashTarget = targetPos;
             _currentState = PlayerState.Dashing;
+            IsPlayerDashing = true;
             OnDashStarted?.Invoke();
         }
 
@@ -139,6 +146,7 @@ namespace POC7
         private void Land()
         {
             _currentState = PlayerState.Landed;
+            IsPlayerDashing = false;
             OnPlayerLanded?.Invoke();
         }
     }

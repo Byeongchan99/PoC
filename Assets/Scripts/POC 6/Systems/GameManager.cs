@@ -269,9 +269,15 @@ namespace POC6
         /// </summary>
         public void OnCardSelected(CardData card)
         {
-            if (_currentState != GameState.CardSelection) return;
+            Debug.Log($"[GameManager] OnCardSelected: card={card?.name}, currentState={_currentState}");
+            if (_currentState != GameState.CardSelection)
+            {
+                Debug.LogWarning($"[GameManager] OnCardSelected 거부됨 - 현재 상태가 CardSelection이 아님: {_currentState}");
+                return;
+            }
 
             _deckManager.AddCard(card);
+            Debug.Log($"[GameManager] AddCard 완료 - 덱 크기: {_deckManager.Deck.Count}");
             ChangeState(GameState.BuildPhase);
         }
 

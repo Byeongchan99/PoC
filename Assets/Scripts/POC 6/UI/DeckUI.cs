@@ -81,6 +81,7 @@ namespace POC6
         /// </summary>
         private void RefreshDeck()
         {
+            Debug.Log($"[DeckUI] RefreshDeck - deckManager:{_deckManager != null}, prefab:{_cardButtonPrefab != null}, deckCount:{_deckManager?.Deck?.Count}");
             ClearButtons();
 
             if (_deckManager == null || _cardButtonPrefab == null) return;

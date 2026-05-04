@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using UnityEngine.InputSystem;
 using UnityEngine.EventSystems;
 using TMPro;
+using System.Collections.Generic;
 
 namespace POC6
 {
@@ -78,8 +79,9 @@ namespace POC6
 
             if (Mouse.current.leftButton.wasPressedThisFrame)
             {
-                // UI 위에서 클릭하면 무시. 버튼 클릭이 노드 선택/해제를 덮어쓰지 않도록 합니다.
-                if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
+                // 버튼 같은 상호작용 UI 위에서 클릭하면 무시합니다.
+                // IsPointerOverGameObject()는 비상호작용 패널도 감지하므로 Selectable 기반으로 확인합니다.
+                if (IsPointerOverInteractableUI())
                     return;
 
                 TrySelectNodeAtMouse();
@@ -303,6 +305,32 @@ namespace POC6
                 NodeType.Normal => "일반",
                 _ => "알 수 없음"
             };
+        }
+
+        /// <summary>
+        /// 마우스가 버튼처럼 상호작용 가능한 UI 위에 있는지 확인합니다.
+        /// IsPointerOverGameObject()와 달리 비상호작용 패널(배경 이미지 등)은 무시합니다.
+        /// </summary>
+        private bool IsPointerOverInteractableUI()
+        {
+            if (EventSystem.current == null) return false;
+
+            var eventData = new PointerEventData(EventSystem.current)
+            {
+                position = Mouse.current.position.ReadValue()
+            };
+
+            var results = new List<RaycastResult>();
+            EventSystem.current.RaycastAll(eventData, results);
+
+            foreach (var result in results)
+            {
+                // Selectable(Button, Toggle 등 상호작용 컴포넌트)이 있는 오브젝트만 차단
+                if (result.gameObject.GetComponentInParent<UnityEngine.UI.Selectable>() != null)
+                    return true;
+            }
+
+            return false;
         }
 
         private Vector3 GetMouseWorldPosition()

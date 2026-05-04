@@ -102,6 +102,18 @@ namespace POC6
             _isDead = false;
             _lastAttackTime = 0f;
             _currentTarget = null;
+
+            // 물리 충돌을 위해 콜라이더를 Non-trigger로 설정합니다.
+            // 발사체는 Trigger이므로 OnTriggerEnter2D는 계속 동작합니다.
+            var col = GetComponent<Collider2D>();
+            if (col != null) col.isTrigger = false;
+
+            // 이동 중 회전 방지
+            if (_rigidbody != null)
+            {
+                _rigidbody.constraints = RigidbodyConstraints2D.FreezeRotation;
+                _rigidbody.interpolation = RigidbodyInterpolation2D.Interpolate;
+            }
         }
 
         /// <summary>

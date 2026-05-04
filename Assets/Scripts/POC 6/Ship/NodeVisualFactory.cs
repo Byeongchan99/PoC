@@ -40,6 +40,11 @@ namespace POC6
                 );
             }
 
+            // 프리팹의 콜라이더가 Trigger일 수 있으므로 Non-trigger로 강제 설정합니다.
+            // 발사체(Trigger)가 OnTriggerEnter2D로 히트를 감지하므로 노드는 Non-trigger여야 합니다.
+            foreach (var col in obj.GetComponentsInChildren<Collider2D>())
+                col.isTrigger = false;
+
             // 모든 노드에 공통으로 NodeHealth 부착
             var nodeHealth = obj.AddComponent<NodeHealth>();
             nodeHealth.Initialize(node.Data);

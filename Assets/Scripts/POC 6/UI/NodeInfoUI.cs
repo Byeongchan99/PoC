@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.InputSystem;
+using UnityEngine.EventSystems;
 using TMPro;
 
 namespace POC6
@@ -76,7 +77,13 @@ namespace POC6
             if (_nodePlacer != null && _nodePlacer.IsPlacing) return;
 
             if (Mouse.current.leftButton.wasPressedThisFrame)
+            {
+                // UI 위에서 클릭하면 무시. 버튼 클릭이 노드 선택/해제를 덮어쓰지 않도록 합니다.
+                if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
+                    return;
+
                 TrySelectNodeAtMouse();
+            }
         }
 
         // ────────────────────────────────────────────────

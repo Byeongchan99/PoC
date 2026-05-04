@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 namespace POC7
@@ -8,6 +9,8 @@ namespace POC7
     /// </summary>
     public class PlayerCombat : MonoBehaviour
     {
+        /// <summary>공격력이 변경될 때 발생. 인자는 변경 후 공격력. PlayerAttackLabel이 구독한다.</summary>
+        public event Action<int> OnAttackPowerChanged;
         [SerializeField] private int _initialAttackPower = 1;
         [SerializeField] private int _attackPowerGainPerKill = 1;
 
@@ -62,6 +65,7 @@ namespace POC7
         private void HandleEnemyKilled(Enemy enemy)
         {
             _currentAttackPower += _attackPowerGainPerKill;
+            OnAttackPowerChanged?.Invoke(_currentAttackPower);
         }
     }
 }

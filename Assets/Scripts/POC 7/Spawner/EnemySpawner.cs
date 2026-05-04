@@ -34,6 +34,12 @@ namespace POC7
         /// </summary>
         [SerializeField] private int _healthMaxExponent = 4;
 
+        /// <summary>
+        /// 적 체력 상한. 지수 공식으로 계산된 체력이 이 값을 넘지 않도록 클램프한다.
+        /// 크기의 maxVisualSize에 대응하는 개념이다.
+        /// </summary>
+        [SerializeField] private int _maxEnemyHealth = 16;
+
         /// <summary>각도 섹터 내에서 랜덤 배치 시 허용하는 지터 비율 (0~0.5).</summary>
         [SerializeField] private float _sectorJitter = 0.4f;
 
@@ -88,7 +94,7 @@ namespace POC7
             // 체력을 2의 거듭제곱으로 계산한다.
             // 예: exponent=1→2, exponent=2→4, exponent=3→8, exponent=4→16
             int exponent = Mathf.RoundToInt(Mathf.Lerp(_healthMinExponent, _healthMaxExponent, difficulty));
-            int health = Mathf.Max(1, (int)Mathf.Pow(2, exponent));
+            int health = Mathf.Clamp((int)Mathf.Pow(2, exponent), 1, _maxEnemyHealth);
 
             // 겹침 체크에 사용할 적의 반경을 미리 계산한다
             float enemySize = Mathf.Min(_enemyBaseSize + health * _enemySizePerHealth, _enemyMaxVisualSize);

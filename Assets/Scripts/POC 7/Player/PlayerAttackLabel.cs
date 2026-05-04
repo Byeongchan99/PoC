@@ -47,11 +47,19 @@ namespace POC7
         }
 
         /// <summary>
-        /// 오브젝트 활성화 시 공격력 변경 이벤트를 구독하고 초기값을 표시한다.
+        /// 오브젝트 활성화 시 공격력 변경 이벤트를 구독한다.
         /// </summary>
         private void OnEnable()
         {
             _playerCombat.OnAttackPowerChanged += UpdateLabel;
+        }
+
+        /// <summary>
+        /// 모든 Awake가 완료된 후 초기값을 표시한다.
+        /// OnEnable에서 읽으면 PlayerCombat.Awake 실행 순서에 따라 0이 반환될 수 있다.
+        /// </summary>
+        private void Start()
+        {
             UpdateLabel(_playerCombat.CurrentAttackPower);
         }
 

@@ -69,7 +69,7 @@ namespace POC7
         private void UpdateLabel(int attackPower)
         {
             if (_label != null)
-                _label.text = $"ATK {attackPower}";
+                _label.text = $"{attackPower}";
         }
     }
 }

@@ -28,8 +28,23 @@ namespace POC6
         // 현재 덱 (획득한 카드 목록)
         private List<CardData> _deck = new();
 
+        // 배치 중인 카드. 취소 시 덱으로 반환하기 위해 보관합니다.
+        private CardData _pendingCard;
+
         /// <summary>현재 덱의 읽기 전용 카드 목록</summary>
         public IReadOnlyList<CardData> Deck => _deck;
+
+        private void OnEnable()
+        {
+            NodePlacer.OnPlacementCancelled += ReturnPendingCard;
+            NodePlacer.OnPlacementCompleted += ClearPendingCard;
+        }
+
+        private void OnDisable()
+        {
+            NodePlacer.OnPlacementCancelled -= ReturnPendingCard;
+            NodePlacer.OnPlacementCompleted -= ClearPendingCard;
+        }
 
         /// <summary>
         /// 덱을 시작 덱으로 초기화합니다.
@@ -37,6 +52,7 @@ namespace POC6
         public void Initialize()
         {
             _deck = new List<CardData>(_startingDeck);
+            _pendingCard = null;
             OnDeckChanged?.Invoke();
         }
 
@@ -63,15 +79,39 @@ namespace POC6
         /// <summary>
         /// 덱에서 카드를 꺼내 NodePlacer로 배치 모드를 시작합니다.
         /// Build Phase에서 플레이어가 카드를 선택할 때 호출합니다.
+        /// 배치가 취소되면 OnPlacementCancelled 이벤트로 카드가 자동 반환됩니다.
         /// </summary>
         public void UseCardForPlacement(CardData card)
         {
             if (!_deck.Contains(card)) return;
             if (card.NodeToGive == null) return;
 
+            _pendingCard = card;
             _deck.Remove(card);
             OnDeckChanged?.Invoke();
             _nodePlacer.BeginPlacement(card.NodeToGive);
+        }
+
+        /// <summary>
+        /// 배치가 취소됐을 때 NodePlacer.OnPlacementCancelled 이벤트에서 호출됩니다.
+        /// 보관 중인 카드를 덱으로 돌려줍니다.
+        /// </summary>
+        private void ReturnPendingCard()
+        {
+            if (_pendingCard == null) return;
+
+            _deck.Add(_pendingCard);
+            _pendingCard = null;
+            OnDeckChanged?.Invoke();
+        }
+
+        /// <summary>
+        /// 배치가 성공적으로 완료됐을 때 NodePlacer.OnPlacementCompleted 이벤트에서 호출됩니다.
+        /// 보관 중인 카드 참조를 정리합니다.
+        /// </summary>
+        private void ClearPendingCard()
+        {
+            _pendingCard = null;
         }
 
         /// <summary>
@@ -94,6 +134,7 @@ namespace POC6
         public void RestoreFromSnapshot(List<string> cardNames)
         {
             _deck.Clear();
+            _pendingCard = null;
 
             foreach (var name in cardNames)
             {

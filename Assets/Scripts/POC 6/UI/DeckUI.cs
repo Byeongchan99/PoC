@@ -30,14 +30,26 @@ namespace POC6
             if (_panelRoot != null) _panelRoot.SetActive(false);
         }
 
+        private void Start()
+        {
+            // 게임이 이미 BuildPhase인 상태로 시작하면 Update 첫 프레임 전에 즉시 표시
+            if (GameManager.Instance != null && GameManager.Instance.CurrentState == GameState.BuildPhase)
+            {
+                if (_panelRoot != null) _panelRoot.SetActive(true);
+                RefreshDeck();
+            }
+        }
+
         private void OnEnable()
         {
             DeckManager.OnDeckChanged += RefreshDeck;
+            GameManager.OnGameStateChanged += HandleGameStateChanged;
         }
 
         private void OnDisable()
         {
             DeckManager.OnDeckChanged -= RefreshDeck;
+            GameManager.OnGameStateChanged -= HandleGameStateChanged;
         }
 
         private void Update()
@@ -52,6 +64,15 @@ namespace POC6
                 _panelRoot.SetActive(shouldBeVisible);
                 if (shouldBeVisible) RefreshDeck();
             }
+        }
+
+        /// <summary>
+        /// BuildPhase 진입 시 카드 목록을 명시적으로 갱신합니다.
+        /// OnDeckChanged로 갱신이 지연된 경우를 보완합니다.
+        /// </summary>
+        private void HandleGameStateChanged(GameState state)
+        {
+            if (state == GameState.BuildPhase) RefreshDeck();
         }
 
         /// <summary>

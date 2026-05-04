@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -10,6 +11,11 @@ namespace POC6
     /// </summary>
     public class NodePlacer : MonoBehaviour
     {
+        /// <summary>플레이어가 우클릭/Escape로 배치를 취소했을 때 발행됩니다.</summary>
+        public static event Action OnPlacementCancelled;
+
+        /// <summary>노드 배치가 성공적으로 완료됐을 때 발행됩니다.</summary>
+        public static event Action OnPlacementCompleted;
         [Header("참조")]
         [SerializeField] private ShipGrid _shipGrid;
         [SerializeField] private Camera _mainCamera;
@@ -67,9 +73,12 @@ namespace POC6
             if (Mouse.current.leftButton.wasPressedThisFrame)
                 TryPlaceNode();
 
-            // 우클릭 또는 Escape로 배치 취소
+            // 우클릭 또는 Escape로 배치 취소 - 이벤트 발행 후 취소
             if (Mouse.current.rightButton.wasPressedThisFrame || Keyboard.current.escapeKey.wasPressedThisFrame)
+            {
+                OnPlacementCancelled?.Invoke();
                 CancelPlacement();
+            }
         }
 
         // ────────────────────────────────────────────────
@@ -185,6 +194,9 @@ namespace POC6
 
             // 이번 프레임에 배치 완료 플래그 설정 (CancelPlacement 전에 설정해야 함)
             _placedThisFrame = true;
+
+            // 배치 성공 이벤트 발행
+            OnPlacementCompleted?.Invoke();
 
             // 배치 후 미리보기 제거 및 배치 모드 종료
             CancelPlacement();

@@ -139,6 +139,10 @@ namespace POC6
         // 공격 노드 -> 최종 계산된 스탯 캐시
         private Dictionary<PlacedNode, AttackStats> _effectiveStatsCache = new();
 
+        // 공격 노드 -> 받는 동력량 / 공급 가능한 총 동력량 캐시 (UI 표시용)
+        private Dictionary<PlacedNode, float> _receivedPowerCache = new();
+        private Dictionary<PlacedNode, float> _totalPowerCache = new();
+
         /// <summary>
         /// 전체 동력 연결 그래프를 BFS로 탐색해서 각 공격 노드가 받는
         /// 실제 동력량과 특수 효과를 계산합니다.
@@ -146,6 +150,8 @@ namespace POC6
         public void RecalculatePowerDistribution()
         {
             _effectiveStatsCache.Clear();
+            _receivedPowerCache.Clear();
+            _totalPowerCache.Clear();
 
             // 모든 코어 노드를 시작점으로 BFS 시작
             foreach (var node in _grid.PlacedNodes)
@@ -211,6 +217,12 @@ namespace POC6
                 }
 
                 // 기존 스탯이 있으면 누적 (여러 코어의 동력이 한 공격 노드에 모이는 경우)
+                // 동력 수신량 기록 (UI 표시용). 여러 코어에서 받으면 누적합니다.
+                _receivedPowerCache[attackNode] = _receivedPowerCache.TryGetValue(attackNode, out var prev)
+                    ? prev + powerPerAttack
+                    : powerPerAttack;
+                _totalPowerCache[attackNode] = powerCapacity;
+
                 AttackStats effective = attackNode.Data.BaseAttackStats
                     .WithPowerAndEffects(powerRatio, effectType, effectMagnitude);
 
@@ -238,6 +250,18 @@ namespace POC6
         /// RecalculatePowerDistribution() 이후 호출해야 최신값을 얻습니다.
         /// 동력 연결이 없으면 베이스 스탯에 동력 0으로 적용한 값을 반환합니다.
         /// </summary>
+        /// <summary>
+        /// 이 노드가 받고 있는 동력량을 반환합니다. NodeInfoUI의 동력 표시에 사용합니다.
+        /// </summary>
+        public float GetReceivedPower(PlacedNode node) =>
+            _receivedPowerCache.TryGetValue(node, out var p) ? p : 0f;
+
+        /// <summary>
+        /// 이 노드에 동력을 공급하는 코어의 총 동력량을 반환합니다.
+        /// </summary>
+        public float GetTotalPower(PlacedNode node) =>
+            _totalPowerCache.TryGetValue(node, out var p) ? p : 0f;
+
         public AttackStats GetEffectiveStats(PlacedNode attackNode)
         {
             if (_effectiveStatsCache.TryGetValue(attackNode, out var stats))

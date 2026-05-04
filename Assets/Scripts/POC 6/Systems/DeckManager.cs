@@ -22,6 +22,9 @@ namespace POC6
         /// <summary>덱에 카드가 추가될 때 발행됩니다.</summary>
         public static event Action<CardData> OnCardAdded;
 
+        /// <summary>덱이 변경될 때 발행됩니다. (추가/제거/초기화 모두 포함) DeckUI가 구독합니다.</summary>
+        public static event Action OnDeckChanged;
+
         // 현재 덱 (획득한 카드 목록)
         private List<CardData> _deck = new();
 
@@ -34,6 +37,7 @@ namespace POC6
         public void Initialize()
         {
             _deck = new List<CardData>(_startingDeck);
+            OnDeckChanged?.Invoke();
         }
 
         /// <summary>
@@ -44,6 +48,7 @@ namespace POC6
             if (card == null) return;
             _deck.Add(card);
             OnCardAdded?.Invoke(card);
+            OnDeckChanged?.Invoke();
         }
 
         /// <summary>
@@ -65,6 +70,7 @@ namespace POC6
             if (card.NodeToGive == null) return;
 
             _deck.Remove(card);
+            OnDeckChanged?.Invoke();
             _nodePlacer.BeginPlacement(card.NodeToGive);
         }
 

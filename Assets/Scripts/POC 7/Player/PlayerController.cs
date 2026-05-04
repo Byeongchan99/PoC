@@ -24,6 +24,19 @@ namespace POC7
         /// <summary>링 오브젝트의 Transform. 원 중심 좌표(world space) 계산에 사용한다.</summary>
         [SerializeField] private Transform _ringTransform;
 
+        /// <summary>
+        /// 돌진 중 잔상을 표현하는 TrailRenderer. Player 오브젝트 또는 그 자식에 부착한다.
+        ///
+        /// [실무 권장]
+        /// POC 단계에서는 TrailRenderer로 충분하다.
+        /// 추후 Shader Graph 기반 잔상(Sprite 변형 + 알파 페이드) 또는
+        /// VFX Graph의 GPU Particle로 업그레이드하면 더 풍부한 표현이 가능하다.
+        /// </summary>
+        [SerializeField] private TrailRenderer _slashTrail;
+
+        /// <summary>false로 설정하면 항상 Trail을 emit한다. 디버그 용도.</summary>
+        [SerializeField] private bool _trailEmitDuringDash = true;
+
         private Rigidbody2D _rigidbody;
         private PlayerState _currentState = PlayerState.Landed;
         private Vector2 _dashTarget;
@@ -140,6 +153,10 @@ namespace POC7
             _currentState = PlayerState.Dashing;
             IsPlayerDashing = true;
             _dashedThisFrame = true;
+
+            if (_slashTrail != null && _trailEmitDuringDash)
+                _slashTrail.emitting = true;
+
             OnDashStarted?.Invoke();
         }
 
@@ -170,6 +187,10 @@ namespace POC7
         {
             _currentState = PlayerState.Landed;
             IsPlayerDashing = false;
+
+            if (_slashTrail != null)
+                _slashTrail.emitting = false;
+
             OnPlayerLanded?.Invoke();
         }
     }

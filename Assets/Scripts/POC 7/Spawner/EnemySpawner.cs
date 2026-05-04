@@ -5,7 +5,7 @@ namespace POC7
 {
     /// <summary>
     /// 플레이어 클릭마다 링 내부에 적을 스폰하는 컴포넌트.
-    /// 난이도 곡선을 기반으로 스폰량과 적 체력을 조절한다.
+    /// 난이도에 따라 스폰량과 체력을 조절하며, 적이 원형 영역에 고루 퍼지도록 배치한다.
     /// </summary>
     public class EnemySpawner : MonoBehaviour
     {
@@ -21,17 +21,21 @@ namespace POC7
         /// <summary>x축: 난이도(0~1), y축: 스폰량. 난이도에 따른 적 수 변화를 설정한다.</summary>
         [SerializeField] private AnimationCurve _spawnCountCurve = AnimationCurve.Linear(0f, 1f, 1f, 5f);
 
-        /// <summary>x축: 난이도(0~1), y축: 적 체력. 난이도에 따른 체력 변화를 설정한다.</summary>
-        [SerializeField] private AnimationCurve _enemyHealthCurve = AnimationCurve.Linear(0f, 1f, 1f, 10f);
-
         /// <summary>이 웨이브 수에 도달하면 난이도가 1.0(최대)이 된다.</summary>
         [SerializeField] private int _maxDifficultyWaves = 30;
 
-        /// <summary>새로 스폰할 적이 기존 적과 유지해야 할 최소 거리.</summary>
-        [SerializeField] private float _minDistanceBetweenEnemies = 0.5f;
+        /// <summary>
+        /// 난이도 0일 때 적 체력 지수. 체력 = 2^지수이므로 기본값 1 → 시작 체력 2.
+        /// </summary>
+        [SerializeField] private int _healthMinExponent = 1;
 
-        /// <summary>스폰 위치를 찾지 못할 경우 재시도하는 최대 횟수.</summary>
-        [SerializeField] private int _spawnAttemptLimit = 10;
+        /// <summary>
+        /// 난이도 1일 때 적 체력 지수. 기본값 4 → 최대 체력 16 (2, 4, 8, 16 순서로 증가).
+        /// </summary>
+        [SerializeField] private int _healthMaxExponent = 4;
+
+        /// <summary>각도 섹터 내에서 랜덤 배치 시 허용하는 지터 비율 (0~0.5).</summary>
+        [SerializeField] private float _sectorJitter = 0.4f;
 
         private int _currentWave;
 
@@ -61,7 +65,7 @@ namespace POC7
 
         /// <summary>
         /// 현재 웨이브 번호에 따른 난이도를 계산하고, 그에 맞는 수와 체력의 적을 스폰한다.
-        /// PlayerController.OnDashStarted 이벤트 수신 시 호출된다.
+        /// 체력은 2의 거듭제곱으로 증가: 2 → 4 → 8 → 16
         /// </summary>
         private void SpawnWave()
         {
@@ -69,12 +73,16 @@ namespace POC7
 
             float difficulty = Mathf.Clamp01(_currentWave / (float)_maxDifficultyWaves);
             int spawnCount = Mathf.Max(1, Mathf.RoundToInt(_spawnCountCurve.Evaluate(difficulty)));
-            int health = Mathf.Max(1, Mathf.RoundToInt(_enemyHealthCurve.Evaluate(difficulty)));
+
+            // 체력을 2의 거듭제곱으로 계산한다.
+            // 예: exponent=1→2, exponent=2→4, exponent=3→8, exponent=4→16
+            int exponent = Mathf.RoundToInt(Mathf.Lerp(_healthMinExponent, _healthMaxExponent, difficulty));
+            int health = Mathf.Max(1, (int)Mathf.Pow(2, exponent));
 
             int actualSpawned = 0;
             for (int i = 0; i < spawnCount; i++)
             {
-                Vector2 spawnPos = GetRandomSpawnPosition();
+                Vector2 spawnPos = GetSectorSpawnPosition(i, spawnCount);
                 if (SpawnEnemy(spawnPos, health))
                     actualSpawned++;
             }
@@ -109,28 +117,23 @@ namespace POC7
         }
 
         /// <summary>
-        /// 링 중심 기준 spawnRadius 이내에서 기존 적과 겹치지 않는 랜덤 위치를 찾아 반환한다.
-        /// spawnAttemptLimit 횟수 안에 조건을 만족하는 위치를 못 찾으면 마지막으로 시도한 위치를 반환한다.
+        /// 원형 영역을 spawnCount개의 각도 섹터로 나누고, index번째 섹터 안에서 랜덤 위치를 반환한다.
+        /// 이 방식은 적들이 특정 방향에 몰리지 않고 링 전체에 고루 퍼지게 한다.
         /// </summary>
-        private Vector2 GetRandomSpawnPosition()
+        private Vector2 GetSectorSpawnPosition(int index, int spawnCount)
         {
-            Vector2 candidate = Vector2.zero;
+            float sectorAngle = 360f / Mathf.Max(spawnCount, 1);
 
-            for (int attempt = 0; attempt < _spawnAttemptLimit; attempt++)
-            {
-                // 원형 균등 분포: Random.insideUnitCircle은 중심 부근에 밀집하므로 sqrt로 보정한다
-                Vector2 randomDir = UnityEngine.Random.insideUnitCircle.normalized;
-                float randomDist = Mathf.Sqrt(UnityEngine.Random.value) * _spawnRadius;
-                candidate = (Vector2)transform.position + randomDir * randomDist;
+            // 섹터 중앙 각도에 ±jitter 범위의 랜덤 오프셋을 추가한다
+            float baseAngle = sectorAngle * index;
+            float jitterRange = sectorAngle * _sectorJitter;
+            float angle = (baseAngle + UnityEngine.Random.Range(-jitterRange, jitterRange)) * Mathf.Deg2Rad;
 
-                // 해당 위치에 기존 적이 없으면 바로 사용한다
-                Collider2D overlap = Physics2D.OverlapCircle(candidate, _minDistanceBetweenEnemies);
-                if (overlap == null || !overlap.TryGetComponent(out Enemy _))
-                    return candidate;
-            }
+            // sqrt 보정으로 원형 내부에 균등하게 분포시킨다
+            float dist = Mathf.Sqrt(UnityEngine.Random.Range(0.1f, 1f)) * _spawnRadius;
 
-            // 한계 횟수 초과 시 마지막 후보 위치를 그대로 사용한다
-            return candidate;
+            Vector2 dir = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle));
+            return (Vector2)transform.position + dir * dist;
         }
     }
 }

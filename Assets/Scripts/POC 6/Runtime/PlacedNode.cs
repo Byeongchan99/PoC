@@ -112,6 +112,30 @@ namespace POC6
         }
 
         /// <summary>
+        /// 현재 업그레이드 레벨을 반영한 기본 공격 스탯을 반환합니다.
+        /// bonusPerLevel: 레벨당 증가 비율 (예: 0.2 = 20% 증가)
+        /// 공격 노드가 아니거나 레벨 0이면 기본 스탯을 그대로 반환합니다.
+        /// </summary>
+        public AttackStats GetUpgradedBaseStats(float bonusPerLevel)
+        {
+            if (CurrentUpgradeLevel == 0 || Data.NodeType != NodeType.Attack)
+                return Data.BaseAttackStats;
+
+            float multiplier = 1f + CurrentUpgradeLevel * bonusPerLevel;
+            var b = Data.BaseAttackStats;
+
+            // 데미지와 공격속도를 레벨에 따라 증가. 사거리와 발사체 속도는 유지.
+            return new AttackStats(
+                b.Damage * multiplier,
+                b.FireRate * multiplier,
+                b.AttackRange,
+                b.ProjectileSpeed,
+                b.ProjectileCount,
+                b.PierceCount
+            );
+        }
+
+        /// <summary>
         /// 스냅샷 복원 등 특수 상황에서 레벨을 직접 설정합니다.
         /// </summary>
         public void SetUpgradeLevel(int level)

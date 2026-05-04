@@ -55,6 +55,11 @@ namespace POC6
         [Range(2, 5)]
         [SerializeField] private int _cardChoiceCount = 3;
 
+        [Header("동력 시스템 설정")]
+        [Tooltip("동력 비율 1.0에 해당하는 기준 동력량. 코어 하나(기본 동력 = 이 값)에 공격 노드 하나를 연결하면 비율이 정확히 1.0이 됩니다.")]
+        [Min(1f)]
+        [SerializeField] private float _basePowerCapacity = 100f;
+
         // 읽기 전용 프로퍼티들
         public int StartingGold => _startingGold;
         public float CellSize => _cellSize;
@@ -62,6 +67,7 @@ namespace POC6
         public int GridHeight => _gridHeight;
         public float BuildPhaseTimeScale => _buildPhaseTimeScale;
         public float EnemySpawnRadius => _enemySpawnRadius;
+        public float BasePowerCapacity => _basePowerCapacity;
         public float UpgradeCostMultiplier => _upgradeCostMultiplier;
         public float UpgradeStatBonus => _upgradeStatBonus;
         public int BaseUpgradeCost => _baseUpgradeCost;

@@ -38,6 +38,10 @@ namespace POC6
         [Tooltip("라인의 Z 오프셋. 노드(Z=0)보다 카메라 쪽으로 당겨서 앞에 표시합니다.")]
         [SerializeField] private float _lineZOffset = -0.1f;
 
+        [Header("설정")]
+        [Tooltip("동력 비율 계산에 사용하는 기준 설정. 없으면 기준 동력 100을 사용합니다.")]
+        [SerializeField] private GameConfig _config;
+
         private ShipGrid _grid;
 
         private void Awake()
@@ -139,13 +143,15 @@ namespace POC6
         // 공격 노드 -> 최종 계산된 스탯 캐시
         private Dictionary<PlacedNode, AttackStats> _effectiveStatsCache = new();
 
-        // 공격 노드 -> 받는 동력량 / 공급 가능한 총 동력량 캐시 (UI 표시용)
+        // 공격 노드 -> 수신 동력량 캐시 (UI 표시용)
         private Dictionary<PlacedNode, float> _receivedPowerCache = new();
         private Dictionary<PlacedNode, float> _totalPowerCache = new();
 
         /// <summary>
-        /// 전체 동력 연결 그래프를 BFS로 탐색해서 각 공격 노드가 받는
-        /// 실제 동력량과 특수 효과를 계산합니다.
+        /// 전체 동력 연결 그래프를 순회해서 각 공격 노드의 스탯을 재계산합니다.
+        /// 2단계로 처리합니다.
+        /// 1단계: 모든 코어에서 각 공격 노드로 전달되는 동력과 특수 효과를 수집합니다.
+        /// 2단계: 수집된 데이터를 토대로 업그레이드 레벨을 반영한 최종 스탯을 계산합니다.
         /// </summary>
         public void RecalculatePowerDistribution()
         {
@@ -153,103 +159,97 @@ namespace POC6
             _receivedPowerCache.Clear();
             _totalPowerCache.Clear();
 
-            // 모든 코어 노드를 시작점으로 BFS 시작
+            // 1단계 수집용 임시 딕셔너리
+            // 공격 노드 -> 수신 총 동력량
+            var rawPower = new Dictionary<PlacedNode, float>();
+            // 공격 노드 -> 적용할 특수 효과 (처음 발견한 것 사용, POC 기준)
+            var specialEffects = new Dictionary<PlacedNode, (SpecialEffectType effect, float magnitude)>();
+
+            // 1단계: 모든 코어에서 동력 수집
             foreach (var node in _grid.PlacedNodes)
             {
                 if (node.Data.NodeType == NodeType.Core)
-                    ProcessCoreNode(node);
+                    CollectPowerFromCore(node, rawPower, specialEffects);
+            }
+
+            // 2단계: 수집된 동력으로 최종 스탯 계산
+            float basePower = _config != null ? _config.BasePowerCapacity : 100f;
+            float upgradeBonus = _config != null ? _config.UpgradeStatBonus : 0.2f;
+
+            foreach (var kvp in rawPower)
+            {
+                PlacedNode attackNode = kvp.Key;
+                float received = kvp.Value;
+
+                _receivedPowerCache[attackNode] = received;
+                // UI에서 received / basePower 비율(%)로 표시하기 위한 기준값 저장
+                _totalPowerCache[attackNode] = basePower;
+
+                // 동력 비율: 기준 동력 대비 수신량 (1.0 = 기준치, 1.5 = 50% 초과)
+                float ratio = received / basePower;
+
+                SpecialEffectType? effect = null;
+                float effectMag = 0f;
+                if (specialEffects.TryGetValue(attackNode, out var se))
+                {
+                    effect = se.effect;
+                    effectMag = se.magnitude;
+                }
+
+                // 업그레이드 레벨이 반영된 기본 스탯으로 동력과 특수 효과 적용
+                AttackStats baseStats = attackNode.GetUpgradedBaseStats(upgradeBonus);
+                _effectiveStatsCache[attackNode] = baseStats.WithPowerAndEffects(ratio, effect, effectMag);
             }
         }
 
         /// <summary>
-        /// 단일 코어에서 연결된 공격 노드들까지 BFS로 탐색합니다.
-        /// 코어의 동력을 연결된 공격 노드들에 균등 분배합니다.
+        /// 단일 코어에서 연결된 모든 공격 노드로의 동력과 특수 효과를 수집합니다.
+        /// 코어의 동력을 연결된 공격 노드 수에 따라 균등 분배합니다.
+        /// 코어 -> 공격 (직접) 또는 코어 -> 특수 -> 공격 (특수 경유) 경로를 처리합니다.
         /// </summary>
-        private void ProcessCoreNode(PlacedNode coreNode)
+        private void CollectPowerFromCore(
+            PlacedNode coreNode,
+            Dictionary<PlacedNode, float> powerAcc,
+            Dictionary<PlacedNode, (SpecialEffectType, float)> specialAcc)
         {
-            int powerCapacity = coreNode.Data.PowerCapacity;
-
-            // 이 코어와 연결된 공격 노드와 경로상 특수 노드를 수집
-            var attackNodePaths = new List<(PlacedNode attackNode, PlacedNode specialNode)>();
-
             if (!_outgoing.ContainsKey(coreNode)) return;
 
-            foreach (var directTarget in _outgoing[coreNode])
+            var attackPaths = new List<(PlacedNode attackNode, PlacedNode specialNode)>();
+
+            foreach (var target in _outgoing[coreNode])
             {
-                if (directTarget.Data.NodeType == NodeType.Attack)
+                if (target.Data.NodeType == NodeType.Attack)
                 {
-                    // 코어 -> 공격 직접 연결
-                    attackNodePaths.Add((directTarget, null));
+                    attackPaths.Add((target, null));
                 }
-                else if (directTarget.Data.NodeType == NodeType.Special)
+                else if (target.Data.NodeType == NodeType.Special && _outgoing.ContainsKey(target))
                 {
-                    // 코어 -> 특수 -> 공격 체인
-                    if (_outgoing.ContainsKey(directTarget))
+                    foreach (var chainTarget in _outgoing[target])
                     {
-                        foreach (var chainTarget in _outgoing[directTarget])
-                        {
-                            if (chainTarget.Data.NodeType == NodeType.Attack)
-                            {
-                                attackNodePaths.Add((chainTarget, directTarget));
-                            }
-                        }
+                        if (chainTarget.Data.NodeType == NodeType.Attack)
+                            attackPaths.Add((chainTarget, target));
                     }
                 }
             }
 
-            if (attackNodePaths.Count == 0) return;
+            if (attackPaths.Count == 0) return;
 
-            // 균등 분배: 코어 동력 / 연결된 공격 노드 수
-            float powerPerAttack = (float)powerCapacity / attackNodePaths.Count;
-            // 최대 동력 비율 계산을 위한 최대값 (코어 전체 용량 = 100%)
-            float powerRatio = powerPerAttack / powerCapacity;
+            // 이 코어의 동력을 연결된 공격 노드 수로 균등 분배
+            float powerPerAttack = (float)coreNode.Data.PowerCapacity / attackPaths.Count;
 
-            foreach (var (attackNode, specialNode) in attackNodePaths)
+            foreach (var (attackNode, specialNode) in attackPaths)
             {
-                // 특수 효과 정보
-                SpecialEffectType? effectType = null;
-                float effectMagnitude = 0f;
-
-                if (specialNode != null)
-                {
-                    effectType = specialNode.Data.SpecialEffect;
-                    effectMagnitude = specialNode.Data.EffectMagnitude;
-                }
-
-                // 기존 스탯이 있으면 누적 (여러 코어의 동력이 한 공격 노드에 모이는 경우)
-                // 동력 수신량 기록 (UI 표시용). 여러 코어에서 받으면 누적합니다.
-                _receivedPowerCache[attackNode] = _receivedPowerCache.TryGetValue(attackNode, out var prev)
+                // 동력 누적: 여러 코어에서 받으면 합산
+                powerAcc[attackNode] = powerAcc.TryGetValue(attackNode, out var prev)
                     ? prev + powerPerAttack
                     : powerPerAttack;
-                _totalPowerCache[attackNode] = powerCapacity;
 
-                AttackStats effective = attackNode.Data.BaseAttackStats
-                    .WithPowerAndEffects(powerRatio, effectType, effectMagnitude);
-
-                if (_effectiveStatsCache.ContainsKey(attackNode))
-                {
-                    // 이미 다른 코어에서 계산된 스탯이 있으면 데미지와 공속 합산
-                    var existing = _effectiveStatsCache[attackNode];
-                    // 단순화: 더 높은 값 채택 (POC 기준)
-                    effective = new AttackStats(
-                        existing.Damage + effective.Damage,
-                        Mathf.Max(existing.FireRate, effective.FireRate),
-                        Mathf.Max(existing.AttackRange, effective.AttackRange),
-                        existing.ProjectileSpeed,
-                        Mathf.Max(existing.ProjectileCount, effective.ProjectileCount),
-                        Mathf.Max(existing.PierceCount, effective.PierceCount)
-                    );
-                }
-
-                _effectiveStatsCache[attackNode] = effective;
+                // 특수 효과: 처음 발견한 것을 적용 (POC 단순화)
+                if (specialNode != null && !specialAcc.ContainsKey(attackNode))
+                    specialAcc[attackNode] = (specialNode.Data.SpecialEffect, specialNode.Data.EffectMagnitude);
             }
         }
 
-        /// <summary>
-        /// 공격 노드의 최종 전투 스탯을 반환합니다.
-        /// RecalculatePowerDistribution() 이후 호출해야 최신값을 얻습니다.
-        /// 동력 연결이 없으면 베이스 스탯에 동력 0으로 적용한 값을 반환합니다.
-        /// </summary>
         /// <summary>
         /// 이 노드가 받고 있는 동력량을 반환합니다. NodeInfoUI의 동력 표시에 사용합니다.
         /// </summary>

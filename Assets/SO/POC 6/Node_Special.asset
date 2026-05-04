@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cf1c6c915f841514fbc8d8795ae78f5a, type: 3}
+  m_Name: Node_Special
+  m_EditorClassIdentifier: Assembly-CSharp::POC6.NodeData
+  _nodeName: "\uD2B9\uC218 \uB178\uB4DC"
+  _nodeType: 1
+  _size: {x: 1, y: 1}
+  _healthContribution: 10
+  _visualPrefab: {fileID: 0}
+  _icon: {fileID: 0}
+  _tintColor: {r: 0.72313964, g: 0.38714847, b: 0.9433962, a: 1}
+  _powerCapacity: 100
+  _attackFace: 0
+  _baseAttackStats:
+    _damage: 0
+    _fireRate: 0
+    _attackRange: 0
+    _projectileSpeed: 0
+    _projectileCount: 0
+    _pierceCount: 0
+  _specialEffect: 0
+  _effectMagnitude: 1

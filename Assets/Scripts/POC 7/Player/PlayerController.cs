@@ -82,7 +82,7 @@ namespace POC7
         /// </summary>
         private void Start()
         {
-            AdjustPositionToRingWall();
+            AdjustPositionToRingWall(transform.position);
         }
 
         /// <summary>
@@ -222,27 +222,36 @@ namespace POC7
             if (_slashTrail != null)
                 _slashTrail.emitting = false;
 
-            AdjustPositionToRingWall();
+            // MovePosition은 FixedUpdate 스텝이 끝날 때 적용되므로
+            // 이 시점의 transform.localPosition은 아직 이전 위치다.
+            // 착지 목표(_dashTarget)를 직접 넘겨 올바른 방향으로 위치를 계산한다.
+            AdjustPositionToRingWall(_dashTarget);
             OnPlayerLanded?.Invoke();
         }
 
         /// <summary>
         /// 플레이어 외벽이 링 내벽에 정확히 닿도록 localPosition을 조정한다.
         ///
-        /// 링 중심에서 플레이어 중심까지의 거리 = 링 반경 - 플레이어 반경.
-        /// 이렇게 하면 플레이어 크기가 달라져도 항상 링 내벽에 딱 붙어 있는 상태가 유지된다.
+        /// landingWorldPos를 링의 로컬 좌표로 변환하여 방향을 구한다.
+        /// transform.localPosition을 직접 사용하면 MovePosition이 아직 미적용 상태일 때
+        /// 이전 위치 기준으로 잘못된 방향이 계산되는 문제를 피할 수 있다.
         /// </summary>
-        private void AdjustPositionToRingWall()
+        /// <param name="landingWorldPos">플레이어가 위치해야 할 월드 좌표. 방향 계산에만 사용한다.</param>
+        private void AdjustPositionToRingWall(Vector2 landingWorldPos)
         {
-            Vector3 localDir = transform.localPosition.normalized;
-            if (localDir == Vector3.zero)
+            if (transform.parent == null)
+                return;
+
+            // 월드 좌표를 링의 로컬 좌표로 변환하여 링 중심 기준 방향을 구한다.
+            Vector2 localPos = transform.parent.InverseTransformPoint(landingWorldPos);
+            Vector2 localDir = localPos.normalized;
+            if (localDir.sqrMagnitude < 0.001f)
                 return;
 
             float playerRadius = transform.localScale.x / 2f;
-            transform.localPosition = localDir * (_ringRadius - playerRadius);
+            transform.localPosition = (Vector3)(localDir * (_ringRadius - playerRadius));
 
             // Rigidbody2D의 내부 위치를 transform과 동기화한다.
-            // MovePosition 없이 transform을 직접 수정했으므로 물리 엔진에 반영해야 한다.
             _rigidbody.position = transform.position;
         }
     }

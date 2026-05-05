@@ -36,9 +36,20 @@ namespace POC7
         /// <summary>false로 설정하면 항상 Trail을 emit한다. 디버그 용도.</summary>
         [SerializeField] private bool _trailEmitDuringDash = true;
 
+        /// <summary>반사 횟수의 상한. UI 버튼으로 이 값을 초과할 수 없다.</summary>
+        [SerializeField] private int _maxBounceCount = 10;
+
         private Rigidbody2D _rigidbody;
         private PlayerCombat _playerCombat;
         private PlayerState _currentState = PlayerState.Landed;
+
+        /// <summary>현재 돌진 경로의 경유 지점 목록. StartDash 시 계산되며 순서대로 이동한다.</summary>
+        private Vector2[] _waypoints;
+
+        /// <summary>현재 이동 중인 경유 지점 인덱스.</summary>
+        private int _currentWaypointIndex;
+
+        /// <summary>현재 목표 경유 지점. UpdateDash에서 이 위치를 향해 이동한다.</summary>
         private Vector2 _dashTarget;
 
         /// <summary>
@@ -47,14 +58,17 @@ namespace POC7
         /// </summary>
         private float _ringRadius;
 
+        /// <summary>현재 반사 횟수. UI 버튼으로 조절한다.</summary>
+        private int _bounceCount;
+
         /// <summary>현재 돌진 중인지 외부에서 확인할 때 사용한다.</summary>
         public bool IsDashing => _currentState == PlayerState.Dashing;
 
-        /// <summary>
-        /// 씬 내 플레이어가 돌진 중인지 나타내는 정적 프로퍼티.
-        /// 인스턴스 참조 없이 어디서든 읽을 수 있다.
-        /// </summary>
+        /// <summary>씬 내 플레이어가 돌진 중인지 나타내는 정적 프로퍼티.</summary>
         public static bool IsPlayerDashing { get; private set; }
+
+        /// <summary>현재 반사 횟수. BounceCountUI가 읽는다.</summary>
+        public int BounceCount => _bounceCount;
 
         /// <summary>
         /// Rigidbody2D를 Kinematic + Continuous 감지 모드로 초기화한다.
@@ -99,12 +113,26 @@ namespace POC7
 
         /// <summary>
         /// MovePosition을 FixedUpdate에서 호출하여 물리 스텝과 이동을 동기화한다.
-        /// Update에서 StartDash가 호출되어도 FixedUpdate는 다음 물리 스텝에서 실행되므로
-        /// 같은 프레임 내 즉시 착지 문제가 자연스럽게 방지된다.
         /// </summary>
         private void FixedUpdate()
         {
             UpdateDash();
+        }
+
+        /// <summary>
+        /// 반사 횟수를 1 증가시킨다. _maxBounceCount를 초과하지 않는다.
+        /// </summary>
+        public void IncreaseBounceCount()
+        {
+            _bounceCount = Mathf.Min(_bounceCount + 1, _maxBounceCount);
+        }
+
+        /// <summary>
+        /// 반사 횟수를 1 감소시킨다. 0 미만으로 내려가지 않는다.
+        /// </summary>
+        public void DecreaseBounceCount()
+        {
+            _bounceCount = Mathf.Max(_bounceCount - 1, 0);
         }
 
         /// <summary>
@@ -179,27 +207,82 @@ namespace POC7
         }
 
         /// <summary>
-        /// 돌진 목표 지점을 저장하고 상태를 Dashing으로 전환한다.
-        /// 레이캐스트로 경로 위 적에게 즉시 데미지를 적용한 후 OnDashStarted 이벤트를 발생시킨다.
+        /// 현재 위치에서 주어진 방향으로 출발하는 전체 경유 지점 목록을 계산한다.
+        /// 반사 횟수(_bounceCount)만큼 반사를 추가하므로 총 (_bounceCount + 1)개의 지점이 생성된다.
+        ///
+        /// 각 교점에서 반사 방향은 Vector2.Reflect로 계산한다.
+        ///   normal = (교점 - 링 중심).normalized   (링 내벽의 법선)
+        ///   반사 방향 = Reflect(입사 방향, normal)
         /// </summary>
-        private void StartDash(Vector2 targetPos)
+        private Vector2[] ComputeWaypoints(Vector2 startPos, Vector2 direction)
         {
-            _dashTarget = targetPos;
+            Vector2 ringCenter = _ringTransform != null ? (Vector2)_ringTransform.position : Vector2.zero;
+            int totalPoints = _bounceCount + 1;
+            Vector2[] waypoints = new Vector2[totalPoints];
+
+            Vector2 pos = startPos;
+            Vector2 dir = direction;
+
+            for (int i = 0; i < totalPoints; i++)
+            {
+                float t = 2f * Vector2.Dot(ringCenter - pos, dir);
+
+                // t가 너무 작으면 링 바깥 방향 클릭 등 비정상 상태. 남은 지점을 현재 위치로 채우고 종료한다.
+                if (t < 0.1f)
+                {
+                    for (int j = i; j < totalPoints; j++)
+                        waypoints[j] = pos;
+                    break;
+                }
+
+                Vector2 nextPos = pos + t * dir;
+                waypoints[i] = nextPos;
+
+                if (i < totalPoints - 1)
+                {
+                    // 교점의 법선(링 중심 → 교점 방향)을 기준으로 방향을 반사한다.
+                    Vector2 normal = (nextPos - ringCenter).normalized;
+                    dir = Vector2.Reflect(dir, normal);
+                    pos = nextPos;
+                }
+            }
+
+            return waypoints;
+        }
+
+        /// <summary>
+        /// 경유 지점을 계산하고 상태를 Dashing으로 전환한다.
+        /// 각 구간마다 레이캐스트 공격 판정을 적용한 후 OnDashStarted 이벤트를 발생시킨다.
+        /// </summary>
+        private void StartDash(Vector2 firstTarget)
+        {
+            Vector2 startPos = transform.position;
+            Vector2 direction = (firstTarget - startPos).normalized;
+
+            _waypoints = ComputeWaypoints(startPos, direction);
+            _currentWaypointIndex = 0;
+            _dashTarget = _waypoints[0];
+
             _currentState = PlayerState.Dashing;
             IsPlayerDashing = true;
 
             if (_slashTrail != null && _trailEmitDuringDash)
                 _slashTrail.emitting = true;
 
-            // 이동 시작 전에 경로 위 적을 레이캐스트로 한 번에 판정한다.
-            _playerCombat?.PerformDashAttack(transform.position, targetPos);
+            // 모든 구간에 대해 레이캐스트 공격 판정을 적용한다.
+            Vector2 segmentStart = startPos;
+            foreach (Vector2 waypoint in _waypoints)
+            {
+                _playerCombat?.PerformDashAttack(segmentStart, waypoint);
+                segmentStart = waypoint;
+            }
 
             OnDashStarted?.Invoke();
         }
 
         /// <summary>
-        /// Dashing 상태일 때 매 물리 스텝마다 목표 지점을 향해 이동한다.
-        /// FixedUpdate에서 호출되므로 Time.fixedDeltaTime을 사용한다.
+        /// Dashing 상태일 때 매 물리 스텝마다 현재 경유 지점을 향해 이동한다.
+        /// 도달하면 다음 경유 지점으로 전환하고, 마지막 지점이면 Land()를 호출한다.
         /// </summary>
         private void UpdateDash()
         {
@@ -210,8 +293,15 @@ namespace POC7
             Vector2 newPos = Vector2.MoveTowards(currentPos, _dashTarget, _dashSpeed * Time.fixedDeltaTime);
             _rigidbody.MovePosition(newPos);
 
-            if (Vector2.Distance(newPos, _dashTarget) < 0.05f)
+            if (Vector2.Distance(newPos, _dashTarget) >= 0.05f)
+                return;
+
+            _currentWaypointIndex++;
+
+            if (_currentWaypointIndex >= _waypoints.Length)
                 Land();
+            else
+                _dashTarget = _waypoints[_currentWaypointIndex];
         }
 
         /// <summary>
@@ -225,9 +315,6 @@ namespace POC7
             if (_slashTrail != null)
                 _slashTrail.emitting = false;
 
-            // MovePosition은 FixedUpdate 스텝이 끝날 때 적용되므로
-            // 이 시점의 transform.localPosition은 아직 이전 위치다.
-            // 착지 목표(_dashTarget)를 직접 넘겨 올바른 방향으로 위치를 계산한다.
             AdjustPositionToRingWall(_dashTarget);
             OnPlayerLanded?.Invoke();
         }
@@ -235,13 +322,9 @@ namespace POC7
         /// <summary>
         /// 플레이어 외벽이 링 내벽에 정확히 닿도록 월드 좌표 위치를 조정한다.
         ///
-        /// 링 중심(_ringTransform)을 기준으로 방향을 계산하므로
-        /// 씬 계층 구조나 부모 Transform에 관계없이 항상 올바르게 동작한다.
-        ///
         /// 목표 위치 = 링 중심 + 방향 * (링 반경 - 플레이어 반경)
         /// 플레이어 반경만큼 안쪽에 중심을 두므로 외벽이 링 내벽에 정확히 닿는다.
         /// </summary>
-        /// <param name="landingWorldPos">착지할 월드 좌표. 링 중심에서 이 방향으로 플레이어를 배치한다.</param>
         private void AdjustPositionToRingWall(Vector2 landingWorldPos)
         {
             Vector2 ringCenter = _ringTransform != null ? (Vector2)_ringTransform.position : Vector2.zero;

@@ -41,6 +41,12 @@ namespace POC7
         private PlayerState _currentState = PlayerState.Landed;
         private Vector2 _dashTarget;
 
+        /// <summary>
+        /// 링 중심에서 플레이어 외벽까지의 거리. 씬에서 설정한 초기 localPosition 크기를 기준으로 삼는다.
+        /// 플레이어 크기가 변해도 이 값(링 반경)은 유지되며, 부착 위치 계산에 사용한다.
+        /// </summary>
+        private float _ringRadius;
+
         /// <summary>현재 돌진 중인지 외부에서 확인할 때 사용한다.</summary>
         public bool IsDashing => _currentState == PlayerState.Dashing;
 
@@ -64,6 +70,19 @@ namespace POC7
             _rigidbody.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
 
             _playerCombat = GetComponent<PlayerCombat>();
+
+            // 씬에서 설정한 초기 localPosition의 크기를 링 반경으로 저장한다.
+            // 이 값은 "플레이어 외벽이 닿아야 할 링 내벽까지의 거리"를 의미한다.
+            _ringRadius = transform.localPosition.magnitude;
+        }
+
+        /// <summary>
+        /// 모든 Awake가 완료된 후 초기 크기에 맞게 부착 위치를 조정한다.
+        /// PlayerCombat.Awake가 초기 scale을 설정한 뒤 이 메서드가 실행되어야 정확하다.
+        /// </summary>
+        private void Start()
+        {
+            AdjustPositionToRingWall();
         }
 
         /// <summary>
@@ -193,8 +212,7 @@ namespace POC7
         }
 
         /// <summary>
-        /// 상태를 Landed로 전환하고 OnPlayerLanded 이벤트를 발생시킨다.
-        /// 플레이어는 링의 자식이므로 위치를 그대로 유지하면 링 내벽에 부착된 상태가 된다.
+        /// 상태를 Landed로 전환하고 링 벽 부착 위치를 조정한 후 OnPlayerLanded 이벤트를 발생시킨다.
         /// </summary>
         private void Land()
         {
@@ -204,7 +222,28 @@ namespace POC7
             if (_slashTrail != null)
                 _slashTrail.emitting = false;
 
+            AdjustPositionToRingWall();
             OnPlayerLanded?.Invoke();
+        }
+
+        /// <summary>
+        /// 플레이어 외벽이 링 내벽에 정확히 닿도록 localPosition을 조정한다.
+        ///
+        /// 링 중심에서 플레이어 중심까지의 거리 = 링 반경 - 플레이어 반경.
+        /// 이렇게 하면 플레이어 크기가 달라져도 항상 링 내벽에 딱 붙어 있는 상태가 유지된다.
+        /// </summary>
+        private void AdjustPositionToRingWall()
+        {
+            Vector3 localDir = transform.localPosition.normalized;
+            if (localDir == Vector3.zero)
+                return;
+
+            float playerRadius = transform.localScale.x / 2f;
+            transform.localPosition = localDir * (_ringRadius - playerRadius);
+
+            // Rigidbody2D의 내부 위치를 transform과 동기화한다.
+            // MovePosition 없이 transform을 직접 수정했으므로 물리 엔진에 반영해야 한다.
+            _rigidbody.position = transform.position;
         }
     }
 }

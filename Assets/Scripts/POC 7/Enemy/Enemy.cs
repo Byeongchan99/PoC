@@ -29,19 +29,6 @@ namespace POC7
         [SerializeField] private float _sizePerHealth = 0.1f;
         [SerializeField] private float _maxVisualSize = 2.0f;
 
-        /// <summary>
-        /// 체력 단계(2의 거듭제곱 지수)에 따른 색상 배열.
-        /// 지수 1(체력 2) → 빨강, 2(4) → 주황, 3(8) → 노랑, 4(16) → 초록, 5+(32 이상) → 파랑.
-        /// </summary>
-        private static readonly Color[] HealthTierColors =
-        {
-            new Color(1f, 0.2f, 0.2f),   // 빨강 (체력 2)
-            new Color(1f, 0.5f, 0f),      // 주황 (체력 4)
-            new Color(1f, 0.9f, 0f),      // 노랑 (체력 8)
-            new Color(0.2f, 0.8f, 0.2f),  // 초록 (체력 16)
-            new Color(0.2f, 0.4f, 1f),    // 파랑 (체력 32 이상)
-        };
-
         private SpriteRenderer _spriteRenderer;
         private int _currentHealth;
 
@@ -66,14 +53,14 @@ namespace POC7
         }
 
         /// <summary>
-        /// Spawner가 적을 생성한 직후 호출한다. 체력을 설정하고 크기를 초기화한다.
+        /// Spawner가 적을 생성한 직후 호출한다. 체력을 설정하고 크기와 색상을 초기화한다.
         /// </summary>
         public void Initialize(int health)
         {
             _maxHealth = health;
             _currentHealth = health;
             UpdateVisualSize();
-            UpdateColor();
+            AssignRandomColor();
             OnHealthChanged?.Invoke(_currentHealth);
             OnEnemySpawned?.Invoke(this);
         }
@@ -88,7 +75,6 @@ namespace POC7
 
             _currentHealth -= damage;
             UpdateVisualSize();
-            UpdateColor();
             OnHealthChanged?.Invoke(Mathf.Max(0, _currentHealth));
 
             if (_currentHealth <= 0)
@@ -106,19 +92,17 @@ namespace POC7
         }
 
         /// <summary>
-        /// 체력을 2의 거듭제곱 지수(exponent)로 변환하여 단계별 색상을 적용한다.
-        /// exponent = floor(log2(health)): 체력 2→1, 4→2, 8→3, 16→4, 32→5
-        /// HealthTierColors 배열 마지막 색상은 최대 단계 이상에 모두 적용된다.
+        /// 스폰 시 무작위 색조(hue)를 선택하여 고채도·고명도 색상을 적용한다.
+        /// 색상은 스폰 시 한 번만 결정되며 피격 시 변하지 않는다.
+        /// 크기로 체력 단계를 표현하므로 색상은 순수 시각적 다양성 역할만 담당한다.
         /// </summary>
-        private void UpdateColor()
+        private void AssignRandomColor()
         {
             if (_spriteRenderer == null)
                 return;
 
-            // 체력이 1이면 지수 0, 이후 2의 거듭제곱마다 1씩 증가
-            int exponent = _currentHealth > 0 ? Mathf.FloorToInt(Mathf.Log(_currentHealth, 2)) : 0;
-            int colorIndex = Mathf.Clamp(exponent - 1, 0, HealthTierColors.Length - 1);
-            _spriteRenderer.color = HealthTierColors[colorIndex];
+            float hue = UnityEngine.Random.value;
+            _spriteRenderer.color = Color.HSVToRGB(hue, 0.85f, 0.95f);
         }
 
         /// <summary>

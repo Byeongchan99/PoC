@@ -13,7 +13,6 @@ namespace POC7
         public event Action<int> OnAttackPowerChanged;
 
         [SerializeField] private int _initialAttackPower = 1;
-        [SerializeField] private int _attackPowerGainPerKill = 1;
 
         /// <summary>공격력 1일 때 플레이어의 기본 크기.</summary>
         [SerializeField] private float _basePlayerSize = 0.3f;
@@ -25,6 +24,13 @@ namespace POC7
         [SerializeField] private float _maxPlayerSize = 2.0f;
 
         private int _currentAttackPower;
+
+        /// <summary>
+        /// 현재 공격력만큼 적을 처치하면 공격력이 2배로 증가한다.
+        /// 증가 후에도 킬 카운트는 유지되어, 다음 배수까지 필요한 킬 수가 줄어든다.
+        /// 예: 공격력 16 달성 시 킬 카운트 16 → 공격력 32, 킬 카운트 16 유지 → 이후 16킬 추가하면 64
+        /// </summary>
+        private int _killCount;
 
         /// <summary>현재 공격력. 외부에서 읽기 전용으로 참조한다.</summary>
         public int CurrentAttackPower => _currentAttackPower;
@@ -55,13 +61,12 @@ namespace POC7
         }
 
         /// <summary>
-        /// 돌진 출발점부터 목표 지점까지 레이를 쏴서 경로 위의 모든 IDamageable에 데미지를 적용한다.
+        /// 돌진 출발점부터 목표 지점까지 원형 캐스트를 쏴서 경로 위의 모든 IDamageable에 데미지를 적용한다.
         /// PlayerController가 StartDash 시점에 호출한다.
         ///
         /// [실무 권장]
-        /// Physics2D.RaycastAll은 선(1D) 판정이라 플레이어 폭을 무시한다.
-        /// 더 자연스러운 판정이 필요하면 Physics2D.CircleCastAll로 교체하여
-        /// 플레이어 콜라이더 반경만큼의 두께를 줄 수 있다.
+        /// CircleCastAll은 플레이어 반경만큼의 두께로 판정하여 RaycastAll보다 자연스럽다.
+        /// 더 정밀한 표현이 필요하면 LayerMask를 지정하여 불필요한 레이어를 제외할 수 있다.
         /// </summary>
         /// <param name="from">돌진 출발 위치 (world space).</param>
         /// <param name="to">돌진 목표 위치 (world space).</param>
@@ -74,8 +79,6 @@ namespace POC7
             // 크기가 커져도 자동으로 판정 두께가 반영된다.
             float radius = transform.localScale.x / 2f;
 
-            // CircleCastAll은 반경 radius인 원을 direction 방향으로 distance만큼 이동시키며
-            // 겹치는 모든 콜라이더를 반환한다. RaycastAll보다 플레이어 폭을 정확히 반영한다.
             RaycastHit2D[] hits = Physics2D.CircleCastAll(from, radius, direction, distance);
             foreach (RaycastHit2D hit in hits)
             {
@@ -85,11 +88,17 @@ namespace POC7
         }
 
         /// <summary>
-        /// 적이 처치될 때마다 호출된다. 공격력을 증가시키고 플레이어 크기를 갱신한다.
+        /// 적이 처치될 때마다 킬 카운트를 증가시킨다.
+        /// 킬 카운트가 현재 공격력에 도달하면 공격력을 2배로 올리고, 킬 카운트는 유지한다.
         /// </summary>
         private void HandleEnemyKilled(Enemy enemy)
         {
-            _currentAttackPower += _attackPowerGainPerKill;
+            _killCount++;
+
+            if (_killCount < _currentAttackPower)
+                return;
+
+            _currentAttackPower *= 2;
             UpdatePlayerSize();
             OnAttackPowerChanged?.Invoke(_currentAttackPower);
         }

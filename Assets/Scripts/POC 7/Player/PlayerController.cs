@@ -10,7 +10,6 @@ namespace POC7
     // RingController보다 먼저 실행되도록 우선순위를 낮은 값으로 설정한다 (숫자가 낮을수록 먼저 실행)
     [DefaultExecutionOrder(-10)]
     [RequireComponent(typeof(Rigidbody2D))]
-    [RequireComponent(typeof(Collider2D))]
     public class PlayerController : MonoBehaviour
     {
         /// <summary>돌진이 시작될 때 발생. EnemySpawner가 구독한다.</summary>

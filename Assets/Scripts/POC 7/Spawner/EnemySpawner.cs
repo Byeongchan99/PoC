@@ -15,6 +15,9 @@ namespace POC7
         /// <summary>스폰할 Enemy 프리팹. Enemy 컴포넌트가 부착되어 있어야 한다.</summary>
         [SerializeField] private GameObject _enemyPrefab;
 
+        /// <summary>플레이어 공격력을 읽기 위한 참조. Inspector에서 연결해야 한다.</summary>
+        [SerializeField] private PlayerCombat _playerCombat;
+
         /// <summary>링 중심에서 스폰 가능한 최대 반경. 링 내곽 반경보다 작아야 한다.</summary>
         [SerializeField] private float _spawnRadius = 4f;
 
@@ -23,12 +26,6 @@ namespace POC7
 
         /// <summary>이 웨이브 수에 도달하면 난이도가 1.0(최대)이 된다.</summary>
         [SerializeField] private int _maxDifficultyWaves = 30;
-
-        /// <summary>
-        /// 이 웨이브 수마다 적 체력이 2배로 증가한다.
-        /// 예: 값이 5이면 웨이브 1~5는 체력 2, 6~10은 4, 11~15는 8 ... 상한 없이 계속 증가.
-        /// </summary>
-        [SerializeField] private int _wavesPerHealthDouble = 5;
 
 
         /// <summary>각도 섹터 내에서 랜덤 배치 시 허용하는 지터 비율 (0~0.5).</summary>
@@ -52,7 +49,7 @@ namespace POC7
         /// </summary>
         private void OnEnable()
         {
-            PlayerController.OnDashStarted += SpawnWave;
+            PlayerController.OnPlayerLanded += SpawnWave;
         }
 
         /// <summary>
@@ -60,7 +57,7 @@ namespace POC7
         /// </summary>
         private void OnDisable()
         {
-            PlayerController.OnDashStarted -= SpawnWave;
+            PlayerController.OnPlayerLanded -= SpawnWave;
         }
 
         /// <summary>
@@ -73,7 +70,7 @@ namespace POC7
 
         /// <summary>
         /// 현재 웨이브 번호에 따른 난이도를 계산하고, 그에 맞는 수와 체력의 적을 스폰한다.
-        /// 체력은 2의 거듭제곱으로 증가: 2 → 4 → 8 → 16
+        /// 최대 체력은 플레이어 공격력의 2배로 제한되며, 2의 거듭제곱 단계 중 균등 랜덤 선택한다.
         /// </summary>
         private void SpawnWave()
         {
@@ -82,13 +79,13 @@ namespace POC7
             float difficulty = Mathf.Clamp01(_currentWave / (float)_maxDifficultyWaves);
             int spawnCount = Mathf.Max(1, Mathf.RoundToInt(_spawnCountCurve.Evaluate(difficulty)));
 
-            // 현재 웨이브에서 도달 가능한 최대 체력 지수를 구한다.
-            // 예: wavesPerDouble=5 → 웨이브 1→지수1(체력2), 6→지수2(체력4), 11→지수3(체력8) ...
-            int maxExponent = Mathf.FloorToInt((_currentWave - 1) / (float)_wavesPerHealthDouble) + 1;
+            // 최대 체력 = 플레이어 공격력 × 2.
+            // 예: 공격력 64 → 최대 체력 128 → 지수 7 → 체력 2,4,8,16,32,64,128 중 랜덤.
+            int playerAttackPower = _playerCombat != null ? _playerCombat.CurrentAttackPower : 1;
+            int maxHealth = playerAttackPower * 2;
 
-            // 지수 1부터 maxExponent까지의 모든 체력 단계(2^1, 2^2, ..., 2^maxExponent)를 목록으로 만든다.
-            // 이 목록에서 균등 분포로 랜덤 선택하여 각 적의 체력을 결정한다.
-            int maxHealth = (int)Mathf.Pow(2, maxExponent);
+            // 최대 체력의 2의 거듭제곱 지수를 구한다. 예: 128 → 7, 64 → 6.
+            int maxExponent = Mathf.FloorToInt(Mathf.Log(maxHealth, 2));
 
             // 겹침 체크에 사용할 적의 반경은 최대 체력 기준으로 계산한다 (최악의 크기 기준).
             float enemySize = Mathf.Min(_enemyBaseSize + maxHealth * _enemySizePerHealth, _enemyMaxVisualSize);

@@ -38,6 +38,7 @@ namespace POC7
         [SerializeField] private bool _trailEmitDuringDash = true;
 
         private Rigidbody2D _rigidbody;
+        private PlayerCombat _playerCombat;
         private PlayerState _currentState = PlayerState.Landed;
         private Vector2 _dashTarget;
 
@@ -62,6 +63,8 @@ namespace POC7
             // Discrete(기본값)는 각 물리 스텝의 끝 위치만 검사하여 빠른 오브젝트가 충돌체를 통과할 수 있다.
             // Continuous는 이동 경로 전체를 스윕 테스트하여 충돌 누락을 방지한다.
             _rigidbody.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
+
+            _playerCombat = GetComponent<PlayerCombat>();
         }
 
         /// <summary>
@@ -155,7 +158,8 @@ namespace POC7
         }
 
         /// <summary>
-        /// 돌진 목표 지점을 저장하고 상태를 Dashing으로 전환한다. OnDashStarted 이벤트를 발생시킨다.
+        /// 돌진 목표 지점을 저장하고 상태를 Dashing으로 전환한다.
+        /// 레이캐스트로 경로 위 적에게 즉시 데미지를 적용한 후 OnDashStarted 이벤트를 발생시킨다.
         /// </summary>
         private void StartDash(Vector2 targetPos)
         {
@@ -165,6 +169,9 @@ namespace POC7
 
             if (_slashTrail != null && _trailEmitDuringDash)
                 _slashTrail.emitting = true;
+
+            // 이동 시작 전에 경로 위 적을 레이캐스트로 한 번에 판정한다.
+            _playerCombat?.PerformDashAttack(transform.position, targetPos);
 
             OnDashStarted?.Invoke();
         }

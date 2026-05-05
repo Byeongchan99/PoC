@@ -72,9 +72,11 @@ namespace POC7
             _playerCombat = GetComponent<PlayerCombat>();
 
             // 링 중심(_ringTransform)에서 플레이어 초기 위치까지의 거리를 링 반경으로 저장한다.
-            // 플레이어가 씬에서 링 내벽 위에 배치되어 있다고 가정한다.
+            // PlayerController.Awake는 PlayerCombat.Awake보다 먼저 실행되므로
+            // 이 시점의 scale은 씬 기본값(1.0)이다. 초기 반경(0.5)을 더해 실제 링 벽 반경을 구한다.
             Vector2 ringCenter = _ringTransform != null ? (Vector2)_ringTransform.position : Vector2.zero;
-            _ringRadius = Vector2.Distance(transform.position, ringCenter);
+            float initialPlayerRadius = transform.localScale.x / 2f;
+            _ringRadius = Vector2.Distance(transform.position, ringCenter) + initialPlayerRadius;
         }
 
         /// <summary>

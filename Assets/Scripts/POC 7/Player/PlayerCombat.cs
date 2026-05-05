@@ -70,9 +70,13 @@ namespace POC7
             Vector2 direction = (to - from).normalized;
             float distance = Vector2.Distance(from, to);
 
-            // 레이 경로 위의 모든 콜라이더를 한 번에 조회한다.
-            // RaycastAll은 출발점을 포함한 콜라이더도 반환할 수 있으므로 IDamageable 여부로 필터링한다.
-            RaycastHit2D[] hits = Physics2D.RaycastAll(from, direction, distance);
+            // 플레이어 localScale.x가 지름이므로 반으로 나눠 반경을 구한다.
+            // 크기가 커져도 자동으로 판정 두께가 반영된다.
+            float radius = transform.localScale.x / 2f;
+
+            // CircleCastAll은 반경 radius인 원을 direction 방향으로 distance만큼 이동시키며
+            // 겹치는 모든 콜라이더를 반환한다. RaycastAll보다 플레이어 폭을 정확히 반영한다.
+            RaycastHit2D[] hits = Physics2D.CircleCastAll(from, radius, direction, distance);
             foreach (RaycastHit2D hit in hits)
             {
                 if (hit.collider.TryGetComponent(out IDamageable damageable))

@@ -60,7 +60,7 @@ namespace POC7
             _maxHealth = health;
             _currentHealth = health;
             UpdateVisualSize();
-            AssignRandomColor();
+            UpdateColor();
             OnHealthChanged?.Invoke(_currentHealth);
             OnEnemySpawned?.Invoke(this);
         }
@@ -75,6 +75,7 @@ namespace POC7
 
             _currentHealth -= damage;
             UpdateVisualSize();
+            UpdateColor();
             OnHealthChanged?.Invoke(Mathf.Max(0, _currentHealth));
 
             if (_currentHealth <= 0)
@@ -92,16 +93,23 @@ namespace POC7
         }
 
         /// <summary>
-        /// 스폰 시 무작위 색조(hue)를 선택하여 고채도·고명도 색상을 적용한다.
-        /// 색상은 스폰 시 한 번만 결정되며 피격 시 변하지 않는다.
-        /// 크기로 체력 단계를 표현하므로 색상은 순수 시각적 다양성 역할만 담당한다.
+        /// 현재 체력의 2의 거듭제곱 지수(exponent)를 기반으로 색상을 결정한다.
+        ///
+        /// 황금비(0.618...)를 이용해 단계마다 색상환(Hue)을 순환시키면
+        /// 인접한 단계끼리 색이 겹치지 않으면서 단계 수에 관계없이 다양한 색상이 나온다.
+        /// 예: 지수 1→빨강(0.0), 2→하늘(0.618), 3→연두(0.236), 4→분홍(0.854), 5→청록(0.472) ...
         /// </summary>
-        private void AssignRandomColor()
+        private void UpdateColor()
         {
             if (_spriteRenderer == null)
                 return;
 
-            float hue = UnityEngine.Random.value;
+            int exponent = _currentHealth > 0 ? Mathf.FloorToInt(Mathf.Log(_currentHealth, 2)) : 0;
+
+            // 황금비 켤레(golden ratio conjugate)를 곱할수록 색상환에서 균등하게 분산된 값을 얻는다.
+            const float GoldenRatioConjugate = 0.6180339887f;
+            float hue = (exponent * GoldenRatioConjugate) % 1f;
+
             _spriteRenderer.color = Color.HSVToRGB(hue, 0.85f, 0.95f);
         }
 

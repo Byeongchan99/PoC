@@ -49,7 +49,7 @@ namespace POC7
         /// </summary>
         private void OnEnable()
         {
-            PlayerController.OnDashStarted += SpawnWave;
+            PlayerController.OnPlayerLanded += SpawnWave;
         }
 
         /// <summary>
@@ -57,7 +57,7 @@ namespace POC7
         /// </summary>
         private void OnDisable()
         {
-            PlayerController.OnDashStarted -= SpawnWave;
+            PlayerController.OnPlayerLanded -= SpawnWave;
         }
 
         /// <summary>

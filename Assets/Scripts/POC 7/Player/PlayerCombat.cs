@@ -12,6 +12,9 @@ namespace POC7
         /// <summary>공격력이 변경될 때 발생. 인자는 변경 후 공격력. PlayerAttackLabel이 구독한다.</summary>
         public event Action<int> OnAttackPowerChanged;
 
+        /// <summary>킬 카운트가 변경될 때 발생. 인자는 (현재 킬 수, 다음 배수까지 필요한 총 킬 수).</summary>
+        public event Action<int, int> OnKillCountChanged;
+
         [SerializeField] private int _initialAttackPower = 1;
 
         /// <summary>공격력 1일 때 플레이어의 기본 크기.</summary>
@@ -34,6 +37,9 @@ namespace POC7
 
         /// <summary>현재 공격력. 외부에서 읽기 전용으로 참조한다.</summary>
         public int CurrentAttackPower => _currentAttackPower;
+
+        /// <summary>현재 킬 카운트. 외부에서 읽기 전용으로 참조한다.</summary>
+        public int KillCount => _killCount;
 
         /// <summary>
         /// 공격력을 초기값으로 설정하고 초기 크기를 반영한다.
@@ -95,12 +101,14 @@ namespace POC7
         {
             _killCount++;
 
-            if (_killCount < _currentAttackPower)
-                return;
+            if (_killCount >= _currentAttackPower)
+            {
+                _currentAttackPower *= 2;
+                UpdatePlayerSize();
+                OnAttackPowerChanged?.Invoke(_currentAttackPower);
+            }
 
-            _currentAttackPower *= 2;
-            UpdatePlayerSize();
-            OnAttackPowerChanged?.Invoke(_currentAttackPower);
+            OnKillCountChanged?.Invoke(_killCount, _currentAttackPower);
         }
 
         /// <summary>

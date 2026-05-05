@@ -71,9 +71,10 @@ namespace POC7
 
             _playerCombat = GetComponent<PlayerCombat>();
 
-            // 씬에서 설정한 초기 localPosition의 크기를 링 반경으로 저장한다.
-            // 이 값은 "플레이어 외벽이 닿아야 할 링 내벽까지의 거리"를 의미한다.
-            _ringRadius = transform.localPosition.magnitude;
+            // 링 중심(_ringTransform)에서 플레이어 초기 위치까지의 거리를 링 반경으로 저장한다.
+            // 플레이어가 씬에서 링 내벽 위에 배치되어 있다고 가정한다.
+            Vector2 ringCenter = _ringTransform != null ? (Vector2)_ringTransform.position : Vector2.zero;
+            _ringRadius = Vector2.Distance(transform.position, ringCenter);
         }
 
         /// <summary>
@@ -230,29 +231,27 @@ namespace POC7
         }
 
         /// <summary>
-        /// 플레이어 외벽이 링 내벽에 정확히 닿도록 localPosition을 조정한다.
+        /// 플레이어 외벽이 링 내벽에 정확히 닿도록 월드 좌표 위치를 조정한다.
         ///
-        /// landingWorldPos를 링의 로컬 좌표로 변환하여 방향을 구한다.
-        /// transform.localPosition을 직접 사용하면 MovePosition이 아직 미적용 상태일 때
-        /// 이전 위치 기준으로 잘못된 방향이 계산되는 문제를 피할 수 있다.
+        /// 링 중심(_ringTransform)을 기준으로 방향을 계산하므로
+        /// 씬 계층 구조나 부모 Transform에 관계없이 항상 올바르게 동작한다.
+        ///
+        /// 목표 위치 = 링 중심 + 방향 * (링 반경 - 플레이어 반경)
+        /// 플레이어 반경만큼 안쪽에 중심을 두므로 외벽이 링 내벽에 정확히 닿는다.
         /// </summary>
-        /// <param name="landingWorldPos">플레이어가 위치해야 할 월드 좌표. 방향 계산에만 사용한다.</param>
+        /// <param name="landingWorldPos">착지할 월드 좌표. 링 중심에서 이 방향으로 플레이어를 배치한다.</param>
         private void AdjustPositionToRingWall(Vector2 landingWorldPos)
         {
-            if (transform.parent == null)
-                return;
-
-            // 월드 좌표를 링의 로컬 좌표로 변환하여 링 중심 기준 방향을 구한다.
-            Vector2 localPos = transform.parent.InverseTransformPoint(landingWorldPos);
-            Vector2 localDir = localPos.normalized;
-            if (localDir.sqrMagnitude < 0.001f)
+            Vector2 ringCenter = _ringTransform != null ? (Vector2)_ringTransform.position : Vector2.zero;
+            Vector2 dir = (landingWorldPos - ringCenter).normalized;
+            if (dir.sqrMagnitude < 0.001f)
                 return;
 
             float playerRadius = transform.localScale.x / 2f;
-            transform.localPosition = (Vector3)(localDir * (_ringRadius - playerRadius));
+            Vector2 targetPos = ringCenter + dir * (_ringRadius - playerRadius);
 
-            // Rigidbody2D의 내부 위치를 transform과 동기화한다.
-            _rigidbody.position = transform.position;
+            transform.position = targetPos;
+            _rigidbody.position = targetPos;
         }
     }
 }

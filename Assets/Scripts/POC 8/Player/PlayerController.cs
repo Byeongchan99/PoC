@@ -342,10 +342,13 @@ namespace POC8
 
         /// <summary>
         /// 상태를 Landed로 전환하고 링 벽 부착 위치를 조정한 후 OnPlayerLanded 이벤트를 발생시킨다.
-        /// 킬 리셋 대기 중이더라도 착지만으로는 창을 닫지 않는다. 타이머 만료 또는 클릭으로만 종료된다.
+        /// 착지 시 킬 리셋 대기 중이었다면 정리한다.
         /// </summary>
         private void Land()
         {
+            if (_killResetAvailable)
+                EndKillReset();
+
             _currentState = PlayerState.Landed;
             IsPlayerDashing = false;
 

@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace POC7
+namespace POC8
 {
     /// <summary>
     /// SaturationSystem의 현재 적 수를 슬라이더로 표시하는 UI 컴포넌트.

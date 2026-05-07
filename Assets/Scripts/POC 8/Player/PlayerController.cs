@@ -1,7 +1,8 @@
 using System;
+using System.Collections;
 using UnityEngine;
 
-namespace POC7
+namespace POC8
 {
     /// <summary>
     /// 플레이어의 상태(Landed/Dashing)와 돌진 이동을 담당하는 컴포넌트.
@@ -9,7 +10,6 @@ namespace POC7
     /// </summary>
     // RingController보다 먼저 실행되도록 우선순위를 낮은 값으로 설정한다 (숫자가 낮을수록 먼저 실행)
     [DefaultExecutionOrder(-10)]
-    [RequireComponent(typeof(Rigidbody2D))]
     public class PlayerController : MonoBehaviour
     {
         /// <summary>돌진이 시작될 때 발생. EnemySpawner가 구독한다.</summary>
@@ -39,7 +39,12 @@ namespace POC7
         /// <summary>반사 횟수의 상한. UI 버튼으로 이 값을 초과할 수 없다.</summary>
         [SerializeField] private int _maxBounceCount = 10;
 
-        private Rigidbody2D _rigidbody;
+        /// <summary>킬 리셋 발동 시 적용할 Time.timeScale 값.</summary>
+        [SerializeField] private float _killResetTimeScale = 0.25f;
+
+        /// <summary>킬 리셋 입력 대기 시간(실제 시간 기준, 초). 이 시간 안에 클릭하지 않으면 슬로우가 해제된다.</summary>
+        [SerializeField] private float _killResetWindowDuration = 1.5f;
+
         private PlayerCombat _playerCombat;
         private PlayerState _currentState = PlayerState.Landed;
 
@@ -61,6 +66,18 @@ namespace POC7
         /// <summary>현재 반사 횟수. UI 버튼으로 조절한다.</summary>
         private int _bounceCount;
 
+        /// <summary>킬 리셋 입력을 받을 수 있는 상태인지 나타낸다.</summary>
+        private bool _killResetAvailable;
+
+        /// <summary>실행 중인 킬 리셋 대기 코루틴. 새 리셋이 발동되기 전 중단하는 데 사용한다.</summary>
+        private Coroutine _killResetCoroutine;
+
+        /// <summary>
+        /// 대시마다 증가하는 식별자. ApplyDamageDelayed 코루틴이 이 값을 검사해
+        /// 새 대시가 시작된 경우 이전 경로의 데미지 예약을 무시한다.
+        /// </summary>
+        private int _dashId;
+
         /// <summary>현재 돌진 중인지 외부에서 확인할 때 사용한다.</summary>
         public bool IsDashing => _currentState == PlayerState.Dashing;
 
@@ -71,26 +88,39 @@ namespace POC7
         public int BounceCount => _bounceCount;
 
         /// <summary>
-        /// Rigidbody2D를 Kinematic + Continuous 감지 모드로 초기화한다.
-        /// Continuous 모드는 빠른 이동 시 적을 통과하는 터널링을 방지한다.
+        /// PlayerCombat 참조를 확보하고 링 반경을 초기화한다.
+        /// PlayerController.Awake는 PlayerCombat.Awake보다 먼저 실행되므로
+        /// 이 시점의 scale은 씬 기본값(1.0)이다. 초기 반경(0.5)을 더해 실제 링 벽 반경을 구한다.
         /// </summary>
         private void Awake()
         {
-            _rigidbody = GetComponent<Rigidbody2D>();
-            _rigidbody.bodyType = RigidbodyType2D.Kinematic;
-
-            // Discrete(기본값)는 각 물리 스텝의 끝 위치만 검사하여 빠른 오브젝트가 충돌체를 통과할 수 있다.
-            // Continuous는 이동 경로 전체를 스윕 테스트하여 충돌 누락을 방지한다.
-            _rigidbody.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
-
             _playerCombat = GetComponent<PlayerCombat>();
 
-            // 링 중심(_ringTransform)에서 플레이어 초기 위치까지의 거리를 링 반경으로 저장한다.
-            // PlayerController.Awake는 PlayerCombat.Awake보다 먼저 실행되므로
-            // 이 시점의 scale은 씬 기본값(1.0)이다. 초기 반경(0.5)을 더해 실제 링 벽 반경을 구한다.
             Vector2 ringCenter = _ringTransform != null ? (Vector2)_ringTransform.position : Vector2.zero;
             float initialPlayerRadius = transform.localScale.x / 2f;
             _ringRadius = Vector2.Distance(transform.position, ringCenter) + initialPlayerRadius;
+        }
+
+        /// <summary>
+        /// 킬 리셋 이벤트를 구독한다.
+        /// </summary>
+        private void OnEnable()
+        {
+            if (_playerCombat != null)
+                _playerCombat.OnKillDuringDash += HandleKillDuringDash;
+        }
+
+        /// <summary>
+        /// 킬 리셋 이벤트 구독을 해제하고 timeScale을 복구한다.
+        /// </summary>
+        private void OnDisable()
+        {
+            if (_playerCombat != null)
+                _playerCombat.OnKillDuringDash -= HandleKillDuringDash;
+
+            // 씬 전환 등으로 오브젝트가 비활성화될 때 timeScale이 느린 채로 남지 않도록 복구한다.
+            if (_killResetAvailable)
+                Time.timeScale = 1f;
         }
 
         /// <summary>
@@ -103,19 +133,12 @@ namespace POC7
         }
 
         /// <summary>
-        /// 입력 처리는 Update에서, 이동은 FixedUpdate에서 실행한다.
-        /// MovePosition은 FixedUpdate에서 호출해야 물리 엔진과 동기화되어 충돌 감지가 정확해진다.
+        /// 입력 처리와 이동을 Update에서 실행한다.
+        /// Time.deltaTime을 사용하므로 Time.timeScale 변화(슬로우)에 자동으로 동기화된다.
         /// </summary>
         private void Update()
         {
             HandleInput();
-        }
-
-        /// <summary>
-        /// MovePosition을 FixedUpdate에서 호출하여 물리 스텝과 이동을 동기화한다.
-        /// </summary>
-        private void FixedUpdate()
-        {
             UpdateDash();
         }
 
@@ -136,12 +159,15 @@ namespace POC7
         }
 
         /// <summary>
-        /// Landed 상태에서만 마우스 클릭을 감지한다.
-        /// 클릭 위치를 월드 좌표로 변환 후 돌진 목표 지점을 계산한다.
+        /// Landed 상태이거나 킬 리셋 대기 중일 때 마우스 클릭을 감지한다.
+        /// Input.GetMouseButtonDown은 Time.timeScale의 영향을 받지 않으므로 슬로우 중에도 정상 동작한다.
         /// </summary>
         private void HandleInput()
         {
-            if (_currentState != PlayerState.Landed)
+            bool canInput = _currentState == PlayerState.Landed ||
+                            (_currentState == PlayerState.Dashing && _killResetAvailable);
+
+            if (!canInput)
                 return;
 
             if (!Input.GetMouseButtonDown(0))
@@ -158,22 +184,20 @@ namespace POC7
         }
 
         /// <summary>
-        /// 플레이어 위치(P)에서 클릭 방향(d)으로 나아갈 때 링 원의 반대편 교점을 계산한다.
+        /// 플레이어 위치(P)에서 클릭 방향(d)으로 나아갈 때 링 내벽과의 교점을 계산한다.
         ///
         /// [수학 설명]
-        /// P는 반경 r인 원 위의 점, C는 원 중심, d는 클릭 방향의 단위벡터.
-        /// 직선의 방정식: Q = P + t * d
-        /// 원의 방정식: |Q - C|^2 = r^2
+        /// Ray: Q = P + t * d  (d는 단위벡터)
+        /// Circle: |Q - C|^2 = R^2  (R = 링 내벽 반경)
         ///
-        /// 대입 후 전개하면:
-        ///   t^2 + 2t * dot(P - C, d) + (|P - C|^2 - r^2) = 0
+        /// 대입 후 전개 (u = P - C):
+        ///   t^2 + 2*(u·d)*t + (|u|^2 - R^2) = 0
+        ///   b = 2*(u·d),  c = |u|^2 - R^2
+        ///   t = (-b + sqrt(b^2 - 4c)) / 2
         ///
-        /// P가 원 위의 점이므로 |P - C| = r, 따라서 마지막 항은 0:
-        ///   t * (t + 2 * dot(P - C, d)) = 0
-        ///   t = 0  (출발점, 버림)
-        ///   t = -2 * dot(P - C, d) = 2 * dot(C - P, d)  (반대편 교점)
-        ///
-        /// 주의: 이 단순화는 P가 정확히 원 위에 있을 때만 성립한다.
+        /// P가 링 내부에 있으면 c < 0이므로 판별식은 항상 양수(교점 2개).
+        /// 양수 근을 선택하면 전방의 교점을 얻는다.
+        /// P가 링 벽 위에 있으면 c = 0이 되어 t = -b로 단순화되며 기존 동작과 동일하다.
         /// </summary>
         /// <returns>유효한 목표 지점이 계산되면 true, 클릭 방향이 잘못됐으면 false</returns>
         private bool TryCalculateDashTarget(Vector2 clickWorldPos, out Vector2 target)
@@ -191,11 +215,21 @@ namespace POC7
             }
 
             Vector2 direction = rawDir.normalized;
+            float wallRadius = _ringRadius - transform.localScale.x / 2f;
 
-            // 반대편 교점까지의 거리 t = 2 * dot(C - P, d)
-            float t = 2f * Vector2.Dot(ringCenter - playerPos, direction);
+            Vector2 u = playerPos - ringCenter;
+            float b = 2f * Vector2.Dot(u, direction);
+            float c = Vector2.Dot(u, u) - wallRadius * wallRadius;
+            float discriminant = b * b - 4f * c;
 
-            // t가 0 이하면 클릭 방향이 링 안쪽을 향하지 않으므로 돌진하지 않는다
+            if (discriminant < 0f)
+            {
+                target = playerPos;
+                return false;
+            }
+
+            float t = (-b + Mathf.Sqrt(discriminant)) / 2f;
+
             if (t < 0.1f)
             {
                 target = playerPos;
@@ -213,10 +247,14 @@ namespace POC7
         /// 각 교점에서 반사 방향은 Vector2.Reflect로 계산한다.
         ///   normal = (교점 - 링 중심).normalized   (링 내벽의 법선)
         ///   반사 방향 = Reflect(입사 방향, normal)
+        ///
+        /// 교점 계산에 완전한 2차 방정식을 사용하므로 킬 리셋 직후처럼
+        /// 출발 위치가 링 내부에 있는 경우에도 정확하게 동작한다.
         /// </summary>
         private Vector2[] ComputeWaypoints(Vector2 startPos, Vector2 direction)
         {
             Vector2 ringCenter = _ringTransform != null ? (Vector2)_ringTransform.position : Vector2.zero;
+            float wallRadius = _ringRadius - transform.localScale.x / 2f;
             int totalPoints = _bounceCount + 1;
             Vector2[] waypoints = new Vector2[totalPoints];
 
@@ -225,7 +263,12 @@ namespace POC7
 
             for (int i = 0; i < totalPoints; i++)
             {
-                float t = 2f * Vector2.Dot(ringCenter - pos, dir);
+                // Ray-Circle 교점: t^2 + 2*(u·d)*t + (|u|^2 - R^2) = 0, u = pos - ringCenter
+                Vector2 u = pos - ringCenter;
+                float b = 2f * Vector2.Dot(u, dir);
+                float c = Vector2.Dot(u, u) - wallRadius * wallRadius;
+                float discriminant = b * b - 4f * c;
+                float t = discriminant >= 0f ? (-b + Mathf.Sqrt(discriminant)) / 2f : 0f;
 
                 // t가 너무 작으면 링 바깥 방향 클릭 등 비정상 상태. 남은 지점을 현재 위치로 채우고 종료한다.
                 if (t < 0.1f)
@@ -251,11 +294,17 @@ namespace POC7
         }
 
         /// <summary>
-        /// 경유 지점을 계산하고 상태를 Dashing으로 전환한다.
-        /// 각 구간마다 레이캐스트 공격 판정을 적용한 후 OnDashStarted 이벤트를 발생시킨다.
+        /// _dashId를 증가시켜 이전 대시의 데미지 예약을 무효화하고,
+        /// 각 구간을 CircleCastAll로 사전 계산하여 도달 시간에 맞춰 데미지를 예약한다.
         /// </summary>
         private void StartDash(Vector2 firstTarget)
         {
+            if (_killResetAvailable)
+                EndKillReset();
+
+            _dashId++;
+            int capturedDashId = _dashId;
+
             Vector2 startPos = transform.position;
             Vector2 direction = (firstTarget - startPos).normalized;
 
@@ -269,11 +318,13 @@ namespace POC7
             if (_slashTrail != null && _trailEmitDuringDash)
                 _slashTrail.emitting = true;
 
-            // 모든 구간에 대해 레이캐스트 공격 판정을 적용한다.
+            // 각 구간의 히트를 사전 계산하고 도달 시간에 맞춰 데미지를 예약한다.
             Vector2 segmentStart = startPos;
+            float timeOffset = 0f;
             foreach (Vector2 waypoint in _waypoints)
             {
-                _playerCombat?.PerformDashAttack(segmentStart, waypoint);
+                ScheduleSegmentDamage(segmentStart, waypoint, timeOffset, capturedDashId);
+                timeOffset += Vector2.Distance(segmentStart, waypoint) / _dashSpeed;
                 segmentStart = waypoint;
             }
 
@@ -281,17 +332,54 @@ namespace POC7
         }
 
         /// <summary>
-        /// Dashing 상태일 때 매 물리 스텝마다 현재 경유 지점을 향해 이동한다.
-        /// 도달하면 다음 경유 지점으로 전환하고, 마지막 지점이면 Land()를 호출한다.
+        /// 한 구간에 대해 CircleCastAll을 실행하고 각 히트에 대해 데미지 예약 코루틴을 시작한다.
+        /// timeOffset은 이전 구간들을 통과하는 데 걸리는 누적 시간(게임 시간)이다.
+        /// </summary>
+        private void ScheduleSegmentDamage(Vector2 from, Vector2 to, float timeOffset, int dashId)
+        {
+            Vector2 direction = (to - from).normalized;
+            float distance = Vector2.Distance(from, to);
+            float radius = transform.localScale.x / 2f;
+
+            RaycastHit2D[] hits = Physics2D.CircleCastAll(from, radius, direction, distance);
+            foreach (RaycastHit2D hit in hits)
+            {
+                if (hit.collider.TryGetComponent(out IDamageable damageable))
+                {
+                    // 히트 지점까지의 도달 시간 = 이전 구간 누적 시간 + 이번 구간 내 거리 / 속도
+                    float delay = timeOffset + hit.distance / _dashSpeed;
+                    StartCoroutine(ApplyDamageDelayed(delay, damageable, dashId));
+                }
+            }
+        }
+
+        /// <summary>
+        /// delay(게임 시간) 후 dashId가 현재와 일치하면 데미지를 적용한다.
+        /// WaitForSeconds는 Time.timeScale을 따르므로 슬로우 중에는 대기 시간도 늘어나
+        /// 플레이어의 실제 이동 속도와 자동으로 동기화된다.
+        /// </summary>
+        private IEnumerator ApplyDamageDelayed(float delay, IDamageable target, int dashId)
+        {
+            yield return new WaitForSeconds(delay);
+
+            if (_dashId != dashId)
+                yield break;
+
+            _playerCombat.ApplyDamage(target);
+        }
+
+        /// <summary>
+        /// Dashing 상태일 때 매 프레임마다 현재 경유 지점을 향해 이동한다.
+        /// Time.deltaTime을 사용하므로 Time.timeScale 변화에 따라 이동 속도가 자동으로 조정된다.
         /// </summary>
         private void UpdateDash()
         {
             if (_currentState != PlayerState.Dashing)
                 return;
 
-            Vector2 currentPos = _rigidbody.position;
-            Vector2 newPos = Vector2.MoveTowards(currentPos, _dashTarget, _dashSpeed * Time.fixedDeltaTime);
-            _rigidbody.MovePosition(newPos);
+            Vector2 currentPos = transform.position;
+            Vector2 newPos = Vector2.MoveTowards(currentPos, _dashTarget, _dashSpeed * Time.deltaTime);
+            transform.position = newPos;
 
             if (Vector2.Distance(newPos, _dashTarget) >= 0.05f)
                 return;
@@ -309,6 +397,9 @@ namespace POC7
         /// </summary>
         private void Land()
         {
+            if (_killResetAvailable)
+                EndKillReset();
+
             _currentState = PlayerState.Landed;
             IsPlayerDashing = false;
 
@@ -336,7 +427,54 @@ namespace POC7
             Vector2 targetPos = ringCenter + dir * (_ringRadius - playerRadius);
 
             transform.position = targetPos;
-            _rigidbody.position = targetPos;
+        }
+
+        /// <summary>
+        /// 대시 중 킬이 발생했을 때 PlayerCombat으로부터 호출된다.
+        /// 이미 킬 리셋 대기 중이면 타이머를 재시작하지 않는다(연속 킬 시 창이 리셋되지 않도록).
+        /// </summary>
+        private void HandleKillDuringDash()
+        {
+            if (_killResetAvailable)
+                return;
+
+            _killResetAvailable = true;
+            _killResetCoroutine = StartCoroutine(KillResetWindow());
+        }
+
+        /// <summary>
+        /// 킬 리셋 입력 대기 창을 실행한다.
+        /// Time.timeScale을 낮춰 슬로우 효과를 적용하고, 대기 시간이 지나면 자동으로 해제한다.
+        /// 타이머는 실제 시간(unscaledDeltaTime) 기준으로 동작한다.
+        /// </summary>
+        private IEnumerator KillResetWindow()
+        {
+            Time.timeScale = _killResetTimeScale;
+
+            float elapsed = 0f;
+            while (elapsed < _killResetWindowDuration)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                yield return null;
+            }
+
+            EndKillReset();
+        }
+
+        /// <summary>
+        /// 킬 리셋 상태를 정리하고 timeScale을 복구한다.
+        /// 코루틴 만료, 클릭 입력, 착지 등 여러 경로에서 호출된다.
+        /// </summary>
+        private void EndKillReset()
+        {
+            if (_killResetCoroutine != null)
+            {
+                StopCoroutine(_killResetCoroutine);
+                _killResetCoroutine = null;
+            }
+
+            _killResetAvailable = false;
+            Time.timeScale = 1f;
         }
     }
 }

@@ -2,7 +2,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace POC7
+namespace POC8
 {
     /// <summary>
     /// 반사 횟수를 증가/감소 버튼으로 조절하고 현재 값을 텍스트로 표시하는 UI 컴포넌트.

@@ -1,7 +1,7 @@
 using TMPro;
 using UnityEngine;
 
-namespace POC7
+namespace POC8
 {
     /// <summary>
     /// 플레이어 위에 현재 공격력을 표시하는 레이블 컴포넌트.

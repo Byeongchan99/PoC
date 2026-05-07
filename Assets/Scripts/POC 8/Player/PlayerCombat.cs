@@ -1,10 +1,10 @@
 using System;
 using UnityEngine;
 
-namespace POC7
+namespace POC8
 {
     /// <summary>
-    /// 플레이어의 공격력 관리, 돌진 경로 레이캐스트 공격, 크기 변화를 담당하는 컴포넌트.
+    /// 플레이어의 공격력 관리, 데미지 적용, 크기 변화를 담당하는 컴포넌트.
     /// PlayerController와 같은 GameObject에 부착해야 한다.
     /// </summary>
     public class PlayerCombat : MonoBehaviour
@@ -14,6 +14,9 @@ namespace POC7
 
         /// <summary>킬 카운트가 변경될 때 발생. 인자는 (현재 킬 수, 다음 배수까지 필요한 총 킬 수).</summary>
         public event Action<int, int> OnKillCountChanged;
+
+        /// <summary>대시 중 적을 처치했을 때 발생. PlayerController가 구독하여 킬 리셋을 처리한다.</summary>
+        public event Action OnKillDuringDash;
 
         [SerializeField] private int _initialAttackPower = 1;
 
@@ -67,35 +70,18 @@ namespace POC7
         }
 
         /// <summary>
-        /// 돌진 출발점부터 목표 지점까지 원형 캐스트를 쏴서 경로 위의 모든 IDamageable에 데미지를 적용한다.
-        /// PlayerController가 StartDash 시점에 호출한다.
-        ///
-        /// [실무 권장]
-        /// CircleCastAll은 플레이어 반경만큼의 두께로 판정하여 RaycastAll보다 자연스럽다.
-        /// 더 정밀한 표현이 필요하면 LayerMask를 지정하여 불필요한 레이어를 제외할 수 있다.
+        /// PlayerController의 ApplyDamageDelayed 코루틴이 도달 시간에 맞춰 호출한다.
+        /// 현재 공격력만큼 대상에게 데미지를 적용한다.
         /// </summary>
-        /// <param name="from">돌진 출발 위치 (world space).</param>
-        /// <param name="to">돌진 목표 위치 (world space).</param>
-        public void PerformDashAttack(Vector2 from, Vector2 to)
+        public void ApplyDamage(IDamageable target)
         {
-            Vector2 direction = (to - from).normalized;
-            float distance = Vector2.Distance(from, to);
-
-            // 플레이어 localScale.x가 지름이므로 반으로 나눠 반경을 구한다.
-            // 크기가 커져도 자동으로 판정 두께가 반영된다.
-            float radius = transform.localScale.x / 2f;
-
-            RaycastHit2D[] hits = Physics2D.CircleCastAll(from, radius, direction, distance);
-            foreach (RaycastHit2D hit in hits)
-            {
-                if (hit.collider.TryGetComponent(out IDamageable damageable))
-                    damageable.TakeDamage(_currentAttackPower);
-            }
+            target.TakeDamage(_currentAttackPower);
         }
 
         /// <summary>
         /// 적이 처치될 때마다 킬 카운트를 증가시킨다.
         /// 킬 카운트가 현재 공격력에 도달하면 공격력을 2배로 올리고, 킬 카운트는 유지한다.
+        /// 대시 중 처치라면 OnKillDuringDash 이벤트를 발생시킨다.
         /// </summary>
         private void HandleEnemyKilled(Enemy enemy)
         {
@@ -109,6 +95,9 @@ namespace POC7
             }
 
             OnKillCountChanged?.Invoke(_killCount, _currentAttackPower);
+
+            if (PlayerController.IsPlayerDashing)
+                OnKillDuringDash?.Invoke();
         }
 
         /// <summary>

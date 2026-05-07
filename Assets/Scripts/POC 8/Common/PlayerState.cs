@@ -1,4 +1,4 @@
-namespace POC7
+namespace POC8
 {
     /// <summary>
     /// 플레이어의 행동 상태를 나타내는 열거형.

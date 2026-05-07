@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 
-namespace POC7
+namespace POC8
 {
     /// <summary>
     /// 씬의 모든 활성 적 위에 체력 수치를 표시하는 World Space HUD.

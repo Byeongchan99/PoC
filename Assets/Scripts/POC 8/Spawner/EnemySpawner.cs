@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace POC7
+namespace POC8
 {
     /// <summary>
     /// 플레이어 클릭마다 링 내부에 적을 스폰하는 컴포넌트.

@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace POC7
+namespace POC8
 {
     /// <summary>
     /// 살아있는 적 수를 추적하고, 임계치 도달 시 게임 오버를 발생시키는 컴포넌트.

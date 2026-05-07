@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace POC7
+namespace POC8
 {
     /// <summary>
     /// 플레이어의 공격력 관리, 돌진 경로 레이캐스트 공격, 크기 변화를 담당하는 컴포넌트.

@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace POC7
+namespace POC8
 {
     /// <summary>
     /// 게임 전체 흐름을 조율하는 컴포넌트.

@@ -1,7 +1,7 @@
 using TMPro;
 using UnityEngine;
 
-namespace POC7
+namespace POC8
 {
     /// <summary>
     /// 플레이어의 현재 킬 카운트와 다음 공격력 배수까지의 진행도를 텍스트로 표시하는 UI 컴포넌트.

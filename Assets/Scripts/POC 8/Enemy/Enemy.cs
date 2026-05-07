@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace POC7
+namespace POC8
 {
     /// <summary>
     /// 적 오브젝트의 체력, 피격, 크기 변화, 사망 처리를 담당하는 컴포넌트.

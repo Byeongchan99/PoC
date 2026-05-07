@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace POC7
+namespace POC8
 {
     /// <summary>
     /// 런타임에 EdgeCollider2D 점들을 원형으로 배치하여 링 충돌 영역을 생성하는 컴포넌트.

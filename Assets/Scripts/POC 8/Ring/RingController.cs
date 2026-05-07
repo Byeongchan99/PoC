@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace POC7
+namespace POC8
 {
     /// <summary>
     /// 링의 회전을 담당하는 컴포넌트.

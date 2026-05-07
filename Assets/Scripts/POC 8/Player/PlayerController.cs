@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace POC7
+namespace POC8
 {
     /// <summary>
     /// 플레이어의 상태(Landed/Dashing)와 돌진 이동을 담당하는 컴포넌트.

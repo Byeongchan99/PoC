@@ -132,7 +132,7 @@ GameObject:
   - component: {fileID: 51543081}
   - component: {fileID: 51543083}
   m_Layer: 5
-  m_Name: Text (TMP) (3)
+  m_Name: Text (TMP) Bounce Label
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -266,10 +266,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 51543079}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3a7bacc2227666e4bb4da656d524cccc, type: 3}
+  m_Script: {fileID: 11500000, guid: 86e68040fabfc1141b91496801152052, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::POC7.BounceCountUI
-  _playerController: {fileID: 1799977932}
+  m_EditorClassIdentifier: Assembly-CSharp::POC8.BounceCountUI
+  _playerController: {fileID: 1799977934}
   _increaseButton: {fileID: 68816808}
   _decreaseButton: {fileID: 548704631}
   _countText: {fileID: 1461792348}
@@ -286,7 +286,7 @@ GameObject:
   - component: {fileID: 68816809}
   - component: {fileID: 68816808}
   m_Layer: 5
-  m_Name: Button (1)
+  m_Name: Button Bounce Increase
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -549,7 +549,7 @@ GameObject:
   m_Component:
   - component: {fileID: 265334220}
   - component: {fileID: 265334222}
-  - component: {fileID: 265334221}
+  - component: {fileID: 265334224}
   - component: {fileID: 265334223}
   m_Layer: 0
   m_Name: Ring Container
@@ -576,20 +576,6 @@ Transform:
   - {fileID: 1799977927}
   m_Father: {fileID: 889235354}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &265334221
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 265334219}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::POC7.RingColliderBuilder
-  _innerRadius: 7
-  _pointCount: 64
 --- !u!68 &265334222
 EdgeCollider2D:
   m_ObjectHideFlags: 0
@@ -705,9 +691,23 @@ MonoBehaviour:
   m_GameObject: {fileID: 265334219}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1, type: 3}
+  m_Script: {fileID: 11500000, guid: 5924536f3347d0b4f80076bef0f9a407, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::POC7.RingController
+  m_EditorClassIdentifier: Assembly-CSharp::POC8.RingColliderBuilder
+  _innerRadius: 7
+  _pointCount: 64
+--- !u!114 &265334224
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 265334219}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ff720ab093456e240837530d32c716c4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::POC8.RingController
   _rotationSpeed: 90
 --- !u!1 &391968332
 GameObject:
@@ -846,7 +846,7 @@ GameObject:
   - component: {fileID: 548704632}
   - component: {fileID: 548704631}
   m_Layer: 5
-  m_Name: Button
+  m_Name: Button Bounce Decrease
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -964,7 +964,7 @@ GameObject:
   m_Component:
   - component: {fileID: 588695230}
   - component: {fileID: 588695232}
-  - component: {fileID: 588695231}
+  - component: {fileID: 588695233}
   m_Layer: 5
   m_Name: Slider
   m_TagString: Untagged
@@ -993,19 +993,6 @@ RectTransform:
   m_AnchoredPosition: {x: -667, y: 453}
   m_SizeDelta: {x: 300, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &588695231
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 588695229}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ca9a7ed6923e5bb42ac9ee9d1cf74b0a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::POC7.SaturationUI
-  _saturationSystem: {fileID: 1822435371}
 --- !u!114 &588695232
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1057,6 +1044,19 @@ MonoBehaviour:
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &588695233
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 588695229}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8aa696cdc0b5a7e448ec5304ff91644f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::POC8.SaturationUI
+  _saturationSystem: {fileID: 1822435372}
 --- !u!1 &793283826
 GameObject:
   m_ObjectHideFlags: 0
@@ -1133,7 +1133,7 @@ GameObject:
   - component: {fileID: 929182716}
   - component: {fileID: 929182715}
   m_Layer: 5
-  m_Name: Text (TMP) (1)
+  m_Name: Text (TMP) Kill Count Label
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1679,9 +1679,9 @@ GameObject:
   - component: {fileID: 1367174251}
   - component: {fileID: 1367174254}
   - component: {fileID: 1367174253}
-  - component: {fileID: 1367174252}
+  - component: {fileID: 1367174255}
   m_Layer: 5
-  m_Name: Text (TMP) (2)
+  m_Name: Text (TMP) Kill Count
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1706,19 +1706,6 @@ RectTransform:
   m_AnchoredPosition: {x: -716, y: 392.3}
   m_SizeDelta: {x: 200, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &1367174252
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1367174250}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: cd929fa6de1fa894abe7b5a7d632f3ec, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::POC7.KillCountUI
-  _playerCombat: {fileID: 1799977933}
 --- !u!114 &1367174253
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1819,6 +1806,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1367174250}
   m_CullTransparentMesh: 1
+--- !u!114 &1367174255
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1367174250}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5be5f7c9125453b44a3c8f4e0dac1c1b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::POC8.KillCountUI
+  _playerCombat: {fileID: 1799977933}
 --- !u!1 &1382215606
 GameObject:
   m_ObjectHideFlags: 0
@@ -1910,7 +1910,7 @@ GameObject:
   - component: {fileID: 1461792349}
   - component: {fileID: 1461792348}
   m_Layer: 5
-  m_Name: Text (TMP) (4)
+  m_Name: Text (TMP) Bounce Count
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2318,7 +2318,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1554768322}
-  - component: {fileID: 1554768321}
+  - component: {fileID: 1554768323}
   m_Layer: 0
   m_Name: Enemy Spawner
   m_TagString: Untagged
@@ -2326,52 +2326,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1554768321
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1554768320}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::POC7.EnemySpawner
-  _enemyPrefab: {fileID: 275834676584187379, guid: 2a8b1be711d54344e82137f0e14c935f, type: 3}
-  _playerCombat: {fileID: 1799977933}
-  _spawnRadius: 5
-  _spawnCountCurve:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: -0.0009063878
-      value: 1.0437421
-      inSlope: 4.95177
-      outSlope: 4.95177
-      tangentMode: 34
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0.33333334
-    - serializedVersion: 3
-      time: 1
-      value: 6
-      inSlope: 4.95177
-      outSlope: 4.95177
-      tangentMode: 34
-      weightedMode: 0
-      inWeight: 0.33333334
-      outWeight: 0
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
-  _maxDifficultyWaves: 30
-  _sectorJitter: 0.4
-  _spawnClearance: 0.2
-  _spawnAttemptLimit: 20
-  _enemyBaseSize: 0.3
-  _enemySizePerHealth: 0.1
-  _enemyMaxVisualSize: 2
 --- !u!4 &1554768322
 Transform:
   m_ObjectHideFlags: 0
@@ -2387,6 +2341,52 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1819224949}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1554768323
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1554768320}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1b10d580f82c80d439224451275f5b05, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::POC8.EnemySpawner
+  _enemyPrefab: {fileID: 275834676584187379, guid: c17313655b666c045a675c3b9c30cd65, type: 3}
+  _playerCombat: {fileID: 1799977933}
+  _spawnRadius: 6
+  _spawnCountCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 5
+      outSlope: 5
+      tangentMode: 34
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1
+      value: 6
+      inSlope: 5
+      outSlope: 5
+      tangentMode: 34
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  _maxDifficultyWaves: 30
+  _sectorJitter: 0.4
+  _spawnClearance: 0.2
+  _spawnAttemptLimit: 20
+  _enemyBaseSize: 0.3
+  _enemySizePerHealth: 0.1
+  _enemyMaxVisualSize: 2
 --- !u!1 &1613023355
 GameObject:
   m_ObjectHideFlags: 0
@@ -2399,7 +2399,7 @@ GameObject:
   - component: {fileID: 1613023359}
   - component: {fileID: 1613023358}
   - component: {fileID: 1613023357}
-  - component: {fileID: 1613023356}
+  - component: {fileID: 1613023361}
   m_Layer: 5
   m_Name: Canvas Enemy Health
   m_TagString: Untagged
@@ -2407,21 +2407,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1613023356
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1613023355}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::POC7.EnemyHealthHUD
-  _labelYOffset: 0
-  _fontSize: 36
-  _labelColor: {r: 0, g: 0, b: 0, a: 1}
 --- !u!114 &1613023357
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2504,6 +2489,21 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
+--- !u!114 &1613023361
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1613023355}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 310954ed7a4829242a8c3f7048ca4e80, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::POC8.EnemyHealthHUD
+  _labelYOffset: 0
+  _fontSize: 36
+  _labelColor: {r: 0, g: 0, b: 0, a: 1}
 --- !u!1 &1799977926
 GameObject:
   m_ObjectHideFlags: 0
@@ -2514,11 +2514,10 @@ GameObject:
   m_Component:
   - component: {fileID: 1799977927}
   - component: {fileID: 1799977928}
-  - component: {fileID: 1799977929}
   - component: {fileID: 1799977931}
-  - component: {fileID: 1799977932}
-  - component: {fileID: 1799977933}
   - component: {fileID: 1799977934}
+  - component: {fileID: 1799977933}
+  - component: {fileID: 1799977932}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -2600,33 +2599,6 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
---- !u!50 &1799977929
-Rigidbody2D:
-  serializedVersion: 5
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1799977926}
-  m_BodyType: 0
-  m_Simulated: 1
-  m_UseFullKinematicContacts: 0
-  m_UseAutoMass: 0
-  m_Mass: 1
-  m_LinearDamping: 0
-  m_AngularDamping: 0.05
-  m_GravityScale: 0
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_Interpolate: 0
-  m_SleepingMode: 1
-  m_CollisionDetection: 1
-  m_Constraints: 0
 --- !u!96 &1799977931
 TrailRenderer:
   serializedVersion: 4
@@ -2755,14 +2727,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 1799977926}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5, type: 3}
+  m_Script: {fileID: 11500000, guid: 378ccdc1d81774a449201c6e8b9a88fd, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::POC7.PlayerController
-  _dashSpeed: 100
-  _ringTransform: {fileID: 391968333}
-  _slashTrail: {fileID: 1799977931}
-  _trailEmitDuringDash: 1
-  _maxBounceCount: 10
+  m_EditorClassIdentifier: Assembly-CSharp::POC8.PlayerAttackLabel
+  _labelYOffset: 0
+  _labelColor: {r: 0, g: 0, b: 0, a: 1}
 --- !u!114 &1799977933
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2772,9 +2741,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 1799977926}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6, type: 3}
+  m_Script: {fileID: 11500000, guid: 5ab9a8f6def265543ab1688f7030189f, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::POC7.PlayerCombat
+  m_EditorClassIdentifier: Assembly-CSharp::POC8.PlayerCombat
   _initialAttackPower: 1
   _basePlayerSize: 0.3
   _sizePerAttackPower: 0.013
@@ -2788,11 +2757,16 @@ MonoBehaviour:
   m_GameObject: {fileID: 1799977926}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8, type: 3}
+  m_Script: {fileID: 11500000, guid: e55d0066b2eb1f34f8902d879409d168, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::POC7.PlayerAttackLabel
-  _labelYOffset: 0
-  _labelColor: {r: 0, g: 0, b: 0, a: 1}
+  m_EditorClassIdentifier: Assembly-CSharp::POC8.PlayerController
+  _dashSpeed: 100
+  _ringTransform: {fileID: 391968333}
+  _slashTrail: {fileID: 1799977931}
+  _trailEmitDuringDash: 1
+  _maxBounceCount: 10
+  _killResetTimeScale: 0.05
+  _killResetWindowDuration: 0.5
 --- !u!1 &1819224948
 GameObject:
   m_ObjectHideFlags: 0
@@ -2836,7 +2810,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1822435370}
-  - component: {fileID: 1822435371}
+  - component: {fileID: 1822435372}
   m_Layer: 0
   m_Name: 'SaturationSystem '
   m_TagString: Untagged
@@ -2859,7 +2833,7 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1819224949}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1822435371
+--- !u!114 &1822435372
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -2868,9 +2842,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 1822435369}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5, type: 3}
+  m_Script: {fileID: 11500000, guid: cb8309d26a4b349469d452cbce29b2fa, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::POC7.SaturationSystem
+  m_EditorClassIdentifier: Assembly-CSharp::POC8.SaturationSystem
   _maxEnemyCount: 30
 --- !u!1 &1911632845
 GameObject:
@@ -2884,7 +2858,7 @@ GameObject:
   - component: {fileID: 1911632848}
   - component: {fileID: 1911632847}
   m_Layer: 5
-  m_Name: Text (TMP)
+  m_Name: Text (TMP) Saturation Label
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3018,7 +2992,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2011380998}
-  - component: {fileID: 2011380999}
+  - component: {fileID: 2011381000}
   m_Layer: 0
   m_Name: Game Manager
   m_TagString: Untagged
@@ -3041,7 +3015,7 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1819224949}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &2011380999
+--- !u!114 &2011381000
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -3050,13 +3024,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 2011380996}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6, type: 3}
+  m_Script: {fileID: 11500000, guid: d9371b1906fce7945a15f433e15cb230, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::POC7.GameManager
-  _playerController: {fileID: 1799977932}
-  _ringController: {fileID: 265334223}
-  _enemySpawner: {fileID: 1554768321}
-  _saturationSystem: {fileID: 1822435371}
+  m_EditorClassIdentifier: Assembly-CSharp::POC8.GameManager
+  _playerController: {fileID: 1799977934}
+  _ringController: {fileID: 265334224}
+  _enemySpawner: {fileID: 1554768323}
+  _saturationSystem: {fileID: 1822435372}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

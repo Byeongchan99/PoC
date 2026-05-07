@@ -4,9 +4,10 @@ using UnityEngine;
 namespace POC8
 {
     /// <summary>
-    /// 플레이어의 공격력 관리, 돌진 경로 레이캐스트 공격, 크기 변화를 담당하는 컴포넌트.
+    /// 플레이어의 공격력 관리, 이동 중 피격 판정, 크기 변화를 담당하는 컴포넌트.
     /// PlayerController와 같은 GameObject에 부착해야 한다.
     /// </summary>
+    [RequireComponent(typeof(CircleCollider2D))]
     public class PlayerCombat : MonoBehaviour
     {
         /// <summary>공격력이 변경될 때 발생. 인자는 변경 후 공격력. PlayerAttackLabel이 구독한다.</summary>
@@ -14,6 +15,9 @@ namespace POC8
 
         /// <summary>킬 카운트가 변경될 때 발생. 인자는 (현재 킬 수, 다음 배수까지 필요한 총 킬 수).</summary>
         public event Action<int, int> OnKillCountChanged;
+
+        /// <summary>대시 중 적을 처치했을 때 발생. PlayerController가 구독하여 킬 리셋을 처리한다.</summary>
+        public event Action OnKillDuringDash;
 
         [SerializeField] private int _initialAttackPower = 1;
 
@@ -43,11 +47,16 @@ namespace POC8
 
         /// <summary>
         /// 공격력을 초기값으로 설정하고 초기 크기를 반영한다.
+        /// CircleCollider2D를 설정한다. radius 0.5는 localScale이 지름 역할을 하므로 항상 올바른 크기를 유지한다.
         /// </summary>
         private void Awake()
         {
             _currentAttackPower = _initialAttackPower;
             UpdatePlayerSize();
+
+            var col = GetComponent<CircleCollider2D>();
+            col.radius = 0.5f;
+            col.isTrigger = false;
         }
 
         /// <summary>
@@ -67,35 +76,22 @@ namespace POC8
         }
 
         /// <summary>
-        /// 돌진 출발점부터 목표 지점까지 원형 캐스트를 쏴서 경로 위의 모든 IDamageable에 데미지를 적용한다.
-        /// PlayerController가 StartDash 시점에 호출한다.
-        ///
-        /// [실무 권장]
-        /// CircleCastAll은 플레이어 반경만큼의 두께로 판정하여 RaycastAll보다 자연스럽다.
-        /// 더 정밀한 표현이 필요하면 LayerMask를 지정하여 불필요한 레이어를 제외할 수 있다.
+        /// 대시 중 플레이어가 적의 트리거 콜라이더에 진입하면 데미지를 적용한다.
+        /// 대시 중이 아닐 때는 판정하지 않는다.
         /// </summary>
-        /// <param name="from">돌진 출발 위치 (world space).</param>
-        /// <param name="to">돌진 목표 위치 (world space).</param>
-        public void PerformDashAttack(Vector2 from, Vector2 to)
+        private void OnTriggerEnter2D(Collider2D other)
         {
-            Vector2 direction = (to - from).normalized;
-            float distance = Vector2.Distance(from, to);
+            if (!PlayerController.IsPlayerDashing)
+                return;
 
-            // 플레이어 localScale.x가 지름이므로 반으로 나눠 반경을 구한다.
-            // 크기가 커져도 자동으로 판정 두께가 반영된다.
-            float radius = transform.localScale.x / 2f;
-
-            RaycastHit2D[] hits = Physics2D.CircleCastAll(from, radius, direction, distance);
-            foreach (RaycastHit2D hit in hits)
-            {
-                if (hit.collider.TryGetComponent(out IDamageable damageable))
-                    damageable.TakeDamage(_currentAttackPower);
-            }
+            if (other.TryGetComponent(out IDamageable damageable))
+                damageable.TakeDamage(_currentAttackPower);
         }
 
         /// <summary>
         /// 적이 처치될 때마다 킬 카운트를 증가시킨다.
         /// 킬 카운트가 현재 공격력에 도달하면 공격력을 2배로 올리고, 킬 카운트는 유지한다.
+        /// 대시 중 처치라면 OnKillDuringDash 이벤트를 발생시킨다.
         /// </summary>
         private void HandleEnemyKilled(Enemy enemy)
         {
@@ -109,6 +105,9 @@ namespace POC8
             }
 
             OnKillCountChanged?.Invoke(_killCount, _currentAttackPower);
+
+            if (PlayerController.IsPlayerDashing)
+                OnKillDuringDash?.Invoke();
         }
 
         /// <summary>

@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using UnityEngine;
 
 namespace POC8
@@ -39,6 +40,12 @@ namespace POC8
         /// <summary>반사 횟수의 상한. UI 버튼으로 이 값을 초과할 수 없다.</summary>
         [SerializeField] private int _maxBounceCount = 10;
 
+        /// <summary>킬 리셋 발동 시 적용할 Time.timeScale 값.</summary>
+        [SerializeField] private float _killResetTimeScale = 0.25f;
+
+        /// <summary>킬 리셋 입력 대기 시간(실제 시간 기준, 초). 이 시간 안에 클릭하지 않으면 슬로우가 해제된다.</summary>
+        [SerializeField] private float _killResetWindowDuration = 1.5f;
+
         private Rigidbody2D _rigidbody;
         private PlayerCombat _playerCombat;
         private PlayerState _currentState = PlayerState.Landed;
@@ -60,6 +67,12 @@ namespace POC8
 
         /// <summary>현재 반사 횟수. UI 버튼으로 조절한다.</summary>
         private int _bounceCount;
+
+        /// <summary>킬 리셋 입력을 받을 수 있는 상태인지 나타낸다.</summary>
+        private bool _killResetAvailable;
+
+        /// <summary>실행 중인 킬 리셋 대기 코루틴. 새 리셋이 발동되기 전 중단하는 데 사용한다.</summary>
+        private Coroutine _killResetCoroutine;
 
         /// <summary>현재 돌진 중인지 외부에서 확인할 때 사용한다.</summary>
         public bool IsDashing => _currentState == PlayerState.Dashing;
@@ -91,6 +104,28 @@ namespace POC8
             Vector2 ringCenter = _ringTransform != null ? (Vector2)_ringTransform.position : Vector2.zero;
             float initialPlayerRadius = transform.localScale.x / 2f;
             _ringRadius = Vector2.Distance(transform.position, ringCenter) + initialPlayerRadius;
+        }
+
+        /// <summary>
+        /// 모든 Awake가 완료된 후 초기 크기에 맞게 부착 위치를 조정하고 킬 리셋 이벤트를 구독한다.
+        /// </summary>
+        private void OnEnable()
+        {
+            if (_playerCombat != null)
+                _playerCombat.OnKillDuringDash += HandleKillDuringDash;
+        }
+
+        /// <summary>
+        /// 비활성화 시 킬 리셋 이벤트 구독을 해제하고 timeScale을 복구한다.
+        /// </summary>
+        private void OnDisable()
+        {
+            if (_playerCombat != null)
+                _playerCombat.OnKillDuringDash -= HandleKillDuringDash;
+
+            // 씬 전환 등으로 오브젝트가 비활성화될 때 timeScale이 느린 채로 남지 않도록 복구한다.
+            if (_killResetAvailable)
+                Time.timeScale = 1f;
         }
 
         /// <summary>
@@ -136,12 +171,15 @@ namespace POC8
         }
 
         /// <summary>
-        /// Landed 상태에서만 마우스 클릭을 감지한다.
-        /// 클릭 위치를 월드 좌표로 변환 후 돌진 목표 지점을 계산한다.
+        /// Landed 상태이거나 킬 리셋 대기 중일 때 마우스 클릭을 감지한다.
+        /// Input.GetMouseButtonDown은 Time.timeScale의 영향을 받지 않으므로 슬로우 중에도 정상 동작한다.
         /// </summary>
         private void HandleInput()
         {
-            if (_currentState != PlayerState.Landed)
+            bool canInput = _currentState == PlayerState.Landed ||
+                            (_currentState == PlayerState.Dashing && _killResetAvailable);
+
+            if (!canInput)
                 return;
 
             if (!Input.GetMouseButtonDown(0))
@@ -252,10 +290,15 @@ namespace POC8
 
         /// <summary>
         /// 경유 지점을 계산하고 상태를 Dashing으로 전환한다.
-        /// 각 구간마다 레이캐스트 공격 판정을 적용한 후 OnDashStarted 이벤트를 발생시킨다.
+        /// 킬 리셋 대기 중이었다면 슬로우를 해제하고 현재 위치에서 새 경로를 시작한다.
+        /// 데미지 판정은 이동 중 OnTriggerEnter2D로 처리하므로 이 메서드에서 직접 수행하지 않는다.
         /// </summary>
         private void StartDash(Vector2 firstTarget)
         {
+            // 킬 리셋 대기 중이었다면 코루틴과 슬로우를 정리한다.
+            if (_killResetAvailable)
+                EndKillReset();
+
             Vector2 startPos = transform.position;
             Vector2 direction = (firstTarget - startPos).normalized;
 
@@ -269,20 +312,13 @@ namespace POC8
             if (_slashTrail != null && _trailEmitDuringDash)
                 _slashTrail.emitting = true;
 
-            // 모든 구간에 대해 레이캐스트 공격 판정을 적용한다.
-            Vector2 segmentStart = startPos;
-            foreach (Vector2 waypoint in _waypoints)
-            {
-                _playerCombat?.PerformDashAttack(segmentStart, waypoint);
-                segmentStart = waypoint;
-            }
-
             OnDashStarted?.Invoke();
         }
 
         /// <summary>
         /// Dashing 상태일 때 매 물리 스텝마다 현재 경유 지점을 향해 이동한다.
         /// 도달하면 다음 경유 지점으로 전환하고, 마지막 지점이면 Land()를 호출한다.
+        /// Time.timeScale이 낮아지면 FixedUpdate 호출 빈도가 줄어 자연스럽게 이동이 느려진다.
         /// </summary>
         private void UpdateDash()
         {
@@ -306,9 +342,13 @@ namespace POC8
 
         /// <summary>
         /// 상태를 Landed로 전환하고 링 벽 부착 위치를 조정한 후 OnPlayerLanded 이벤트를 발생시킨다.
+        /// 착지 시 킬 리셋 대기 중이었다면 정리한다.
         /// </summary>
         private void Land()
         {
+            if (_killResetAvailable)
+                EndKillReset();
+
             _currentState = PlayerState.Landed;
             IsPlayerDashing = false;
 
@@ -337,6 +377,54 @@ namespace POC8
 
             transform.position = targetPos;
             _rigidbody.position = targetPos;
+        }
+
+        /// <summary>
+        /// 대시 중 킬이 발생했을 때 PlayerCombat으로부터 호출된다.
+        /// 이미 킬 리셋 대기 중이면 타이머를 재시작하지 않는다(연속 킬 시 창이 리셋되지 않도록).
+        /// </summary>
+        private void HandleKillDuringDash()
+        {
+            if (_killResetAvailable)
+                return;
+
+            _killResetAvailable = true;
+            _killResetCoroutine = StartCoroutine(KillResetWindow());
+        }
+
+        /// <summary>
+        /// 킬 리셋 입력 대기 창을 실행한다.
+        /// Time.timeScale을 낮춰 슬로우 효과를 적용하고, 대기 시간이 지나면 자동으로 해제한다.
+        /// 타이머는 실제 시간(unscaledDeltaTime) 기준으로 동작한다.
+        /// </summary>
+        private IEnumerator KillResetWindow()
+        {
+            Time.timeScale = _killResetTimeScale;
+
+            float elapsed = 0f;
+            while (elapsed < _killResetWindowDuration)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                yield return null;
+            }
+
+            EndKillReset();
+        }
+
+        /// <summary>
+        /// 킬 리셋 상태를 정리하고 timeScale을 복구한다.
+        /// 코루틴 만료, 클릭 입력, 착지 등 여러 경로에서 호출된다.
+        /// </summary>
+        private void EndKillReset()
+        {
+            if (_killResetCoroutine != null)
+            {
+                StopCoroutine(_killResetCoroutine);
+                _killResetCoroutine = null;
+            }
+
+            _killResetAvailable = false;
+            Time.timeScale = 1f;
         }
     }
 }

@@ -4,10 +4,9 @@ using UnityEngine;
 namespace POC8
 {
     /// <summary>
-    /// 플레이어의 공격력 관리, 이동 중 피격 판정, 크기 변화를 담당하는 컴포넌트.
+    /// 플레이어의 공격력 관리, 데미지 적용, 크기 변화를 담당하는 컴포넌트.
     /// PlayerController와 같은 GameObject에 부착해야 한다.
     /// </summary>
-    [RequireComponent(typeof(CircleCollider2D))]
     public class PlayerCombat : MonoBehaviour
     {
         /// <summary>공격력이 변경될 때 발생. 인자는 변경 후 공격력. PlayerAttackLabel이 구독한다.</summary>
@@ -47,16 +46,11 @@ namespace POC8
 
         /// <summary>
         /// 공격력을 초기값으로 설정하고 초기 크기를 반영한다.
-        /// CircleCollider2D를 설정한다. radius 0.5는 localScale이 지름 역할을 하므로 항상 올바른 크기를 유지한다.
         /// </summary>
         private void Awake()
         {
             _currentAttackPower = _initialAttackPower;
             UpdatePlayerSize();
-
-            var col = GetComponent<CircleCollider2D>();
-            col.radius = 0.5f;
-            col.isTrigger = false;
         }
 
         /// <summary>
@@ -76,16 +70,12 @@ namespace POC8
         }
 
         /// <summary>
-        /// 대시 중 플레이어가 적의 트리거 콜라이더에 진입하면 데미지를 적용한다.
-        /// 대시 중이 아닐 때는 판정하지 않는다.
+        /// PlayerController의 ApplyDamageDelayed 코루틴이 도달 시간에 맞춰 호출한다.
+        /// 현재 공격력만큼 대상에게 데미지를 적용한다.
         /// </summary>
-        private void OnTriggerEnter2D(Collider2D other)
+        public void ApplyDamage(IDamageable target)
         {
-            if (!PlayerController.IsPlayerDashing)
-                return;
-
-            if (other.TryGetComponent(out IDamageable damageable))
-                damageable.TakeDamage(_currentAttackPower);
+            target.TakeDamage(_currentAttackPower);
         }
 
         /// <summary>

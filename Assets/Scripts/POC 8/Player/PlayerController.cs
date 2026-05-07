@@ -10,7 +10,6 @@ namespace POC8
     /// </summary>
     // RingController보다 먼저 실행되도록 우선순위를 낮은 값으로 설정한다 (숫자가 낮을수록 먼저 실행)
     [DefaultExecutionOrder(-10)]
-    [RequireComponent(typeof(Rigidbody2D))]
     public class PlayerController : MonoBehaviour
     {
         /// <summary>돌진이 시작될 때 발생. EnemySpawner가 구독한다.</summary>
@@ -46,7 +45,6 @@ namespace POC8
         /// <summary>킬 리셋 입력 대기 시간(실제 시간 기준, 초). 이 시간 안에 클릭하지 않으면 슬로우가 해제된다.</summary>
         [SerializeField] private float _killResetWindowDuration = 1.5f;
 
-        private Rigidbody2D _rigidbody;
         private PlayerCombat _playerCombat;
         private PlayerState _currentState = PlayerState.Landed;
 
@@ -74,6 +72,12 @@ namespace POC8
         /// <summary>실행 중인 킬 리셋 대기 코루틴. 새 리셋이 발동되기 전 중단하는 데 사용한다.</summary>
         private Coroutine _killResetCoroutine;
 
+        /// <summary>
+        /// 대시마다 증가하는 식별자. ApplyDamageDelayed 코루틴이 이 값을 검사해
+        /// 새 대시가 시작된 경우 이전 경로의 데미지 예약을 무시한다.
+        /// </summary>
+        private int _dashId;
+
         /// <summary>현재 돌진 중인지 외부에서 확인할 때 사용한다.</summary>
         public bool IsDashing => _currentState == PlayerState.Dashing;
 
@@ -84,30 +88,21 @@ namespace POC8
         public int BounceCount => _bounceCount;
 
         /// <summary>
-        /// Rigidbody2D를 Kinematic + Continuous 감지 모드로 초기화한다.
-        /// Continuous 모드는 빠른 이동 시 적을 통과하는 터널링을 방지한다.
+        /// PlayerCombat 참조를 확보하고 링 반경을 초기화한다.
+        /// PlayerController.Awake는 PlayerCombat.Awake보다 먼저 실행되므로
+        /// 이 시점의 scale은 씬 기본값(1.0)이다. 초기 반경(0.5)을 더해 실제 링 벽 반경을 구한다.
         /// </summary>
         private void Awake()
         {
-            _rigidbody = GetComponent<Rigidbody2D>();
-            _rigidbody.bodyType = RigidbodyType2D.Kinematic;
-
-            // Discrete(기본값)는 각 물리 스텝의 끝 위치만 검사하여 빠른 오브젝트가 충돌체를 통과할 수 있다.
-            // Continuous는 이동 경로 전체를 스윕 테스트하여 충돌 누락을 방지한다.
-            _rigidbody.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
-
             _playerCombat = GetComponent<PlayerCombat>();
 
-            // 링 중심(_ringTransform)에서 플레이어 초기 위치까지의 거리를 링 반경으로 저장한다.
-            // PlayerController.Awake는 PlayerCombat.Awake보다 먼저 실행되므로
-            // 이 시점의 scale은 씬 기본값(1.0)이다. 초기 반경(0.5)을 더해 실제 링 벽 반경을 구한다.
             Vector2 ringCenter = _ringTransform != null ? (Vector2)_ringTransform.position : Vector2.zero;
             float initialPlayerRadius = transform.localScale.x / 2f;
             _ringRadius = Vector2.Distance(transform.position, ringCenter) + initialPlayerRadius;
         }
 
         /// <summary>
-        /// 모든 Awake가 완료된 후 초기 크기에 맞게 부착 위치를 조정하고 킬 리셋 이벤트를 구독한다.
+        /// 킬 리셋 이벤트를 구독한다.
         /// </summary>
         private void OnEnable()
         {
@@ -116,7 +111,7 @@ namespace POC8
         }
 
         /// <summary>
-        /// 비활성화 시 킬 리셋 이벤트 구독을 해제하고 timeScale을 복구한다.
+        /// 킬 리셋 이벤트 구독을 해제하고 timeScale을 복구한다.
         /// </summary>
         private void OnDisable()
         {
@@ -138,19 +133,12 @@ namespace POC8
         }
 
         /// <summary>
-        /// 입력 처리는 Update에서, 이동은 FixedUpdate에서 실행한다.
-        /// MovePosition은 FixedUpdate에서 호출해야 물리 엔진과 동기화되어 충돌 감지가 정확해진다.
+        /// 입력 처리와 이동을 Update에서 실행한다.
+        /// Time.deltaTime을 사용하므로 Time.timeScale 변화(슬로우)에 자동으로 동기화된다.
         /// </summary>
         private void Update()
         {
             HandleInput();
-        }
-
-        /// <summary>
-        /// MovePosition을 FixedUpdate에서 호출하여 물리 스텝과 이동을 동기화한다.
-        /// </summary>
-        private void FixedUpdate()
-        {
             UpdateDash();
         }
 
@@ -289,15 +277,16 @@ namespace POC8
         }
 
         /// <summary>
-        /// 경유 지점을 계산하고 상태를 Dashing으로 전환한다.
-        /// 킬 리셋 대기 중이었다면 슬로우를 해제하고 현재 위치에서 새 경로를 시작한다.
-        /// 데미지 판정은 이동 중 OnTriggerEnter2D로 처리하므로 이 메서드에서 직접 수행하지 않는다.
+        /// _dashId를 증가시켜 이전 대시의 데미지 예약을 무효화하고,
+        /// 각 구간을 CircleCastAll로 사전 계산하여 도달 시간에 맞춰 데미지를 예약한다.
         /// </summary>
         private void StartDash(Vector2 firstTarget)
         {
-            // 킬 리셋 대기 중이었다면 코루틴과 슬로우를 정리한다.
             if (_killResetAvailable)
                 EndKillReset();
+
+            _dashId++;
+            int capturedDashId = _dashId;
 
             Vector2 startPos = transform.position;
             Vector2 direction = (firstTarget - startPos).normalized;
@@ -312,22 +301,68 @@ namespace POC8
             if (_slashTrail != null && _trailEmitDuringDash)
                 _slashTrail.emitting = true;
 
+            // 각 구간의 히트를 사전 계산하고 도달 시간에 맞춰 데미지를 예약한다.
+            Vector2 segmentStart = startPos;
+            float timeOffset = 0f;
+            foreach (Vector2 waypoint in _waypoints)
+            {
+                ScheduleSegmentDamage(segmentStart, waypoint, timeOffset, capturedDashId);
+                timeOffset += Vector2.Distance(segmentStart, waypoint) / _dashSpeed;
+                segmentStart = waypoint;
+            }
+
             OnDashStarted?.Invoke();
         }
 
         /// <summary>
-        /// Dashing 상태일 때 매 물리 스텝마다 현재 경유 지점을 향해 이동한다.
-        /// 도달하면 다음 경유 지점으로 전환하고, 마지막 지점이면 Land()를 호출한다.
-        /// Time.timeScale이 낮아지면 FixedUpdate 호출 빈도가 줄어 자연스럽게 이동이 느려진다.
+        /// 한 구간에 대해 CircleCastAll을 실행하고 각 히트에 대해 데미지 예약 코루틴을 시작한다.
+        /// timeOffset은 이전 구간들을 통과하는 데 걸리는 누적 시간(게임 시간)이다.
+        /// </summary>
+        private void ScheduleSegmentDamage(Vector2 from, Vector2 to, float timeOffset, int dashId)
+        {
+            Vector2 direction = (to - from).normalized;
+            float distance = Vector2.Distance(from, to);
+            float radius = transform.localScale.x / 2f;
+
+            RaycastHit2D[] hits = Physics2D.CircleCastAll(from, radius, direction, distance);
+            foreach (RaycastHit2D hit in hits)
+            {
+                if (hit.collider.TryGetComponent(out IDamageable damageable))
+                {
+                    // 히트 지점까지의 도달 시간 = 이전 구간 누적 시간 + 이번 구간 내 거리 / 속도
+                    float delay = timeOffset + hit.distance / _dashSpeed;
+                    StartCoroutine(ApplyDamageDelayed(delay, damageable, dashId));
+                }
+            }
+        }
+
+        /// <summary>
+        /// delay(게임 시간) 후 dashId가 현재와 일치하면 데미지를 적용한다.
+        /// WaitForSeconds는 Time.timeScale을 따르므로 슬로우 중에는 대기 시간도 늘어나
+        /// 플레이어의 실제 이동 속도와 자동으로 동기화된다.
+        /// </summary>
+        private IEnumerator ApplyDamageDelayed(float delay, IDamageable target, int dashId)
+        {
+            yield return new WaitForSeconds(delay);
+
+            if (_dashId != dashId)
+                return;
+
+            _playerCombat.ApplyDamage(target);
+        }
+
+        /// <summary>
+        /// Dashing 상태일 때 매 프레임마다 현재 경유 지점을 향해 이동한다.
+        /// Time.deltaTime을 사용하므로 Time.timeScale 변화에 따라 이동 속도가 자동으로 조정된다.
         /// </summary>
         private void UpdateDash()
         {
             if (_currentState != PlayerState.Dashing)
                 return;
 
-            Vector2 currentPos = _rigidbody.position;
-            Vector2 newPos = Vector2.MoveTowards(currentPos, _dashTarget, _dashSpeed * Time.fixedDeltaTime);
-            _rigidbody.MovePosition(newPos);
+            Vector2 currentPos = transform.position;
+            Vector2 newPos = Vector2.MoveTowards(currentPos, _dashTarget, _dashSpeed * Time.deltaTime);
+            transform.position = newPos;
 
             if (Vector2.Distance(newPos, _dashTarget) >= 0.05f)
                 return;
@@ -342,7 +377,6 @@ namespace POC8
 
         /// <summary>
         /// 상태를 Landed로 전환하고 링 벽 부착 위치를 조정한 후 OnPlayerLanded 이벤트를 발생시킨다.
-        /// 착지 시 킬 리셋 대기 중이었다면 정리한다.
         /// </summary>
         private void Land()
         {
@@ -376,7 +410,6 @@ namespace POC8
             Vector2 targetPos = ringCenter + dir * (_ringRadius - playerRadius);
 
             transform.position = targetPos;
-            _rigidbody.position = targetPos;
         }
 
         /// <summary>

@@ -346,7 +346,7 @@ namespace POC8
             yield return new WaitForSeconds(delay);
 
             if (_dashId != dashId)
-                return;
+                yield break;
 
             _playerCombat.ApplyDamage(target);
         }

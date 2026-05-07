@@ -184,22 +184,20 @@ namespace POC8
         }
 
         /// <summary>
-        /// 플레이어 위치(P)에서 클릭 방향(d)으로 나아갈 때 링 원의 반대편 교점을 계산한다.
+        /// 플레이어 위치(P)에서 클릭 방향(d)으로 나아갈 때 링 내벽과의 교점을 계산한다.
         ///
         /// [수학 설명]
-        /// P는 반경 r인 원 위의 점, C는 원 중심, d는 클릭 방향의 단위벡터.
-        /// 직선의 방정식: Q = P + t * d
-        /// 원의 방정식: |Q - C|^2 = r^2
+        /// Ray: Q = P + t * d  (d는 단위벡터)
+        /// Circle: |Q - C|^2 = R^2  (R = 링 내벽 반경)
         ///
-        /// 대입 후 전개하면:
-        ///   t^2 + 2t * dot(P - C, d) + (|P - C|^2 - r^2) = 0
+        /// 대입 후 전개 (u = P - C):
+        ///   t^2 + 2*(u·d)*t + (|u|^2 - R^2) = 0
+        ///   b = 2*(u·d),  c = |u|^2 - R^2
+        ///   t = (-b + sqrt(b^2 - 4c)) / 2
         ///
-        /// P가 원 위의 점이므로 |P - C| = r, 따라서 마지막 항은 0:
-        ///   t * (t + 2 * dot(P - C, d)) = 0
-        ///   t = 0  (출발점, 버림)
-        ///   t = -2 * dot(P - C, d) = 2 * dot(C - P, d)  (반대편 교점)
-        ///
-        /// 주의: 이 단순화는 P가 정확히 원 위에 있을 때만 성립한다.
+        /// P가 링 내부에 있으면 c < 0이므로 판별식은 항상 양수(교점 2개).
+        /// 양수 근을 선택하면 전방의 교점을 얻는다.
+        /// P가 링 벽 위에 있으면 c = 0이 되어 t = -b로 단순화되며 기존 동작과 동일하다.
         /// </summary>
         /// <returns>유효한 목표 지점이 계산되면 true, 클릭 방향이 잘못됐으면 false</returns>
         private bool TryCalculateDashTarget(Vector2 clickWorldPos, out Vector2 target)
@@ -217,11 +215,21 @@ namespace POC8
             }
 
             Vector2 direction = rawDir.normalized;
+            float wallRadius = _ringRadius - transform.localScale.x / 2f;
 
-            // 반대편 교점까지의 거리 t = 2 * dot(C - P, d)
-            float t = 2f * Vector2.Dot(ringCenter - playerPos, direction);
+            Vector2 u = playerPos - ringCenter;
+            float b = 2f * Vector2.Dot(u, direction);
+            float c = Vector2.Dot(u, u) - wallRadius * wallRadius;
+            float discriminant = b * b - 4f * c;
 
-            // t가 0 이하면 클릭 방향이 링 안쪽을 향하지 않으므로 돌진하지 않는다
+            if (discriminant < 0f)
+            {
+                target = playerPos;
+                return false;
+            }
+
+            float t = (-b + Mathf.Sqrt(discriminant)) / 2f;
+
             if (t < 0.1f)
             {
                 target = playerPos;
@@ -239,10 +247,14 @@ namespace POC8
         /// 각 교점에서 반사 방향은 Vector2.Reflect로 계산한다.
         ///   normal = (교점 - 링 중심).normalized   (링 내벽의 법선)
         ///   반사 방향 = Reflect(입사 방향, normal)
+        ///
+        /// 교점 계산에 완전한 2차 방정식을 사용하므로 킬 리셋 직후처럼
+        /// 출발 위치가 링 내부에 있는 경우에도 정확하게 동작한다.
         /// </summary>
         private Vector2[] ComputeWaypoints(Vector2 startPos, Vector2 direction)
         {
             Vector2 ringCenter = _ringTransform != null ? (Vector2)_ringTransform.position : Vector2.zero;
+            float wallRadius = _ringRadius - transform.localScale.x / 2f;
             int totalPoints = _bounceCount + 1;
             Vector2[] waypoints = new Vector2[totalPoints];
 
@@ -251,7 +263,12 @@ namespace POC8
 
             for (int i = 0; i < totalPoints; i++)
             {
-                float t = 2f * Vector2.Dot(ringCenter - pos, dir);
+                // Ray-Circle 교점: t^2 + 2*(u·d)*t + (|u|^2 - R^2) = 0, u = pos - ringCenter
+                Vector2 u = pos - ringCenter;
+                float b = 2f * Vector2.Dot(u, dir);
+                float c = Vector2.Dot(u, u) - wallRadius * wallRadius;
+                float discriminant = b * b - 4f * c;
+                float t = discriminant >= 0f ? (-b + Mathf.Sqrt(discriminant)) / 2f : 0f;
 
                 // t가 너무 작으면 링 바깥 방향 클릭 등 비정상 상태. 남은 지점을 현재 위치로 채우고 종료한다.
                 if (t < 0.1f)

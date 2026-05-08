@@ -70,6 +70,9 @@ namespace POC7
         /// <summary>현재 반사 횟수. BounceCountUI가 읽는다.</summary>
         public int BounceCount => _bounceCount;
 
+        /// <summary>링 오브젝트의 Transform. AttackPathIndicator가 경로 계산에 사용한다.</summary>
+        public Transform RingTransform => _ringTransform;
+
         /// <summary>
         /// Rigidbody2D를 Kinematic + Continuous 감지 모드로 초기화한다.
         /// Continuous 모드는 빠른 이동 시 적을 통과하는 터널링을 방지한다.

@@ -1,10 +1,11 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace POC7
 {
     /// <summary>
     /// 링 벽과 장애물을 모두 고려하여 플레이어의 반사 경로 경유 지점을 계산하는 정적 유틸리티 클래스.
-    /// PlayerController와 AttackPathIndicator 양쪽에서 공유하여 중복 구현을 제거한다.
+    /// PlayerController와 AttackPathIndicator 양쪽에서 공유한다.
     /// </summary>
     public static class PathCalculator
     {
@@ -23,21 +24,17 @@ namespace POC7
         /// <summary>
         /// 시작 위치와 방향을 받아 링 벽과 장애물을 모두 고려한 반사 경로의 경유 지점 목록을 계산한다.
         ///
-        /// 각 반사 단계의 처리 흐름:
-        /// 1. 2차 방정식으로 링 벽까지의 거리를 구한다 (출발점이 링 위가 아닌 경우도 처리 가능).
-        /// 2. 그 거리 안에서 obstacleLayerMask 레이어로 레이캐스트한다.
-        /// 3. 장애물이 링 벽보다 가까우면 장애물 표면 법선으로, 아니면 링 벽 법선으로 반사한다.
-        ///
-        /// [중요] 마지막 경유 지점이 장애물인 경우:
-        /// 반사 방향으로 링 벽까지 세그먼트를 한 개 더 추가한다.
-        /// 플레이어는 항상 링 벽에서 착지해야 하므로, 장애물이 bounce budget 마지막에 있어도
-        /// 올바른 반사 경로로 링 벽까지 도달한다.
+        /// [설계]
+        /// bounceCount + 1번의 기본 스텝을 실행하며, 각 스텝은 장애물 또는 링 벽 중
+        /// 먼저 만나는 표면을 처리한다. 기본 스텝이 끝난 뒤 마지막 지점이 장애물이면
+        /// 링 벽에 닿을 때까지 계속 연장한다(장애물 감지 포함). 이로써 경로는 항상
+        /// 링 벽에서 끝나고, 장애물을 연속으로 여러 번 튕겨도 모두 정확하게 처리된다.
         /// </summary>
         /// <param name="startPos">경로 시작 위치 (world space).</param>
         /// <param name="direction">출발 방향 단위벡터.</param>
         /// <param name="ringCenter">링 중심 위치 (world space).</param>
         /// <param name="ringRadius">링 내벽 반경.</param>
-        /// <param name="bounceCount">반사 횟수. 총 (bounceCount + 1)개의 기본 경유 지점이 생성된다.</param>
+        /// <param name="bounceCount">기본 반사 횟수. 총 (bounceCount + 1)번의 기본 스텝이 실행된다.</param>
         /// <param name="obstacleLayerMask">장애물 감지에 사용할 레이어 마스크.</param>
         public static WaypointInfo[] ComputeWaypoints(
             Vector2 startPos,
@@ -47,74 +44,76 @@ namespace POC7
             int bounceCount,
             LayerMask obstacleLayerMask)
         {
-            int totalPoints = bounceCount + 1;
-            var waypoints = new WaypointInfo[totalPoints];
-
+            var result = new List<WaypointInfo>();
             Vector2 pos = startPos;
             Vector2 dir = direction;
 
-            for (int i = 0; i < totalPoints; i++)
+            // 기본 스텝: bounceCount + 1번 실행, 각 스텝에서 장애물 또는 링 벽을 처리한다.
+            for (int i = 0; i <= bounceCount; i++)
             {
-                float ringDist = GetRingIntersectionDistance(pos, dir, ringCenter, ringRadius);
+                result.Add(ComputeNextWaypoint(ref pos, ref dir, ringCenter, ringRadius, obstacleLayerMask));
+            }
 
-                if (ringDist < 0.1f)
-                {
-                    // 유효한 교점 없음: 남은 지점을 모두 현재 위치로 채우고 종료한다.
-                    for (int j = i; j < totalPoints; j++)
-                        waypoints[j] = new WaypointInfo { Position = pos, HitObstacle = null };
+            // 마지막 지점이 장애물이면 링 벽에 닿을 때까지 경로를 연장한다.
+            // 장애물을 연속으로 여러 번 만나는 경우에도 모두 감지하여 올바르게 처리한다.
+            const int maxExtraSteps = 20;
+            for (int extra = 0; extra < maxExtraSteps; extra++)
+            {
+                if (result[result.Count - 1].HitObstacle == null)
                     break;
-                }
 
-                // 링 벽까지의 경로 안에 장애물이 있는지 레이캐스트로 검사한다.
-                RaycastHit2D obstacleHit = Physics2D.Raycast(pos, dir, ringDist, obstacleLayerMask);
-
-                Vector2 nextPos;
-                Vector2 reflectNormal;
-                Obstacle hitObstacle = null;
-
-                if (obstacleHit.collider != null && obstacleHit.collider.TryGetComponent(out Obstacle obs))
-                {
-                    // 장애물이 링 벽보다 가까움: 장애물 표면 법선으로 반사한다.
-                    // 동일 장애물에 재충돌하지 않도록 법선 방향으로 소량 오프셋한다.
-                    nextPos = obstacleHit.point + obstacleHit.normal * 0.02f;
-                    reflectNormal = obstacleHit.normal;
-                    hitObstacle = obs;
-                }
-                else
-                {
-                    // 링 벽에 도달: 교점의 외향 법선(링 중심 → 교점 방향)으로 반사한다.
-                    nextPos = pos + ringDist * dir;
-                    reflectNormal = (nextPos - ringCenter).normalized;
-                }
-
-                waypoints[i] = new WaypointInfo { Position = nextPos, HitObstacle = hitObstacle };
-
-                // 마지막 스텝이어도 dir과 pos를 갱신한다.
-                // 마지막 지점이 장애물일 때 추가 링 벽 스텝 계산에 최신 값이 필요하다.
-                dir = Vector2.Reflect(dir, reflectNormal);
-                pos = nextPos;
+                result.Add(ComputeNextWaypoint(ref pos, ref dir, ringCenter, ringRadius, obstacleLayerMask));
             }
 
-            // 마지막 경유 지점이 장애물이면 반사 방향으로 링 벽까지 한 세그먼트를 추가한다.
-            // 이를 생략하면 플레이어가 장애물 위치 기준으로 링 벽에 착지하여 방향이 틀어진다.
-            WaypointInfo last = waypoints[totalPoints - 1];
-            if (last.HitObstacle != null)
+            return result.ToArray();
+        }
+
+        /// <summary>
+        /// 현재 위치(pos)에서 방향(dir)으로 다음 충돌 지점(장애물 또는 링 벽)을 하나 계산하고
+        /// pos와 dir을 반사 후 값으로 갱신한다.
+        ///
+        /// ref 파라미터로 pos와 dir을 직접 수정하므로 다음 스텝에 즉시 연결된다.
+        /// </summary>
+        private static WaypointInfo ComputeNextWaypoint(
+            ref Vector2 pos,
+            ref Vector2 dir,
+            Vector2 ringCenter,
+            float ringRadius,
+            LayerMask obstacleLayerMask)
+        {
+            float ringDist = GetRingIntersectionDistance(pos, dir, ringCenter, ringRadius);
+
+            // 유효한 링 교점 없음: 현재 위치를 그대로 반환하고 갱신하지 않는다.
+            if (ringDist < 0.1f)
+                return new WaypointInfo { Position = pos, HitObstacle = null };
+
+            // 링 벽까지의 경로 안에 장애물이 있는지 레이캐스트로 검사한다.
+            RaycastHit2D obstacleHit = Physics2D.Raycast(pos, dir, ringDist, obstacleLayerMask);
+
+            Vector2 nextPos;
+            Vector2 reflectNormal;
+            Obstacle hitObstacle = null;
+
+            if (obstacleHit.collider != null && obstacleHit.collider.TryGetComponent(out Obstacle obs))
             {
-                float extraDist = GetRingIntersectionDistance(last.Position, dir, ringCenter, ringRadius);
-                if (extraDist > 0.1f)
-                {
-                    var extended = new WaypointInfo[totalPoints + 1];
-                    System.Array.Copy(waypoints, extended, totalPoints);
-                    extended[totalPoints] = new WaypointInfo
-                    {
-                        Position = last.Position + dir * extraDist,
-                        HitObstacle = null
-                    };
-                    return extended;
-                }
+                // 장애물이 링 벽보다 가까움: 장애물 표면 법선으로 반사한다.
+                // 동일 장애물 재충돌 방지를 위해 법선 방향으로 소량 오프셋한다.
+                nextPos = obstacleHit.point + obstacleHit.normal * 0.02f;
+                reflectNormal = obstacleHit.normal;
+                hitObstacle = obs;
+            }
+            else
+            {
+                // 링 벽에 도달: 교점의 외향 법선(링 중심 → 교점 방향)으로 반사한다.
+                nextPos = pos + ringDist * dir;
+                reflectNormal = (nextPos - ringCenter).normalized;
             }
 
-            return waypoints;
+            // pos와 dir을 ref로 갱신하여 다음 ComputeNextWaypoint 호출에 이어진다.
+            pos = nextPos;
+            dir = Vector2.Reflect(dir, reflectNormal);
+
+            return new WaypointInfo { Position = nextPos, HitObstacle = hitObstacle };
         }
 
         /// <summary>

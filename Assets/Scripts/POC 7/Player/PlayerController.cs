@@ -49,6 +49,16 @@ namespace POC7
         /// <summary>현재 돌진 경로의 경유 지점 목록. StartDash 시 계산되며 순서대로 이동한다.</summary>
         private Vector2[] _waypoints;
 
+        /// <summary>
+        /// 돌진 시작 위치. Land() 시점에 구간별 데미지 판정의 출발점으로 사용한다.
+        /// </summary>
+        private Vector2 _dashStartPos;
+
+        /// <summary>
+        /// 돌진 경로의 상세 정보. Land() 시점에 적 데미지 적용 및 장애물 파괴에 사용한다.
+        /// </summary>
+        private PathCalculator.WaypointInfo[] _waypointInfos;
+
         /// <summary>현재 이동 중인 경유 지점 인덱스.</summary>
         private int _currentWaypointIndex;
 
@@ -233,13 +243,14 @@ namespace POC7
             Vector2 direction = (firstTarget - startPos).normalized;
             Vector2 ringCenter = _ringTransform != null ? (Vector2)_ringTransform.position : Vector2.zero;
 
-            PathCalculator.WaypointInfo[] waypointInfos = PathCalculator.ComputeWaypoints(
+            _waypointInfos = PathCalculator.ComputeWaypoints(
                 startPos, direction, ringCenter, _ringRadius, _bounceCount, _obstacleLayerMask);
 
-            _waypoints = new Vector2[waypointInfos.Length];
-            for (int i = 0; i < waypointInfos.Length; i++)
-                _waypoints[i] = waypointInfos[i].Position;
+            _waypoints = new Vector2[_waypointInfos.Length];
+            for (int i = 0; i < _waypointInfos.Length; i++)
+                _waypoints[i] = _waypointInfos[i].Position;
 
+            _dashStartPos = startPos;
             _currentWaypointIndex = 0;
             _dashTarget = _waypoints[0];
 
@@ -248,15 +259,6 @@ namespace POC7
 
             if (_slashTrail != null && _trailEmitDuringDash)
                 _slashTrail.emitting = true;
-
-            // 각 구간에 대해 적 공격 판정과 장애물 충돌 처리를 적용한다.
-            Vector2 segmentStart = startPos;
-            foreach (PathCalculator.WaypointInfo info in waypointInfos)
-            {
-                _playerCombat?.PerformDashAttack(segmentStart, info.Position);
-                info.HitObstacle?.RegisterHit();
-                segmentStart = info.Position;
-            }
 
             OnDashStarted?.Invoke();
         }
@@ -286,7 +288,8 @@ namespace POC7
         }
 
         /// <summary>
-        /// 상태를 Landed로 전환하고 링 벽 부착 위치를 조정한 후 OnPlayerLanded 이벤트를 발생시킨다.
+        /// 상태를 Landed로 전환하고, 착지 위치를 조정한 후 데미지 판정과 장애물 파괴를 처리한다.
+        /// 이동이 완전히 끝난 뒤 판정을 적용하므로, 적과 장애물이 대시 도중에는 유지된다.
         /// </summary>
         private void Land()
         {
@@ -297,6 +300,16 @@ namespace POC7
                 _slashTrail.emitting = false;
 
             AdjustPositionToRingWall(_dashTarget);
+
+            // 각 구간에 대해 적 공격 판정과 장애물 충돌 처리를 착지 시점에 적용한다.
+            Vector2 segmentStart = _dashStartPos;
+            foreach (PathCalculator.WaypointInfo info in _waypointInfos)
+            {
+                _playerCombat?.PerformDashAttack(segmentStart, info.Position);
+                info.HitObstacle?.RegisterHit();
+                segmentStart = info.Position;
+            }
+
             OnPlayerLanded?.Invoke();
         }
 

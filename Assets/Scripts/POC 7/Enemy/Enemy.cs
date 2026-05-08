@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using UnityEngine;
 
 namespace POC7
@@ -29,8 +30,14 @@ namespace POC7
         [SerializeField] private float _sizePerHealth = 0.1f;
         [SerializeField] private float _maxVisualSize = 2.0f;
 
+        /// <summary>스폰 애니메이션(스케일 업 + 페이드 인) 재생 시간(초).</summary>
+        [SerializeField] private float _spawnAnimDuration = 0.3f;
+
         private SpriteRenderer _spriteRenderer;
         private int _currentHealth;
+
+        /// <summary>스폰 애니메이션이 재생 중이면 true. 피격 시 애니메이션을 즉시 종료하는 데 사용한다.</summary>
+        private bool _isSpawning;
 
         /// <summary>현재 체력. 외부에서 읽기 전용.</summary>
         public int CurrentHealth => _currentHealth;
@@ -53,25 +60,35 @@ namespace POC7
         }
 
         /// <summary>
-        /// Spawner가 적을 생성한 직후 호출한다. 체력을 설정하고 크기와 색상을 초기화한다.
+        /// Spawner가 적을 생성한 직후 호출한다. 체력을 설정하고 스폰 애니메이션을 시작한다.
         /// </summary>
         public void Initialize(int health)
         {
             _maxHealth = health;
             _currentHealth = health;
-            UpdateVisualSize();
+
+            // 애니메이션 시작 전 색상을 먼저 결정하되 알파를 0으로 설정한다.
             UpdateColor();
+            SetAlpha(0f);
+            transform.localScale = Vector3.zero;
+
+            StartCoroutine(PlaySpawnAnimation());
+
             OnHealthChanged?.Invoke(_currentHealth);
             OnEnemySpawned?.Invoke(this);
         }
 
         /// <summary>
         /// 지정한 양만큼 체력을 감소시킨다. 체력이 0 이하가 되면 사망 처리한다.
+        /// 스폰 애니메이션 중 피격 시 애니메이션을 즉시 종료하고 완전히 표시한다.
         /// </summary>
         public void TakeDamage(int damage)
         {
             if (!IsAlive)
                 return;
+
+            if (_isSpawning)
+                SnapSpawnAnimation();
 
             _currentHealth -= damage;
             UpdateVisualSize();
@@ -90,6 +107,60 @@ namespace POC7
         {
             float size = Mathf.Min(_baseSize + _currentHealth * _sizePerHealth, _maxVisualSize);
             transform.localScale = Vector3.one * size;
+        }
+
+        /// <summary>
+        /// SpriteRenderer 색상의 알파값만 변경한다. 색상(HSV)은 유지된다.
+        /// </summary>
+        private void SetAlpha(float alpha)
+        {
+            if (_spriteRenderer == null)
+                return;
+
+            Color c = _spriteRenderer.color;
+            c.a = alpha;
+            _spriteRenderer.color = c;
+        }
+
+        /// <summary>
+        /// 스폰 애니메이션을 재생한다.
+        /// Smoothstep 보간을 사용해 시작과 끝에서 부드럽게 감속한다.
+        /// </summary>
+        private IEnumerator PlaySpawnAnimation()
+        {
+            _isSpawning = true;
+            float targetSize = Mathf.Min(_baseSize + _currentHealth * _sizePerHealth, _maxVisualSize);
+            float elapsed = 0f;
+
+            while (elapsed < _spawnAnimDuration)
+            {
+                elapsed += Time.deltaTime;
+                float t = Mathf.Clamp01(elapsed / _spawnAnimDuration);
+
+                // Smoothstep: 시작과 끝에서 부드럽게 완급을 조절한다.
+                float smooth = t * t * (3f - 2f * t);
+
+                transform.localScale = Vector3.one * (targetSize * smooth);
+                SetAlpha(smooth);
+
+                yield return null;
+            }
+
+            transform.localScale = Vector3.one * targetSize;
+            SetAlpha(1f);
+            _isSpawning = false;
+        }
+
+        /// <summary>
+        /// 스폰 애니메이션을 중단하고 최종 크기 및 불투명 상태로 즉시 전환한다.
+        /// </summary>
+        private void SnapSpawnAnimation()
+        {
+            StopAllCoroutines();
+            _isSpawning = false;
+            float targetSize = Mathf.Min(_baseSize + _currentHealth * _sizePerHealth, _maxVisualSize);
+            transform.localScale = Vector3.one * targetSize;
+            SetAlpha(1f);
         }
 
         /// <summary>

@@ -68,7 +68,10 @@ namespace POC7
 
         /// <summary>
         /// 돌진 출발점부터 목표 지점까지 원형 캐스트를 쏴서 경로 위의 모든 IDamageable에 데미지를 적용한다.
-        /// PlayerController가 StartDash 시점에 호출한다.
+        /// PlayerController가 Land() 시점에 호출한다.
+        ///
+        /// damageMultiplier는 장애물 반사 횟수에 따라 PlayerController가 계산하여 전달한다.
+        /// 장애물을 튕길 때마다 2배씩 증가한다 (1회 → 2x, 2회 → 4x ...).
         ///
         /// [실무 권장]
         /// CircleCastAll은 플레이어 반경만큼의 두께로 판정하여 RaycastAll보다 자연스럽다.
@@ -76,7 +79,8 @@ namespace POC7
         /// </summary>
         /// <param name="from">돌진 출발 위치 (world space).</param>
         /// <param name="to">돌진 목표 위치 (world space).</param>
-        public void PerformDashAttack(Vector2 from, Vector2 to)
+        /// <param name="damageMultiplier">이 구간에 적용할 데미지 배율. 기본값 1.</param>
+        public void PerformDashAttack(Vector2 from, Vector2 to, int damageMultiplier = 1)
         {
             Vector2 direction = (to - from).normalized;
             float distance = Vector2.Distance(from, to);
@@ -89,7 +93,7 @@ namespace POC7
             foreach (RaycastHit2D hit in hits)
             {
                 if (hit.collider.TryGetComponent(out IDamageable damageable))
-                    damageable.TakeDamage(_currentAttackPower);
+                    damageable.TakeDamage(_currentAttackPower * damageMultiplier);
             }
         }
 

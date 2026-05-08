@@ -39,6 +39,9 @@ namespace POC7
         /// <summary>반사 횟수의 상한. UI 버튼으로 이 값을 초과할 수 없다.</summary>
         [SerializeField] private int _maxBounceCount = 10;
 
+        /// <summary>경로 계산 시 장애물 감지에 사용할 레이어 마스크. Inspector에서 "Obstacle" 레이어를 지정한다.</summary>
+        [SerializeField] private LayerMask _obstacleLayerMask;
+
         private Rigidbody2D _rigidbody;
         private PlayerCombat _playerCombat;
         private PlayerState _currentState = PlayerState.Landed;
@@ -72,6 +75,9 @@ namespace POC7
 
         /// <summary>링 오브젝트의 Transform. AttackPathIndicator가 경로 계산에 사용한다.</summary>
         public Transform RingTransform => _ringTransform;
+
+        /// <summary>링 내벽 반경. AttackPathIndicator가 PathCalculator 호출 시 사용한다.</summary>
+        public float RingRadius => _ringRadius;
 
         /// <summary>
         /// Rigidbody2D를 Kinematic + Continuous 감지 모드로 초기화한다.
@@ -210,59 +216,22 @@ namespace POC7
         }
 
         /// <summary>
-        /// 현재 위치에서 주어진 방향으로 출발하는 전체 경유 지점 목록을 계산한다.
-        /// 반사 횟수(_bounceCount)만큼 반사를 추가하므로 총 (_bounceCount + 1)개의 지점이 생성된다.
-        ///
-        /// 각 교점에서 반사 방향은 Vector2.Reflect로 계산한다.
-        ///   normal = (교점 - 링 중심).normalized   (링 내벽의 법선)
-        ///   반사 방향 = Reflect(입사 방향, normal)
-        /// </summary>
-        private Vector2[] ComputeWaypoints(Vector2 startPos, Vector2 direction)
-        {
-            Vector2 ringCenter = _ringTransform != null ? (Vector2)_ringTransform.position : Vector2.zero;
-            int totalPoints = _bounceCount + 1;
-            Vector2[] waypoints = new Vector2[totalPoints];
-
-            Vector2 pos = startPos;
-            Vector2 dir = direction;
-
-            for (int i = 0; i < totalPoints; i++)
-            {
-                float t = 2f * Vector2.Dot(ringCenter - pos, dir);
-
-                // t가 너무 작으면 링 바깥 방향 클릭 등 비정상 상태. 남은 지점을 현재 위치로 채우고 종료한다.
-                if (t < 0.1f)
-                {
-                    for (int j = i; j < totalPoints; j++)
-                        waypoints[j] = pos;
-                    break;
-                }
-
-                Vector2 nextPos = pos + t * dir;
-                waypoints[i] = nextPos;
-
-                if (i < totalPoints - 1)
-                {
-                    // 교점의 법선(링 중심 → 교점 방향)을 기준으로 방향을 반사한다.
-                    Vector2 normal = (nextPos - ringCenter).normalized;
-                    dir = Vector2.Reflect(dir, normal);
-                    pos = nextPos;
-                }
-            }
-
-            return waypoints;
-        }
-
-        /// <summary>
-        /// 경유 지점을 계산하고 상태를 Dashing으로 전환한다.
-        /// 각 구간마다 레이캐스트 공격 판정을 적용한 후 OnDashStarted 이벤트를 발생시킨다.
+        /// PathCalculator를 사용해 경유 지점을 계산하고 상태를 Dashing으로 전환한다.
+        /// 각 구간마다 적 공격 판정을 적용하고, 장애물 충돌 지점에는 RegisterHit을 호출한다.
         /// </summary>
         private void StartDash(Vector2 firstTarget)
         {
             Vector2 startPos = transform.position;
             Vector2 direction = (firstTarget - startPos).normalized;
+            Vector2 ringCenter = _ringTransform != null ? (Vector2)_ringTransform.position : Vector2.zero;
 
-            _waypoints = ComputeWaypoints(startPos, direction);
+            PathCalculator.WaypointInfo[] waypointInfos = PathCalculator.ComputeWaypoints(
+                startPos, direction, ringCenter, _ringRadius, _bounceCount, _obstacleLayerMask);
+
+            _waypoints = new Vector2[waypointInfos.Length];
+            for (int i = 0; i < waypointInfos.Length; i++)
+                _waypoints[i] = waypointInfos[i].Position;
+
             _currentWaypointIndex = 0;
             _dashTarget = _waypoints[0];
 
@@ -272,12 +241,13 @@ namespace POC7
             if (_slashTrail != null && _trailEmitDuringDash)
                 _slashTrail.emitting = true;
 
-            // 모든 구간에 대해 레이캐스트 공격 판정을 적용한다.
+            // 각 구간에 대해 적 공격 판정과 장애물 충돌 처리를 적용한다.
             Vector2 segmentStart = startPos;
-            foreach (Vector2 waypoint in _waypoints)
+            foreach (PathCalculator.WaypointInfo info in waypointInfos)
             {
-                _playerCombat?.PerformDashAttack(segmentStart, waypoint);
-                segmentStart = waypoint;
+                _playerCombat?.PerformDashAttack(segmentStart, info.Position);
+                info.HitObstacle?.RegisterHit();
+                segmentStart = info.Position;
             }
 
             OnDashStarted?.Invoke();

@@ -11,6 +11,7 @@ namespace POC7
         [SerializeField] private PlayerController _playerController;
         [SerializeField] private RingController _ringController;
         [SerializeField] private EnemySpawner _enemySpawner;
+        [SerializeField] private ObstacleSpawner _obstacleSpawner;
         [SerializeField] private SaturationSystem _saturationSystem;
 
         /// <summary>
@@ -64,6 +65,7 @@ namespace POC7
             // EnemySpawner는 OnDashStarted 이벤트로 스폰하므로
             // 시작 시 동일 이벤트를 강제 발생시키는 대신 public 메서드로 노출한다.
             _enemySpawner.SpawnInitialWave();
+            _obstacleSpawner?.SpawnInitialWave();
         }
     }
 }

@@ -29,6 +29,9 @@ namespace POC7
         /// <summary>경로 끝 지점을 나타내는 스프라이트 오브젝트. 없으면 자동 생성한다.</summary>
         [SerializeField] private SpriteRenderer _endpointMarker;
 
+        /// <summary>장애물 감지에 사용할 레이어 마스크. PlayerController와 동일한 값을 설정해야 한다.</summary>
+        [SerializeField] private LayerMask _obstacleLayerMask;
+
         private LineRenderer _lineRenderer;
         private Camera _mainCamera;
 
@@ -77,8 +80,16 @@ namespace POC7
                 return;
             }
 
-            Vector2[] waypoints = ComputeWaypoints(playerPos, direction, ringTransform, _playerController.BounceCount);
-            DrawPath(playerPos, waypoints);
+            Vector2 ringCenter = ringTransform != null ? (Vector2)ringTransform.position : Vector2.zero;
+            PathCalculator.WaypointInfo[] waypointInfos = PathCalculator.ComputeWaypoints(
+                playerPos, direction, ringCenter, _playerController.RingRadius,
+                _playerController.BounceCount, _obstacleLayerMask);
+
+            var positions = new Vector2[waypointInfos.Length];
+            for (int i = 0; i < waypointInfos.Length; i++)
+                positions[i] = waypointInfos[i].Position;
+
+            DrawPath(playerPos, positions);
         }
 
         /// <summary>
@@ -110,45 +121,6 @@ namespace POC7
             float t = 2f * Vector2.Dot(ringCenter - playerPos, direction);
 
             return t >= 0.1f;
-        }
-
-        /// <summary>
-        /// 시작 위치와 방향을 받아 링 내벽에서 반사되는 모든 경유 지점을 계산한다.
-        /// PlayerController.ComputeWaypoints와 동일한 알고리즘을 사용한다.
-        /// </summary>
-        private Vector2[] ComputeWaypoints(Vector2 startPos, Vector2 direction, Transform ringTransform, int bounceCount)
-        {
-            Vector2 ringCenter = ringTransform != null ? (Vector2)ringTransform.position : Vector2.zero;
-            int totalPoints = bounceCount + 1;
-            Vector2[] waypoints = new Vector2[totalPoints];
-
-            Vector2 pos = startPos;
-            Vector2 dir = direction;
-
-            for (int i = 0; i < totalPoints; i++)
-            {
-                float t = 2f * Vector2.Dot(ringCenter - pos, dir);
-
-                if (t < 0.1f)
-                {
-                    for (int j = i; j < totalPoints; j++)
-                        waypoints[j] = pos;
-                    break;
-                }
-
-                Vector2 nextPos = pos + t * dir;
-                waypoints[i] = nextPos;
-
-                if (i < totalPoints - 1)
-                {
-                    // 교점의 법선(링 중심 → 교점 방향)을 기준으로 방향을 반사한다.
-                    Vector2 normal = (nextPos - ringCenter).normalized;
-                    dir = Vector2.Reflect(dir, normal);
-                    pos = nextPos;
-                }
-            }
-
-            return waypoints;
         }
 
         /// <summary>

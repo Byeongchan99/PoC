@@ -302,10 +302,14 @@ namespace POC7
             AdjustPositionToRingWall(_dashTarget);
 
             // 각 구간에 대해 적 공격 판정과 장애물 충돌 처리를 착지 시점에 적용한다.
+            // 장애물을 튕길 때마다 다음 구간의 데미지가 2배로 증가한다.
+            int damageMultiplier = 1;
             Vector2 segmentStart = _dashStartPos;
             foreach (PathCalculator.WaypointInfo info in _waypointInfos)
             {
-                _playerCombat?.PerformDashAttack(segmentStart, info.Position);
+                _playerCombat?.PerformDashAttack(segmentStart, info.Position, damageMultiplier);
+                if (info.HitObstacle != null)
+                    damageMultiplier *= 2;
                 info.HitObstacle?.RegisterHit();
                 segmentStart = info.Position;
             }

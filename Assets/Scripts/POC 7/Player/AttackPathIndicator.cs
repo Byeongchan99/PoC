@@ -88,6 +88,11 @@ namespace POC7
                 return;
             }
 
+            // 라인 두께를 플레이어 현재 크기에 맞춘다.
+            float playerSize = _playerController.transform.localScale.x;
+            _lineRenderer.startWidth = playerSize;
+            _lineRenderer.endWidth = playerSize;
+
             Vector2 ringCenter = ringTransform != null ? (Vector2)ringTransform.position : Vector2.zero;
             PathCalculator.WaypointInfo[] waypointInfos = PathCalculator.ComputeWaypoints(
                 playerPos, direction, ringCenter, _playerController.RingRadius,

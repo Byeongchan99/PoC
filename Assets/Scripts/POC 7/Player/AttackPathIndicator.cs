@@ -52,6 +52,14 @@ namespace POC7
 
             if (_endpointMarker == null)
                 _endpointMarker = CreateEndpointMarker();
+
+            // Inspector에서 레이어 마스크를 설정하지 않은 경우 "Obstacle" 레이어를 자동으로 탐색한다.
+            if (_obstacleLayerMask.value == 0)
+            {
+                int layer = LayerMask.NameToLayer("Obstacle");
+                if (layer >= 0)
+                    _obstacleLayerMask = 1 << layer;
+            }
         }
 
         /// <summary>

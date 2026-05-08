@@ -62,7 +62,7 @@ namespace POC7
 
         /// <summary>
         /// 남은 충돌 횟수 비율에 따라 SpriteRenderer 색상을 갱신한다.
-        /// 무적이면 회색, 남은 횟수가 많을수록 초록, 적을수록 빨강으로 표시한다.
+        /// 무적이면 중간 회색, 파괴 가능이면 흰색(체력 최대) → 거의 검정(체력 최소)으로 표시한다.
         /// </summary>
         private void UpdateColor()
         {
@@ -71,12 +71,13 @@ namespace POC7
 
             if (IsIndestructible)
             {
-                _spriteRenderer.color = new Color(0.55f, 0.55f, 0.55f);
+                _spriteRenderer.color = new Color(0.5f, 0.5f, 0.5f);
                 return;
             }
 
             float ratio = _maxHits > 0 ? (float)_remainingHits / _maxHits : 0f;
-            _spriteRenderer.color = Color.Lerp(Color.red, Color.green, ratio);
+            // 흰색(체력 최대) → 어두운 회색(체력 최소)으로 변화한다.
+            _spriteRenderer.color = Color.Lerp(new Color(0.15f, 0.15f, 0.15f), Color.white, ratio);
         }
     }
 }

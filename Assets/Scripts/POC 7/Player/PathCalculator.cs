@@ -27,12 +27,17 @@ namespace POC7
         /// 1. 2차 방정식으로 링 벽까지의 거리를 구한다 (출발점이 링 위가 아닌 경우도 처리 가능).
         /// 2. 그 거리 안에서 obstacleLayerMask 레이어로 레이캐스트한다.
         /// 3. 장애물이 링 벽보다 가까우면 장애물 표면 법선으로, 아니면 링 벽 법선으로 반사한다.
+        ///
+        /// [중요] 마지막 경유 지점이 장애물인 경우:
+        /// 반사 방향으로 링 벽까지 세그먼트를 한 개 더 추가한다.
+        /// 플레이어는 항상 링 벽에서 착지해야 하므로, 장애물이 bounce budget 마지막에 있어도
+        /// 올바른 반사 경로로 링 벽까지 도달한다.
         /// </summary>
         /// <param name="startPos">경로 시작 위치 (world space).</param>
         /// <param name="direction">출발 방향 단위벡터.</param>
         /// <param name="ringCenter">링 중심 위치 (world space).</param>
         /// <param name="ringRadius">링 내벽 반경.</param>
-        /// <param name="bounceCount">반사 횟수. 총 (bounceCount + 1)개의 경유 지점이 생성된다.</param>
+        /// <param name="bounceCount">반사 횟수. 총 (bounceCount + 1)개의 기본 경유 지점이 생성된다.</param>
         /// <param name="obstacleLayerMask">장애물 감지에 사용할 레이어 마스크.</param>
         public static WaypointInfo[] ComputeWaypoints(
             Vector2 startPos,
@@ -84,10 +89,28 @@ namespace POC7
 
                 waypoints[i] = new WaypointInfo { Position = nextPos, HitObstacle = hitObstacle };
 
-                if (i < totalPoints - 1)
+                // 마지막 스텝이어도 dir과 pos를 갱신한다.
+                // 마지막 지점이 장애물일 때 추가 링 벽 스텝 계산에 최신 값이 필요하다.
+                dir = Vector2.Reflect(dir, reflectNormal);
+                pos = nextPos;
+            }
+
+            // 마지막 경유 지점이 장애물이면 반사 방향으로 링 벽까지 한 세그먼트를 추가한다.
+            // 이를 생략하면 플레이어가 장애물 위치 기준으로 링 벽에 착지하여 방향이 틀어진다.
+            WaypointInfo last = waypoints[totalPoints - 1];
+            if (last.HitObstacle != null)
+            {
+                float extraDist = GetRingIntersectionDistance(last.Position, dir, ringCenter, ringRadius);
+                if (extraDist > 0.1f)
                 {
-                    dir = Vector2.Reflect(dir, reflectNormal);
-                    pos = nextPos;
+                    var extended = new WaypointInfo[totalPoints + 1];
+                    System.Array.Copy(waypoints, extended, totalPoints);
+                    extended[totalPoints] = new WaypointInfo
+                    {
+                        Position = last.Position + dir * extraDist,
+                        HitObstacle = null
+                    };
+                    return extended;
                 }
             }
 
